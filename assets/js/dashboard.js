@@ -1,0 +1,619 @@
+// dashboard.js (enhanced: modal, toast, validation)
+// Must be included after supabase.js
+document.addEventListener("DOMContentLoaded", () => {
+  const logoutBtns = document.querySelectorAll("#logoutBtn");
+  const toggleSidebarBtns = document.querySelectorAll("#toggleSidebar, .hamburger");
+  const sidebar = document.querySelector(".sidebar");
+  const userNameEl = document.getElementById("userName");
+  const roleLabel = document.getElementById("roleLabel");
+
+  // create global modal + toast containers
+  createUIHelpers();
+
+  checkAuthAndInit();
+  bindLogout();
+  bindSidebarToggle();
+
+  // route-like init
+  const path = location.pathname;
+  if (path.endsWith("/admin.html") || path.endsWith("/admin/") || path.endsWith("/admin")) initDashboard();
+  else if (path.endsWith("/anggota.html")) initMembersPage();
+  else if (path.endsWith("/iuran.html")) initIuranPage();
+  else if (path.endsWith("/keuangan.html")) initKeuanganPage();
+  else if (path.endsWith("/profil.html")) initProfilPage();
+
+  /* ---------------- core/auth ---------------- */
+  async function checkAuthAndInit() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return (window.location.href = "../login.html");
+    const userId = session.user.id;
+    try {
+      const { data: profile } = await supabase.from("profiles").select("nama, role").eq("id", userId).single();
+      if (userNameEl) userNameEl.textContent = profile?.nama || session.user.email;
+      if (roleLabel) roleLabel.textContent = profile?.role || "-";
+    } catch (e) {
+      console.error("profile fetch:", e);
+    }
+  }
+
+  function bindLogout() {
+    logoutBtns.forEach(b => b && b.addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "../login.html";
+    }));
+  }
+
+  function bindSidebarToggle() {
+    toggleSidebarBtns.forEach(btn => btn && btn.addEventListener("click", () => {
+      if (!sidebar) return;
+      sidebar.classList.toggle("open");
+    }));
+  }
+
+  /* ---------------- Dashboard ---------------- */
+  async function initDashboard() {
+    const totalMembersEl = document.getElementById("totalMembers");
+    const totalIuranEl = document.getElementById("totalIuran");
+    const totalPemasukanEl = document.getElementById("totalPemasukan");
+    const totalPengeluaranEl = document.getElementById("totalPengeluaran");
+    const membersPreviewTbody = document.querySelector("#membersPreview tbody");
+
+    // members count
+    try {
+      const { count } = await supabase.from("members").select("*", { count: "exact", head: true });
+      if (totalMembersEl) totalMembersEl.textContent = count ?? "0";
+    } catch (e) { if (totalMembersEl) totalMembersEl.textContent = "0"; }
+
+    // sum iuran (fallback to local sum)
+    try {
+      const { data: iurans } = await supabase.from("iuran").select("jumlah");
+      const sum = (iurans || []).reduce((s, r) => s + Number(r.jumlah || 0), 0);
+      if (totalIuranEl) totalIuranEl.textContent = `Rp ${formatNumber(sum)}`;
+    } catch (e) { if (totalIuranEl) totalIuranEl.textContent = "-"; }
+
+    // pemasukan/pengeluaran
+    try {
+      const { data: pemasukan } = await supabase.from("transactions").select("amount").eq("type", "pemasukan");
+      const pemasukanSum = (pemasukan || []).reduce((s, r) => s + Number(r.amount || 0), 0);
+      if (totalPemasukanEl) totalPemasukanEl.textContent = `Rp ${formatNumber(pemasukanSum)}`;
+    } catch (e) { if (totalPemasukanEl) totalPemasukanEl.textContent = "Rp 0"; }
+
+    try {
+      const { data: pengeluaran } = await supabase.from("transactions").select("amount").eq("type", "pengeluaran");
+      const pengeluaranSum = (pengeluaran || []).reduce((s, r) => s + Number(r.amount || 0), 0);
+      if (totalPengeluaranEl) totalPengeluaranEl.textContent = `Rp ${formatNumber(pengeluaranSum)}`;
+    } catch (e) { if (totalPengeluaranEl) totalPengeluaranEl.textContent = "Rp 0"; }
+
+    // members preview
+    try {
+      const { data: members } = await supabase.from("members").select("id, nama, umur, rt, rw").order("created_at", { ascending: false }).limit(6);
+      if (!members || members.length === 0) membersPreviewTbody.innerHTML = `<tr><td colspan="5" class="empty">Belum ada data</td></tr>`;
+      else membersPreviewTbody.innerHTML = members.map((m,i)=>`<tr>
+        <td>${i+1}</td>
+        <td>${escapeHtml(m.nama)}</td>
+        <td>${m.umur||"-"}</td>
+        <td>${m.rt||"-"} / ${m.rw||"-"}</td>
+        <td>
+          <button class="btn" onclick="window.openMemberModal('${m.id}')">Lihat</button>
+        </td>
+      </tr>`).join("");
+    } catch (e) {
+      membersPreviewTbody.innerHTML = `<tr><td colspan="5" class="empty">Gagal memuat data</td></tr>`;
+      console.error(e);
+    }
+
+    // expose helper to open modal
+    window.openMemberModal = openEditMember;
+  }
+
+  /* ---------------- Members page ---------------- */
+  async function initMembersPage() {
+    const membersTableBody = document.querySelector("#membersTable tbody");
+    const refreshBtn = document.getElementById("refreshMembers");
+
+    async function loadMembers() {
+      membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
+      try {
+        const { data: members } = await supabase.from("members").select("*").order("created_at", { ascending: false });
+        if (!members || members.length === 0) {
+          membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada data</td></tr>`;
+          return;
+        }
+        membersTableBody.innerHTML = members.map((m,i)=>`<tr>
+          <td>${i+1}</td>
+          <td>${escapeHtml(m.nama)}</td>
+          <td>${m.umur||"-"}</td>
+          <td>${m.rt||"-"} / ${m.rw||"-"}</td>
+          <td>${m.status_anggota||"-"}</td>
+          <td>
+            <button onclick="window.openMemberModal('${m.id}')">Detail</button>
+            <button onclick="approveMember('${m.id}')">Setuju</button>
+            <button onclick="rejectMember('${m.id}')">Tolak</button>
+            <button onclick="deleteMember('${m.id}')">Hapus</button>
+          </td>
+        </tr>`).join("");
+      } catch (e) {
+        membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat data</td></tr>`;
+        console.error(e);
+      }
+    }
+
+    // actions
+    window.approveMember = async (id) => {
+      try {
+        await supabase.from("members").update({ status_anggota: "approved" }).eq("id", id);
+        showToast("success","Anggota disetujui.");
+        await loadMembers();
+      } catch (e) { showToast("error","Gagal setuju anggota."); }
+    };
+    window.rejectMember = async (id) => {
+      try {
+        await supabase.from("members").update({ status_anggota: "rejected" }).eq("id", id);
+        showToast("success","Anggota ditolak.");
+        await loadMembers();
+      } catch (e) { showToast("error","Gagal menolak anggota."); }
+    };
+    window.deleteMember = async (id) => {
+      if (!confirm("Hapus anggota ini?")) return;
+      try {
+        await supabase.from("members").delete().eq("id", id);
+        showToast("success","Anggota dihapus.");
+        await loadMembers();
+      } catch (e) { showToast("error","Gagal menghapus anggota."); }
+    };
+
+    refreshBtn && refreshBtn.addEventListener("click", loadMembers);
+    await loadMembers();
+  }
+
+  /* ---------------- Iuran page ---------------- */
+  async function initIuranPage() {
+    const iuranSelect = document.getElementById("iuran_member");
+    const addIuranBtn = document.getElementById("addIuranBtn");
+    const iuranMsg = document.getElementById("iuranMsg");
+    const iuranTableBody = document.querySelector("#iuranTable tbody");
+
+    // load members into select
+    try {
+      const { data: members } = await supabase.from("members").select("id, nama").order("nama");
+      iuranSelect.innerHTML = `<option value="">Pilih anggota</option>` + (members||[]).map(m=>`<option value="${m.id}">${escapeHtml(m.nama)}</option>`).join("");
+    } catch (e) { iuranSelect.innerHTML = `<option value="">Gagal memuat anggota</option>`; }
+
+    async function loadIuran() {
+      iuranTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
+      try {
+        const { data: iurans } = await supabase.from("iuran").select("*").order("created_at", { ascending: false });
+        if (!iurans || iurans.length===0) { iuranTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada iuran</td></tr>`; return; }
+        const memberIds = [...new Set(iurans.map(r=>r.member_id).filter(Boolean))];
+        const { data: members } = memberIds.length ? await supabase.from("members").select("id,nama").in("id", memberIds) : { data: [] };
+        const memberMap = (members||[]).reduce((acc,m)=>(acc[m.id]=m.nama,acc),{});
+        iuranTableBody.innerHTML = iurans.map((u,i)=>`<tr>
+          <td>${i+1}</td>
+          <td>${escapeHtml(u.nama)}</td>
+          <td>${escapeHtml(memberMap[u.member_id]||"-")}</td>
+          <td>Rp ${formatNumber(u.jumlah||0)}</td>
+          <td>${u.status||"belum"}</td>
+          <td>
+            <button onclick="window.openIuranModal('${u.id}')">Edit</button>
+            <button onclick="markIuranPaid('${u.id}')">Lunas</button>
+            <button onclick="deleteIuran('${u.id}')">Hapus</button>
+          </td>
+        </tr>`).join("");
+      } catch (e) { iuranTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat</td></tr>`; console.error(e); }
+    }
+
+    addIuranBtn.addEventListener("click", async () => {
+      const nama = document.getElementById("iuran_nama").value.trim();
+      const jumlah = Number(document.getElementById("iuran_jumlah").value);
+      const member = document.getElementById("iuran_member").value;
+      if (!nama || !jumlah || !member) { iuranMsg.textContent = "Semua field wajib diisi."; return; }
+      if (isNaN(jumlah) || jumlah<=0) { iuranMsg.textContent = "Jumlah harus angka > 0"; return; }
+      iuranMsg.textContent = "Menyimpan...";
+      const { error } = await supabase.from("iuran").insert([{ nama, jumlah, member_id: member, status: "belum" }]);
+      if (error) { iuranMsg.textContent = `Gagal: ${error.message}`; showToast("error", error.message); }
+      else { iuranMsg.textContent = "Berhasil ditambahkan."; showToast("success","Iuran ditambahkan."); document.getElementById("iuran_nama").value=""; document.getElementById("iuran_jumlah").value=""; await loadIuran(); }
+    });
+
+    window.markIuranPaid = async (id) => {
+      if (!confirm("Tandai sebagai lunas?")) return;
+      try { await supabase.from("iuran").update({ status: "lunas" }).eq("id", id); showToast("success","Iuran ditandai lunas"); await loadIuran(); } catch (e){ showToast("error","Gagal update"); }
+    };
+    window.deleteIuran = async (id) => {
+      if (!confirm("Hapus iuran ini?")) return;
+      try { await supabase.from("iuran").delete().eq("id", id); showToast("success","Iuran dihapus"); await loadIuran(); } catch (e){ showToast("error","Gagal hapus"); }
+    };
+
+    // expose modal open
+    window.openIuranModal = openEditIuran;
+    await loadIuran();
+  }
+
+  /* ---------------- Keuangan page ---------------- */
+  async function initKeuanganPage() {
+    const addBtn = document.getElementById("addTransactionBtn");
+    const transMsg = document.getElementById("transMsg");
+    const transTableBody = document.querySelector("#transTable tbody");
+
+    async function loadTrans() {
+      transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
+      try {
+        const { data: trans } = await supabase.from("transactions").select("*").order("created_at",{ascending:false});
+        if (!trans || trans.length===0) { transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada transaksi</td></tr>`; return; }
+        transTableBody.innerHTML = trans.map((t,i)=>`<tr>
+          <td>${i+1}</td><td>${escapeHtml(t.type)}</td><td>Rp ${formatNumber(t.amount)}</td><td>${escapeHtml(t.keterangan||"-")}</td><td>${new Date(t.created_at).toLocaleString()}</td>
+          <td><button onclick="window.openTransModal('${t.id}')">Edit</button><button onclick="deleteTrans('${t.id}')">Hapus</button></td>
+        </tr>`).join("");
+      } catch (e) { transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat</td></tr>`; console.error(e); }
+    }
+
+    addBtn.addEventListener("click", async () => {
+      const type = document.getElementById("trans_type").value;
+      const amount = Number(document.getElementById("trans_amount").value);
+      const keterangan = document.getElementById("trans_keterangan").value.trim();
+      if (!amount || !type) { transMsg.textContent = "Field tidak lengkap"; return; }
+      if (isNaN(amount) || amount<=0){ transMsg.textContent="Jumlah harus > 0"; return; }
+      transMsg.textContent = "Menyimpan...";
+      const { error } = await supabase.from("transactions").insert([{ type, amount, keterangan }]);
+      if (error) { transMsg.textContent=`Gagal: ${error.message}`; showToast("error", error.message); }
+      else { transMsg.textContent="Tersimpan."; showToast("success","Transaksi tersimpan"); document.getElementById("trans_amount").value=""; document.getElementById("trans_keterangan").value=""; await loadTrans(); }
+    });
+
+    window.deleteTrans = async (id) => {
+      if (!confirm("Hapus transaksi ini?")) return;
+      try { await supabase.from("transactions").delete().eq("id", id); showToast("success","Transaksi dihapus"); await loadTrans(); } catch (e) { showToast("error","Gagal hapus"); }
+    };
+
+    window.openTransModal = openEditTrans;
+    await loadTrans();
+  }
+
+  /* ---------------- Profil page ---------------- */
+  async function initProfilPage() {
+    const saveBtn = document.getElementById("saveProfileBtn");
+    const profileMsg = document.getElementById("profileMsg");
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session.user.id;
+
+    try {
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", userId).single();
+      if (profile) {
+        document.getElementById("profile_nama").value = profile.nama || "";
+        document.getElementById("profile_email").value = session.user.email || "";
+        document.getElementById("profile_blok").value = profile.blok || "";
+        document.getElementById("profile_rt").value = profile.rt || "";
+        document.getElementById("profile_rw").value = profile.rw || "";
+      }
+    } catch (e) { console.error(e); }
+
+    saveBtn.addEventListener("click", async () => {
+      profileMsg.textContent = "Menyimpan...";
+      const nama = document.getElementById("profile_nama").value.trim();
+      const blok = document.getElementById("profile_blok").value.trim();
+      const rt = document.getElementById("profile_rt").value.trim();
+      const rw = document.getElementById("profile_rw").value.trim();
+      const avatarFile = document.getElementById("profile_avatar").files?.[0];
+
+      if (!nama) { profileMsg.textContent="Nama wajib diisi"; return; }
+      let avatar_url = null;
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split(".").pop();
+        const filePath = `avatars/${userId}.${fileExt}`;
+        const { error: uploadErr } = await supabase.storage.from("avatars").upload(filePath, avatarFile, { upsert: true });
+        if (uploadErr) { profileMsg.textContent=`Gagal upload: ${uploadErr.message}`; showToast("error", uploadErr.message); return; }
+        const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+        avatar_url = publicData?.publicUrl ?? null;
+      }
+
+      const updateObj = { nama, blok, rt, rw };
+      if (avatar_url) updateObj.avatar_url = avatar_url;
+      const { error } = await supabase.from("profiles").update(updateObj).eq("id", userId);
+      if (error) { profileMsg.textContent=`Gagal: ${error.message}`; showToast("error", error.message); } else { profileMsg.textContent="Profil tersimpan."; showToast("success","Profil tersimpan"); }
+    });
+  }
+
+  /* ---------------- Modal/Edit helpers ---------------- */
+
+  // open edit member modal
+  async function openEditMember(id) {
+    try {
+      const { data: member, error } = await supabase.from("members").select("*").eq("id", id).single();
+      if (error || !member) return showToast("error","Gagal ambil data anggota");
+      // build form
+      const html = `
+        <h3>Edit Anggota</h3>
+        <div class="modal-form">
+          <label>Nama <input id="modal_nama" value="${escapeHtml(member.nama||'')}" /></label>
+          <label>Umur <input id="modal_umur" type="number" value="${member.umur||''}" /></label>
+          <label>Blok <input id="modal_blok" value="${escapeHtml(member.blok||'')}" /></label>
+          <label>RT <input id="modal_rt" value="${escapeHtml(member.rt||'')}" /></label>
+          <label>RW <input id="modal_rw" value="${escapeHtml(member.rw||'')}" /></label>
+          <label>Status <select id="modal_status"><option value="pending">pending</option><option value="approved">approved</option><option value="rejected">rejected</option></select></label>
+          <div class="modal-actions"><button id="modalSave">Simpan</button><button id="modalCancel">Batal</button></div>
+        </div>`;
+      const modal = showModal(html);
+      modal.querySelector("#modal_status").value = member.status_anggota || "pending";
+      modal.querySelector("#modalCancel").addEventListener("click", ()=>closeModal());
+      modal.querySelector("#modalSave").addEventListener("click", async ()=>{
+        const nama = document.getElementById("modal_nama").value.trim();
+        const umur = Number(document.getElementById("modal_umur").value);
+        const blok = document.getElementById("modal_blok").value.trim();
+        const rt = document.getElementById("modal_rt").value.trim();
+        const rw = document.getElementById("modal_rw").value.trim();
+        const status = document.getElementById("modal_status").value;
+        if (!nama) return alert("Nama wajib diisi");
+        if (isNaN(umur) || umur<=0) return alert("Umur harus > 0");
+        try {
+          const { error } = await supabase.from("members").update({ nama, umur, blok, rt, rw, status_anggota: status }).eq("id", id);
+          if (error) { showToast("error", error.message); } else { showToast("success","Perubahan tersimpan"); closeModal(); reloadCurrentPage(); }
+        } catch (e) { showToast("error","Gagal menyimpan"); console.error(e); }
+      });
+    } catch (e) { console.error(e); showToast("error","Gagal buka modal"); }
+  }
+
+  // open iuran modal
+  async function openEditIuran(id) {
+    try {
+      const { data: iuran, error } = await supabase.from("iuran").select("*").eq("id", id).single();
+      if (error || !iuran) return showToast("error","Gagal ambil data iuran");
+      // fetch members for select
+      const { data: members } = await supabase.from("members").select("id,nama").order("nama");
+      const options = (members||[]).map(m=>`<option value="${m.id}" ${m.id===iuran.member_id?'selected':''}>${escapeHtml(m.nama)}</option>`).join("");
+      const html = `
+        <h3>Edit Iuran</h3>
+        <div class="modal-form">
+          <label>Nama <input id="modal_iuran_nama" value="${escapeHtml(iuran.nama||'')}" /></label>
+          <label>Jumlah <input id="modal_iuran_jumlah" type="number" value="${iuran.jumlah||0}" /></label>
+          <label>Member <select id="modal_iuran_member"><option value="">Pilih</option>${options}</select></label>
+          <label>Status <select id="modal_iuran_status"><option value="belum">belum</option><option value="lunas">lunas</option></select></label>
+          <div class="modal-actions"><button id="modalSaveIuran">Simpan</button><button id="modalCancelIuran">Batal</button></div>
+        </div>`;
+      const modal = showModal(html);
+      modal.querySelector("#modalCancelIuran").addEventListener("click", ()=>closeModal());
+      modal.querySelector("#modalSaveIuran").addEventListener("click", async ()=>{
+        const nama = document.getElementById("modal_iuran_nama").value.trim();
+        const jumlah = Number(document.getElementById("modal_iuran_jumlah").value);
+        const member = document.getElementById("modal_iuran_member").value;
+        const status = document.getElementById("modal_iuran_status").value;
+        if (!nama || !jumlah || !member) return alert("Semua field wajib diisi");
+        try {
+          const { error } = await supabase.from("iuran").update({ nama, jumlah, member_id: member, status }).eq("id", id);
+          if (error) showToast("error", error.message); else { showToast("success","Iuran diperbarui"); closeModal(); reloadCurrentPage(); }
+        } catch (e) { showToast("error","Gagal simpan"); }
+      });
+    } catch (e) { console.error(e); showToast("error","Gagal buka modal"); }
+  }
+
+  // open transaction modal
+  async function openEditTrans(id) {
+    try {
+      const { data: tr } = await supabase.from("transactions").select("*").eq("id", id).single();
+      if (!tr) return showToast("error","Data tidak ditemukan");
+      const html = `
+        <h3>Edit Transaksi</h3>
+        <div class="modal-form">
+          <label>Tipe <select id="modal_tr_type"><option value="pemasukan">pemasukan</option><option value="pengeluaran">pengeluaran</option></select></label>
+          <label>Jumlah <input id="modal_tr_amount" type="number" value="${tr.amount||0}" /></label>
+          <label>Keterangan <input id="modal_tr_ket" value="${escapeHtml(tr.keterangan||'')}" /></label>
+          <div class="modal-actions"><button id="modalSaveTr">Simpan</button><button id="modalCancelTr">Batal</button></div>
+        </div>`;
+      const modal = showModal(html);
+      modal.querySelector("#modal_tr_type").value = tr.type;
+      modal.querySelector("#modalCancelTr").addEventListener("click", ()=>closeModal());
+      modal.querySelector("#modalSaveTr").addEventListener("click", async ()=>{
+        const type = document.getElementById("modal_tr_type").value;
+        const amount = Number(document.getElementById("modal_tr_amount").value);
+        const ket = document.getElementById("modal_tr_ket").value.trim();
+        if (!amount || isNaN(amount) || amount<=0) return alert("Jumlah harus angka > 0");
+        try {
+          const { error } = await supabase.from("transactions").update({ type, amount, keterangan: ket }).eq("id", id);
+          if (error) showToast("error", error.message); else { showToast("success","Transaksi diperbarui"); closeModal(); reloadCurrentPage(); }
+        } catch (e) { showToast("error","Gagal simpan"); }
+      });
+    } catch (e) { console.error(e); showToast("error","Gagal buka modal"); }
+  }
+
+  // helper to reload current admin page data
+  function reloadCurrentPage() {
+    const path = location.pathname;
+    if (path.endsWith("/admin.html")) initDashboard();
+    else if (path.endsWith("/anggota.html")) initMembersPage();
+    else if (path.endsWith("/iuran.html")) initIuranPage();
+    else if (path.endsWith("/keuangan.html")) initKeuanganPage();
+    else if (path.endsWith("/profil.html")) initProfilPage();
+  }
+
+  /* ---------------- UI helpers: modal + toast ---------------- */
+  function createUIHelpers() {
+    // toast container
+    if (!document.getElementById("toastContainer")) {
+      const t = document.createElement("div");
+      t.id = "toastContainer";
+      t.style.position = "fixed";
+      t.style.right = "18px";
+      t.style.bottom = "18px";
+      t.style.zIndex = 9999;
+      document.body.appendChild(t);
+    }
+    // modal container
+    if (!document.getElementById("modalRoot")) {
+      const m = document.createElement("div");
+      m.id = "modalRoot";
+      m.style.position = "fixed";
+      m.style.inset = "0";
+      m.style.display = "none";
+      m.style.alignItems = "center";
+      m.style.justifyContent = "center";
+      m.style.zIndex = 9998;
+      document.body.appendChild(m);
+    }
+  }
+
+  function showToast(type, message, timeout = 4500) {
+    const c = document.getElementById("toastContainer");
+    if (!c) return console.warn("toast container missing");
+    const el = document.createElement("div");
+    el.className = `toast toast-${type}`;
+    el.style.marginTop = "8px";
+    el.style.padding = "10px 14px";
+    el.style.borderRadius = "10px";
+    el.style.minWidth = "180px";
+    el.style.boxShadow = "0 8px 18px rgba(0,0,0,.25)";
+    el.style.color = type==="error"?"#fff":"#111";
+    el.style.background = type==="error"?"#b00020":"#f5c542";
+    el.textContent = message;
+    c.appendChild(el);
+    setTimeout(()=>{ el.style.transition="opacity .35s"; el.style.opacity=0; setTimeout(()=>el.remove(),350); }, timeout);
+  }
+
+  function showModal(innerHtml) {
+    const root = document.getElementById("modalRoot");
+    root.innerHTML = "";
+    root.style.display = "flex";
+    const overlay = document.createElement("div");
+    overlay.style.position = "absolute";
+    overlay.style.inset = "0";
+    overlay.style.background = "rgba(0,0,0,0.6)";
+    overlay.addEventListener("click", closeModal);
+    const dialog = document.createElement("div");
+    dialog.style.minWidth = "320px";
+    dialog.style.maxWidth = "760px";
+    dialog.style.background = "#fff";
+    dialog.style.color = "#111";
+    dialog.style.borderRadius = "12px";
+    dialog.style.padding = "18px";
+    dialog.style.zIndex = 10;
+    dialog.innerHTML = innerHtml;
+    root.appendChild(overlay);
+    root.appendChild(dialog);
+    // style modal small helpers
+    dialog.querySelectorAll("label").forEach(l=>{ l.style.display="block"; l.style.marginBottom="8px"; l.querySelector("input,select,textarea")?.style && (l.querySelector("input,select,textarea").style.width="100%")});
+    dialog.querySelectorAll(".modal-actions").forEach(d=>{ d.style.display="flex"; d.style.justifyContent="flex-end"; d.style.gap="8px"; d.style.marginTop="10px" });
+    return dialog;
+  }
+  window.closeModal = closeModal;
+  function closeModal() { const root=document.getElementById("modalRoot"); if(root){ root.style.display="none"; root.innerHTML=""; } }
+
+  /* ---------------- small helpers ---------------- */
+  function formatNumber(n){ if(!n&&n!==0) return "0"; return Number(n).toLocaleString("id-ID"); }
+  function escapeHtml(str){ if(!str&&str!==0) return ""; return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;"); }
+
+  /* ---------------- expose edit modal openers ---------------- */
+  window.openEditMember = openEditMember;
+  window.openEditIuran = openEditIuran;
+  window.openEditTrans = openEditTrans;
+});
+
+// === EKSPOR CSV ===
+async function exportTableToCSV(filename, tableName) {
+  try {
+    // ambil data dari Supabase
+    const { data, error } = await supabase.from(tableName).select('*');
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      showToast('Tidak ada data untuk diekspor.', 'error');
+      return;
+    }
+
+    // ambil kolom dari kunci object
+    const headers = Object.keys(data[0]);
+    const rows = data.map(obj => headers.map(h => JSON.stringify(obj[h] ?? '')).join(','));
+    const csvContent = [headers.join(','), ...rows].join('\n');
+
+    // buat blob dan download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showToast(`Berhasil ekspor ${data.length} data.`, 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('Gagal mengekspor data.', 'error');
+  }
+}
+
+// Contoh event listener umum
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('exportCSV');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      // Ganti "keuangan" sesuai nama tabel Supabase kamu
+      exportTableToCSV('keuangan.csv', 'keuangan');
+    });
+  }
+});
+
+// === EKSPOR PDF ===
+async function exportTableToPDF(title, tableName) {
+  try {
+    const { data, error } = await supabase.from(tableName).select('*');
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      showToast('Tidak ada data untuk dicetak.', 'error');
+      return;
+    }
+
+    // import library (pastikan sudah ada di <script> HTML)
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'pt', 'a4');
+    const marginX = 40;
+    let y = 60;
+
+    // === HEADER LAPORAN ===
+    const logo = new Image();
+    logo.src = 'assets/img/logo-putra-delima.png'; // sesuaikan path logo
+    await new Promise(res => (logo.onload = res));
+
+    doc.addImage(logo, 'PNG', marginX, 30, 40, 40);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PUTRA DELIMA', marginX + 55, 50);
+    doc.setFontSize(11);
+    doc.text('Laporan ' + title, marginX + 55, 68);
+    doc.setDrawColor(245, 197, 66);
+    doc.line(marginX, 80, 550, 80);
+
+    // === ISI TABEL ===
+    const headers = Object.keys(data[0]);
+    const rows = data.map(obj => headers.map(h => obj[h] ?? ''));
+
+    doc.autoTable({
+      head: [headers],
+      body: rows,
+      startY: 90,
+      margin: { left: marginX, right: marginX },
+      styles: { fontSize: 9, cellPadding: 4 },
+      headStyles: { fillColor: [245, 197, 66], textColor: 17 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    });
+
+    // === FOOTER ===
+    const printed = new Date().toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+    doc.setFontSize(10);
+    doc.text(`Dicetak pada: ${printed}`, marginX, doc.internal.pageSize.height - 30);
+
+    // download file
+    doc.save(`${title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+    showToast(`Berhasil cetak ${data.length} data ke PDF.`, 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('Gagal mencetak PDF.', 'error');
+  }
+}
+
+// Event listener
+document.addEventListener('DOMContentLoaded', () => {
+  const pdfBtn = document.getElementById('exportPDF');
+  if (pdfBtn) {
+    pdfBtn.addEventListener('click', () => {
+      exportTableToPDF('Laporan Keuangan', 'keuangan'); // ganti param sesuai halaman
+    });
+  }
+});

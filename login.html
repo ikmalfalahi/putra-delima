@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Putra Delima — Login</title>
+  <link rel="stylesheet" href="assets/css/auth.css" />
+</head>
+<body>
+  <div class="logo-wrapper">
+    <img src="assets/img/logo-putra-delima.png" alt="Logo Putra Delima" />
+    <h1>PUTRA DELIMA</h1>
+  </div>
+
+  <div class="auth-card">
+    <h2>Selamat Datang 👋</h2>
+    <p>Masuk ke akun anggota Putra Delima</p>
+
+    <div class="form-group">
+      <input type="email" id="email" placeholder="Alamat Email" required />
+    </div>
+
+    <div class="form-group password-group">
+      <input type="password" id="password" placeholder="Kata sandi" required />
+      <span id="toggle-pass">Tampilkan</span>
+    </div>
+
+    <button id="login-btn">Masuk</button>
+    <p id="login-msg" class="msg"></p>
+
+    <p class="link-text">
+      Belum punya akun? <a href="daftar.html">Daftar Sekarang</a>
+    </p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/login.js"></script>
+</body>
+</html>

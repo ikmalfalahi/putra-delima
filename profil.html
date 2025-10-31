@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profil — Putra Delima</title>
+  <link rel="stylesheet" href="assets/css/dashboard.css" />
+  <link rel="stylesheet" href="assets/css/profil.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../assets/img/logo-putra-delima.png" alt="logo" />
+        <h3>PUTRA DELIMA</h3>
+      </div>
+      <nav class="nav">
+        <a href="admin.html" class="nav-item">🏠 Dashboard</a>
+        <a href="anggota.html" class="nav-item">👥 Anggota</a>
+        <a href="iuran.html" class="nav-item">📄 Iuran</a>
+        <a href="keuangan.html" class="nav-item">💰 Keuangan</a>
+        <a href="profil.html" class="nav-item active">👤 Profil</a>
+        <button id="logoutBtn" class="nav-logout">🚪 Logout</button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="main-header">
+        <button id="toggleSidebar" class="hamburger">☰</button>
+        <div class="header-right"><span id="userName">—</span></div>
+      </header>
+
+      <section class="content">
+        <h2>Profil Saya</h2>
+
+        <div class="card profil-card">
+          <div class="profil-container">
+            <div class="foto-section">
+              <img id="fotoPreview" src="../assets/img/default-avatar.png" alt="Foto Profil" />
+              <button id="uploadBtn">Ganti Foto</button>
+              <input type="file" id="fotoInput" accept="image/*" hidden />
+            </div>
+
+            <div class="form-section">
+              <div class="form-group">
+                <label>Nama</label>
+                <input type="text" id="nama" placeholder="Tulis Nama" disabled />
+              </div>
+
+              <div class="form-group">
+                <label>Agama</label>
+                <input type="text" id="agama" placeholder="Agama" disabled />
+              </div>
+
+              <div class="form-group">
+                <label>Tgl Lahir</label>
+                <input type="date" id="tanggal_lahir" disabled />
+              </div>
+
+              <div class="form-group">
+                <label>Jns Kelamin</label>
+                <select id="jenis_kelamin" disabled>
+                  <option value="">Pilih</option>
+                  <option value="Laki-laki">Laki-laki</option>
+                  <option value="Perempuan">Perempuan</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Alamat</label>
+                <textarea id="alamat" placeholder="Alamat" disabled></textarea>
+              </div>
+
+              <div class="form-group rt-rw">
+                <label>RT/RW</label>
+                <div class="rt-rw-box">
+                  <input type="text" id="rt" placeholder="RT" disabled />
+                  <input type="text" id="rw" placeholder="RW" disabled />
+                </div>
+              </div>
+
+              <div class="status-group">
+                <label>Status Anggota</label>
+                <span id="statusAnggota" class="aktif">Aktif</span>
+                <div class="action-btns">
+                  <button id="simpanBtn">Simpan</button>
+                  <button id="editBtn">Edit</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script src="assets/js/profil.js"></script>
+</body>
+</html>

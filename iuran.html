@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Iuran — Putra Delima</title>
+  <link rel="stylesheet" href="assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../assets/img/logo-putra-delima.png" alt="logo" />
+        <h3>PUTRA DELIMA</h3>
+      </div>
+      <nav class="nav">
+        <a href="admin.html" class="nav-item">🏠 Dashboard</a>
+        <a href="anggota.html" class="nav-item">👥 Anggota</a>
+        <a href="iuran.html" class="nav-item active">📄 Iuran</a>
+        <a href="keuangan.html" class="nav-item">💰 Keuangan</a>
+        <a href="profil.html" class="nav-item">👤 Profil</a>
+        <button id="logoutBtn" class="nav-logout">🚪 Logout</button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="main-header">
+        <button id="toggleSidebar" class="hamburger">☰</button>
+        <div class="header-right"><span id="userName">—</span></div>
+      </header>
+
+      <section class="content">
+        <h2>Manajemen Iuran</h2>
+
+        <div class="card">
+          <div class="card-head">Tambah Iuran</div>
+          <div class="card-body">
+            <div class="form-row">
+              <input type="text" id="iuran_nama" placeholder="Nama (contoh: Iuran Bulanan)">
+            </div>
+            <div class="form-row">
+              <input type="number" id="iuran_jumlah" placeholder="Jumlah (Rp)">
+            </div>
+            <div class="form-row">
+              <select id="iuran_member">
+                <option value="">Pilih anggota</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <button id="addIuranBtn">Tambah Iuran</button>
+            </div>
+            <p id="iuranMsg" class="msg"></p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">Daftar Iuran</div>
+          <div class="card-body">
+            <table class="table" id="iuranTable">
+              <thead><tr><th>No</th><th>Nama</th><th>Member</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody><tr><td colspan="6" class="empty">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div class="table-header">
+          <h2>Data Keuangan</h2>
+          <div class="action-btns">
+            <button id="exportCSV" class="btn-export">Ekspor CSV</button>
+            <button id="exportPDF" class="btn-export">Cetak PDF</button>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/js/supabase.js"></script>
+  <!-- jsPDF dan AutoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <script src="assets/js/dashboard.js"></script>
+</body>
+</html>

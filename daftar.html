@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Putra Delima — Daftar Akun</title>
+  <link rel="stylesheet" href="assets/css/auth.css" />
+</head>
+<body>
+  <div class="logo-wrapper">
+    <img src="assets/img/logo-putra-delima.png" alt="Logo Putra Delima" />
+    <h1>PUTRA DELIMA</h1>
+  </div>
+
+  <div class="auth-card">
+    <h2>Buat Akun Baru ✨</h2>
+    <p>Daftar menjadi anggota Putra Delima</p>
+
+    <div class="form-group">
+      <input type="text" id="nama" placeholder="Nama Lengkap" required />
+    </div>
+    <div class="form-group">
+      <select id="jenis_kelamin" required>
+        <option value="">Pilih Jenis Kelamin</option>
+        <option value="Laki-laki">Laki-laki</option>
+        <option value="Perempuan">Perempuan</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <input type="date" id="Tanggal_lahir" placeholder="Tanggal_lahir" required />
+    </div>
+    <div class="form-group">
+      <input type="text" id="agama" placeholder="Agama" required />
+    </div>
+    <div class="form-group">
+      <select id="status_hubungan" required>
+        <option value="">Status Hubungan</option>
+        <option value="Belum Menikah">Belum Menikah</option>
+        <option value="Menikah">Menikah</option>
+        <option value="Cerai">Cerai</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <input type="text" id="blok" placeholder="Blok (contoh: A)" required />
+    </div>
+    <div class="form-row">
+      <input type="text" id="rt" placeholder="RT" required />
+      <input type="text" id="rw" placeholder="RW" required />
+    </div>
+    <div class="form-group">
+      <input type="email" id="email" placeholder="Alamat Email" required />
+    </div>
+    <div class="form-group password-group">
+      <input type="password" id="password" placeholder="Kata Sandi" required />
+      <span id="toggle-pass">Tampilkan</span>
+    </div>
+
+    <button id="daftar-btn">Daftar</button>
+    <p id="msg" class="msg"></p>
+
+    <p class="link-text">
+      Sudah punya akun? <a href="login.html">Masuk Sekarang</a>
+    </p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/daftar.js"></script>
+</body>
+</html>

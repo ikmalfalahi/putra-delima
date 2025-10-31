@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Putra Delima</title>
+  <link rel="stylesheet" href="assets/css/dashboard.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <img src="../assets/img/logo-putra-delima.png" alt="logo" />
+        <h3>PUTRA DELIMA</h3>
+      </div>
+
+      <nav class="nav">
+        <a href="admin.html" class="nav-item active" data-page="dashboard">🏠 Dashboard</a>
+        <a href="anggota.html" class="nav-item" data-page="anggota">👥 Anggota</a>
+        <a href="iuran.html" class="nav-item" data-page="iuran">📄 Iuran</a>
+        <a href="keuangan.html" class="nav-item" data-page="keuangan">💰 Keuangan</a>
+        <a href="profil.html" class="nav-item" data-page="profil">👤 Profil</a>
+        <button id="logoutBtn" class="nav-logout">🚪 Logout</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <small>Role: <span id="roleLabel">-</span></small>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="main-header">
+        <button id="toggleSidebar" class="hamburger">☰</button>
+        <div class="header-right">
+          <span id="userName">—</span>
+        </div>
+      </header>
+
+      <section class="content">
+        <h2>Dashboard Admin</h2>
+
+        <div class="stats-grid">
+          <div class="stat card">
+            <div class="stat-title">Total Anggota</div>
+            <div id="totalMembers" class="stat-value">...</div>
+          </div>
+          <div class="stat card">
+            <div class="stat-title">Total Iuran</div>
+            <div id="totalIuran" class="stat-value">...</div>
+          </div>
+          <div class="stat card">
+            <div class="stat-title">Total Pemasukan</div>
+            <div id="totalPemasukan" class="stat-value">...</div>
+          </div>
+          <div class="stat card">
+            <div class="stat-title">Total Pengeluaran</div>
+            <div id="totalPengeluaran" class="stat-value">...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">Preview Data Anggota Terbaru</div>
+          <div class="card-body">
+            <table class="table" id="membersPreview">
+              <thead>
+                <tr><th>No</th><th>Nama</th><th>Umur</th><th>RT/RW</th><th>Aksi</th></tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="5" class="empty">Memuat...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/js/supabase.js"></script>
+  <script src="assets/js/dashboard.js"></script>
+</body>
+</html>
