@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("login-btn");
-  const msg = document.getElementById("msg");
+  const msg = document.getElementById("login-msg");
   const togglePass = document.getElementById("toggle-pass");
   const passwordInput = document.getElementById("password");
 
@@ -75,6 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === Fungsi tampilkan pesan ===
   function showMsg(text, color) {
+    if (!msg) return console.warn("Elemen #login-msg tidak ditemukan");
     msg.textContent = text;
     msg.style.color = color;
   }
