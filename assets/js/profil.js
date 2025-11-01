@@ -1,8 +1,5 @@
-// === Konfigurasi Supabase ===
-const SUPABASE_URL = "https://sosjorfcrsktcitaawyi.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvc2pvcmZjcnNrdGNpdGFhd3lpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NjcyMjcsImV4cCI6MjA3NzU0MzIyN30.4u1fZs46awWRQve_lfQGHE0bxP4Kqbv8qwhDtBogBUQ";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// === Gunakan instance global dari supabase.js ===
+const supabaseClient = supabase;
 
 // === Ambil Elemen HTML ===
 const fotoInput = document.getElementById("fotoInput");
@@ -59,6 +56,7 @@ async function loadProfile() {
     return;
   }
 
+  // Isi data ke form
   if (data.avatar_url) fotoPreview.src = data.avatar_url;
   fields.nama.value = data.nama || "";
   fields.agama.value = data.agama || "";
@@ -89,7 +87,11 @@ simpanBtn.addEventListener("click", async () => {
     status_hubungan: fields.status_hubungan.value,
   };
 
-  const { error } = await supabaseClient.from("profiles").update(updateData).eq("id", userId);
+  const { error } = await supabaseClient
+    .from("profiles")
+    .update(updateData)
+    .eq("id", userId);
+
   if (error) {
     console.error(error);
     alert("Gagal menyimpan profil.");
@@ -107,10 +109,10 @@ fotoInput.addEventListener("change", async () => {
   const file = fotoInput.files[0];
   if (!file) return;
 
-  // ✅ Pastikan bucket 'avatars' sudah ada dan PUBLIC
   const fileExt = file.name.split(".").pop();
   const filePath = `${userId}_${Date.now()}.${fileExt}`;
 
+  // Upload ke bucket "avatars"
   const { error: uploadError } = await supabaseClient.storage
     .from("avatars")
     .upload(filePath, file, { upsert: true });
@@ -121,12 +123,20 @@ fotoInput.addEventListener("change", async () => {
     return;
   }
 
-  const { data: publicURL } = supabaseClient.storage.from("avatars").getPublicUrl(filePath);
+  // Dapatkan URL publik
+  const { data: publicURL } = supabaseClient.storage
+    .from("avatars")
+    .getPublicUrl(filePath);
+
   const imageUrl = publicURL.publicUrl;
 
+  // Tampilkan dan simpan ke tabel
   fotoPreview.src = imageUrl;
+  await supabaseClient
+    .from("profiles")
+    .update({ avatar_url: imageUrl })
+    .eq("id", userId);
 
-  await supabaseClient.from("profiles").update({ avatar_url: imageUrl }).eq("id", userId);
   alert("Foto profil berhasil diunggah!");
 });
 
