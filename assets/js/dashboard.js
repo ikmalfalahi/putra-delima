@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function bindLogout() {
     logoutBtns.forEach(b => b && b.addEventListener("click", async () => {
       await supabase.auth.signOut();
-      window.location.href = "../login.html";
+      window.location.href = "ikmalfalahi.git.io/putra-delima/login.html";
     }));
   }
 
@@ -617,3 +617,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
