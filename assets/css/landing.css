@@ -21,10 +21,10 @@ body {
 .header-inner { display: flex; align-items: center; justify-content: space-between; }
 .brand { display: flex; align-items: center; gap: 10px; }
 .logo { width: 38px; height: 38px; }
-.brand-title { font-weight: 700; color: #f5c542; }
+.brand-title { font-weight: 700; color: #fff; }
 
 .nav a {
-  color: #f5c542;
+  color: #fff;
   text-decoration: none;
   margin-left: 18px;
   font-weight: 500;
@@ -33,17 +33,17 @@ body {
 .nav a:hover { color: #fff; }
 
 .btn-outline {
-  border: 1px solid #f5c542;
+  border: 1px solid #fff;
   padding: 6px 14px;
   border-radius: 8px;
-  color: #f5c542;
+  color: #fff;
 }
-.btn-outline:hover { background: #f5c542; color: #111; }
+.btn-outline:hover { background: #fff; color: #111; }
 
 .hamburger {
   display: none;
   background: none;
-  color: #f5c542;
+  color: #fff;
   font-size: 24px;
   border: none;
 }
@@ -67,13 +67,13 @@ body {
 }
 .hero h1 {
   font-size: 2.5rem;
-  color: #f5c542;
+  color: #fff;
   margin-bottom: 10px;
 }
 .hero .sub { font-size: 1.1rem; margin-bottom: 25px; color: #ddd; }
 
 .btn-primary {
-  background: #f5c542;
+  background: #fff;
   color: #111;
   padding: 10px 20px;
   border-radius: 8px;
@@ -90,7 +90,7 @@ body {
 .section.dark { background: #000; }
 
 .section h2 {
-  color: #f5c542;
+  color: #fff;
   margin-bottom: 20px;
   font-size: 1.6rem;
 }
@@ -109,7 +109,7 @@ body {
   border-radius: 10px;
   max-width: 300px;
 }
-.card h3 { color: #f5c542; margin-bottom: 10px; }
+.card h3 { color: #fff; margin-bottom: 10px; }
 
 /* === GALERI === */
 .gallery {
@@ -144,3 +144,4 @@ body {
   .hero h1 { font-size: 1.8rem; }
   .section { padding: 60px 0; }
 }
+
