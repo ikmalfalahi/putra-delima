@@ -903,19 +903,36 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// === Lihat avatar besar ===
+// === Modal untuk lihat avatar besar + zoom ===
 window.showAvatarModal = function (url, nama) {
   if (!url) return showToast("error", "Tidak ada foto avatar.");
+
   const html = `
-    <h3>Avatar ${escapeHtml(nama)}</h3>
-    <div style="text-align:center">
-      <img src="${url}" alt="${escapeHtml(nama)}" 
-           style="max-width:280px; border-radius:12px; box-shadow:0 0 10px rgba(0,0,0,0.3)" />
+    <h3>Foto ${escapeHtml(nama)}</h3>
+    <div style="text-align:center;">
+      <img 
+        id="zoomAvatar" 
+        src="${url}" 
+        alt="${escapeHtml(nama)}"
+        style="max-width: 300px; max-height: 300px; border-radius: 10px; cursor: zoom-in; transition: transform 0.2s ease;"
+      />
     </div>
-    <div class="modal-actions" style="text-align:center; margin-top:15px;">
+    <div style="text-align:center; margin-top:15px;">
       <button id="closeAvatar">Tutup</button>
-    </div>`;
+    </div>
+  `;
+
   const modal = showModal(html);
+
+  const img = modal.querySelector("#zoomAvatar");
+  let zoomed = false;
+  img.addEventListener("click", () => {
+    zoomed = !zoomed;
+    img.style.transform = zoomed ? "scale(1.8)" : "scale(1)";
+    img.style.cursor = zoomed ? "zoom-out" : "zoom-in";
+  });
+
   modal.querySelector("#closeAvatar").addEventListener("click", closeModal);
 };
+
 
