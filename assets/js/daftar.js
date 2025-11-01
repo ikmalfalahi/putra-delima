@@ -23,7 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const email = document.getElementById("email").value.trim();
     const password = passwordInput.value.trim();
 
-    // === Validasi dasar ===
     if (!nama || !email || !password) {
       showMsg("Harap isi semua data wajib!", "red");
       return;
@@ -36,10 +35,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     showMsg("Mendaftarkan akun...", "gray");
 
-    // === Daftar akun Supabase Auth ===
+    // === 1️⃣ Daftar akun Auth ===
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { nama },
+      },
     });
 
     if (error) {
@@ -48,8 +50,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const user = data.user;
+    if (!user) {
+      showMsg("Gagal membuat akun. Coba lagi nanti.", "red");
+      return;
+    }
 
-    // === Simpan ke tabel profiles ===
+    // === 2️⃣ Simpan ke tabel profiles dengan status "Pending" ===
     const { error: insertError } = await supabase.from("profiles").insert([
       {
         id: user.id,
@@ -60,23 +66,24 @@ document.addEventListener("DOMContentLoaded", () => {
         blok,
         rt,
         rw,
-        status: "Aktif",
+        status: "Pending", // 🔥 belum aktif, menunggu persetujuan admin
         role: "anggota",
         email,
       },
     ]);
 
     if (insertError) {
-      showMsg(`Gagal simpan profil: ${insertError.message}`, "red");
       console.error(insertError);
+      showMsg(`Gagal simpan profil: ${insertError.message}`, "red");
       return;
     }
 
-    showMsg("Akun berhasil dibuat! Silakan login.", "green");
+    // === 3️⃣ Berhasil daftar ===
+    showMsg("Pendaftaran berhasil! Tunggu persetujuan admin.", "green");
 
     setTimeout(() => {
       window.location.href = "login.html";
-    }, 1500);
+    }, 2000);
   });
 
   // === Fungsi tampilkan pesan ===
