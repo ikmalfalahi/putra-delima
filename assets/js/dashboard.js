@@ -176,20 +176,20 @@ async function initMembersPage() {
 if (error) throw error;
 
 if (!members || members.length === 0) {
-  membersPreviewTbody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada data</td></tr>`;
+  membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada data</td></tr>`;
   return;
 }
 
-membersPreviewTbody.innerHTML = members
+membersTableBody.innerHTML = members
   .map(
     (m, i) => `
       <tr>
         <td>${i + 1}</td>
-        <td class="avatar-cell">
+        <td class="avatar-cell" style="text-align:center;">
           <img 
             src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
             alt="${escapeHtml(m.nama || '-')}" 
-            class="avatar-thumb"
+            style="width:36px;height:36px;object-fit:cover;border-radius:50%;cursor:pointer;transition:transform .2s ease;"
             onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
           />
         </td>
@@ -942,6 +942,7 @@ window.showAvatarModal = function (url, nama) {
 
   modal.querySelector("#closeAvatar").addEventListener("click", closeModal);
 };
+
 
 
 
