@@ -163,45 +163,38 @@ async function initMembersPage() {
     try {
       // Ambil data dari tabel profiles
       const { data: members, error } = await supabase
-        .from("profiles")
-        .select("id, nama, tanggal_lahir, rt, rw, role, status")
-        .order("created_at", { ascending: false });
+  .from("profiles")
+  .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role")
+  .order("inserted_at", { ascending: false });
 
-      if (error) throw error;
+if (error) throw error;
 
-      if (!members || members.length === 0) {
-        membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada data anggota</td></tr>`;
-        return;
-      }
+if (!members || members.length === 0) {
+  membersPreviewTbody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada data</td></tr>`;
+  return;
+}
 
-      membersTableBody.innerHTML = members
-        .map(
-          (m, i) => `
-          <tr>
-            <td>${i + 1}</td>
-            <td>${escapeHtml(m.nama || "-")}</td>
-            <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
-            <td>${m.rt || "-"} / ${m.rw || "-"}</td>
-            <td>
-              <span class="badge ${m.status === "Aktif" ? "green" : m.status === "Ditolak" ? "red" : "gray"}">
-                ${escapeHtml(m.status || "-")}
-              </span>
-            </td>
-            <td>
-              <button onclick="openMemberDetail('${m.id}')">Detail</button>
-              ${
-                m.status === "Pending"
-                  ? `
-                    <button onclick="approveMember('${m.id}')">Setuju</button>
-                    <button onclick="rejectMember('${m.id}')">Tolak</button>
-                  `
-                  : ""
-              }
-              <button onclick="deleteMember('${m.id}')">Hapus</button>
-            </td>
-          </tr>`
-        )
-        .join("");
+membersPreviewTbody.innerHTML = members
+  .map(
+    (m, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>
+          <img 
+            src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
+            alt="${m.nama}" 
+            class="avatar-thumb"
+            onclick="showAvatarModal('${m.avatar_url || ''}', '${m.nama}')"
+          />
+          ${escapeHtml(m.nama || "-")}
+        </td>
+        <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
+        <td>${escapeHtml(m.blok || "-")}</td>
+        <td>${m.rt || "-"} / ${m.rw || "-"}</td>
+        <td>${escapeHtml(m.role || "-")}</td>
+      </tr>`
+  )
+  .join("");
     } catch (e) {
       console.error(e);
       membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat data</td></tr>`;
@@ -910,17 +903,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// === Lihat avatar besar ===
+window.showAvatarModal = function (url, nama) {
+  if (!url) return showToast("error", "Tidak ada foto avatar.");
+  const html = `
+    <h3>Avatar ${escapeHtml(nama)}</h3>
+    <div style="text-align:center">
+      <img src="${url}" alt="${escapeHtml(nama)}" 
+           style="max-width:280px; border-radius:12px; box-shadow:0 0 10px rgba(0,0,0,0.3)" />
+    </div>
+    <div class="modal-actions" style="text-align:center; margin-top:15px;">
+      <button id="closeAvatar">Tutup</button>
+    </div>`;
+  const modal = showModal(html);
+  modal.querySelector("#closeAvatar").addEventListener("click", closeModal);
+};
