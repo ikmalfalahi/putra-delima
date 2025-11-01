@@ -111,13 +111,14 @@ async function initMembersPage() {
   const membersTableBody = document.querySelector("#membersTable tbody");
   const refreshBtn = document.getElementById("refreshMembers");
 
+  // === Load daftar anggota ===
   async function loadMembers() {
     membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
     try {
       // Ambil data dari tabel profiles
       const { data: members, error } = await supabase
         .from("profiles")
-        .select("id, nama, tanggal_lahir, rt, rw, role")
+        .select("id, nama, tanggal_lahir, rt, rw, role, status")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -135,11 +136,21 @@ async function initMembersPage() {
             <td>${escapeHtml(m.nama || "-")}</td>
             <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
             <td>${m.rt || "-"} / ${m.rw || "-"}</td>
-            <td>${escapeHtml(m.role || "-")}</td>
+            <td>
+              <span class="badge ${m.status === "Aktif" ? "green" : m.status === "Ditolak" ? "red" : "gray"}">
+                ${escapeHtml(m.status || "-")}
+              </span>
+            </td>
             <td>
               <button onclick="openMemberDetail('${m.id}')">Detail</button>
-              <button onclick="approveMember('${m.id}')">Setuju</button>
-              <button onclick="rejectMember('${m.id}')">Tolak</button>
+              ${
+                m.status === "Pending"
+                  ? `
+                    <button onclick="approveMember('${m.id}')">Setuju</button>
+                    <button onclick="rejectMember('${m.id}')">Tolak</button>
+                  `
+                  : ""
+              }
               <button onclick="deleteMember('${m.id}')">Hapus</button>
             </td>
           </tr>`
@@ -151,53 +162,82 @@ async function initMembersPage() {
     }
   }
 
-  // Tombol aksi
+  // === Aksi: Setuju ===
   window.approveMember = async (id) => {
     try {
-      await supabase.from("profiles").update({ role: "approved" }).eq("id", id);
-      showToast("success", "Anggota disetujui.");
+      const { error } = await supabase
+        .from("profiles")
+        .update({ status: "Aktif", role: "anggota" })
+        .eq("id", id);
+
+      if (error) throw error;
+      showToast("success", "Anggota berhasil disetujui!");
       await loadMembers();
     } catch (e) {
+      console.error(e);
       showToast("error", "Gagal menyetujui anggota.");
     }
   };
 
+  // === Aksi: Tolak ===
   window.rejectMember = async (id) => {
     try {
-      await supabase.from("profiles").update({ role: "rejected" }).eq("id", id);
-      showToast("success", "Anggota ditolak.");
+      const { error } = await supabase
+        .from("profiles")
+        .update({ status: "Ditolak" })
+        .eq("id", id);
+
+      if (error) throw error;
+      showToast("success", "Anggota berhasil ditolak.");
       await loadMembers();
     } catch (e) {
+      console.error(e);
       showToast("error", "Gagal menolak anggota.");
     }
   };
 
+  // === Aksi: Hapus ===
   window.deleteMember = async (id) => {
-    if (!confirm("Hapus anggota ini?")) return;
+    if (!confirm("Yakin ingin menghapus anggota ini?")) return;
     try {
-      await supabase.from("profiles").delete().eq("id", id);
-      showToast("success", "Anggota dihapus.");
+      const { error } = await supabase.from("profiles").delete().eq("id", id);
+      if (error) throw error;
+      showToast("success", "Anggota berhasil dihapus.");
       await loadMembers();
     } catch (e) {
+      console.error(e);
       showToast("error", "Gagal menghapus anggota.");
     }
   };
 
-  // Fungsi lihat detail sederhana
+  // === Detail Anggota ===
   window.openMemberDetail = async (id) => {
     try {
-      const { data: member } = await supabase.from("profiles").select("*").eq("id", id).single();
-      if (!member) return showToast("error", "Data tidak ditemukan");
+      const { data: member, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
       const html = `
         <h3>Detail Anggota</h3>
         <p><strong>Nama:</strong> ${escapeHtml(member.nama || "-")}</p>
-        <p><strong>Tanggal Lahir:</strong> ${member.tanggal_lahir ? new Date(member.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</p>
+        <p><strong>Tanggal Lahir:</strong> ${
+          member.tanggal_lahir
+            ? new Date(member.tanggal_lahir).toLocaleDateString("id-ID")
+            : "-"
+        }</p>
         <p><strong>RT/RW:</strong> ${member.rt || "-"} / ${member.rw || "-"}</p>
-        <p><strong>Status:</strong> ${escapeHtml(member.role || "-")}</p>
+        <p><strong>Status:</strong> ${escapeHtml(member.status || "-")}</p>
+        <p><strong>Role:</strong> ${escapeHtml(member.role || "-")}</p>
         <div class="modal-actions"><button id="closeDetail">Tutup</button></div>`;
+
       const modal = showModal(html);
       modal.querySelector("#closeDetail").addEventListener("click", closeModal);
     } catch (e) {
+      console.error(e);
       showToast("error", "Gagal membuka detail anggota.");
     }
   };
@@ -657,6 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
 
 
 
