@@ -50,61 +50,107 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
   }
 
-  /* ---------------- Dashboard ---------------- */
-  async function initDashboard() {
-    const totalMembersEl = document.getElementById("totalMembers");
-    const totalIuranEl = document.getElementById("totalIuran");
-    const totalPemasukanEl = document.getElementById("totalPemasukan");
-    const totalPengeluaranEl = document.getElementById("totalPengeluaran");
-    const membersPreviewTbody = document.querySelector("#membersPreview tbody");
+/* ---------------- Dashboard ---------------- */
+async function initDashboard() {
+  const totalMembersEl = document.getElementById("totalMembers");
+  const totalIuranEl = document.getElementById("totalIuran");
+  const totalPemasukanEl = document.getElementById("totalPemasukan");
+  const totalPengeluaranEl = document.getElementById("totalPengeluaran");
+  const membersPreviewTbody = document.querySelector("#membersPreview tbody");
 
-    // members count
-    try {
-      const { count } = await supabase.from("members").select("*", { count: "exact", head: true });
-      if (totalMembersEl) totalMembersEl.textContent = count ?? "0";
-    } catch (e) { if (totalMembersEl) totalMembersEl.textContent = "0"; }
+  // === Total Anggota (semua dari profiles) ===
+  try {
+    const { count, error } = await supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true });
+    if (error) throw error;
+    totalMembersEl.textContent = count ?? "0";
+  } catch (e) {
+    console.error("Gagal hitung anggota:", e);
+    totalMembersEl.textContent = "0";
+  }
 
-    // sum iuran (fallback to local sum)
-    try {
-      const { data: iurans } = await supabase.from("iuran").select("jumlah");
-      const sum = (iurans || []).reduce((s, r) => s + Number(r.jumlah || 0), 0);
-      if (totalIuranEl) totalIuranEl.textContent = `Rp ${formatNumber(sum)}`;
-    } catch (e) { if (totalIuranEl) totalIuranEl.textContent = "-"; }
+  // === Total Iuran ===
+  try {
+    const { data: iurans, error } = await supabase
+      .from("iuran")
+      .select("jumlah");
+    if (error) throw error;
+    const total = (iurans || []).reduce((sum, i) => sum + Number(i.jumlah || 0), 0);
+    totalIuranEl.textContent = `Rp ${formatNumber(total)}`;
+  } catch (e) {
+    console.error("Gagal hitung iuran:", e);
+    totalIuranEl.textContent = "-";
+  }
 
-    // pemasukan/pengeluaran
-    try {
-      const { data: pemasukan } = await supabase.from("transactions").select("amount").eq("type", "pemasukan");
-      const pemasukanSum = (pemasukan || []).reduce((s, r) => s + Number(r.amount || 0), 0);
-      if (totalPemasukanEl) totalPemasukanEl.textContent = `Rp ${formatNumber(pemasukanSum)}`;
-    } catch (e) { if (totalPemasukanEl) totalPemasukanEl.textContent = "Rp 0"; }
+  // === Total Pemasukan ===
+  try {
+    const { data: pemasukan, error } = await supabase
+      .from("keuangan")
+      .select("jumlah")
+      .eq("jenis", "pemasukan");
+    if (error) throw error;
+    const total = (pemasukan || []).reduce((sum, p) => sum + Number(p.jumlah || 0), 0);
+    totalPemasukanEl.textContent = `Rp ${formatNumber(total)}`;
+  } catch (e) {
+    console.error("Gagal hitung pemasukan:", e);
+    totalPemasukanEl.textContent = "Rp 0";
+  }
 
-    try {
-      const { data: pengeluaran } = await supabase.from("transactions").select("amount").eq("type", "pengeluaran");
-      const pengeluaranSum = (pengeluaran || []).reduce((s, r) => s + Number(r.amount || 0), 0);
-      if (totalPengeluaranEl) totalPengeluaranEl.textContent = `Rp ${formatNumber(pengeluaranSum)}`;
-    } catch (e) { if (totalPengeluaranEl) totalPengeluaranEl.textContent = "Rp 0"; }
+  // === Total Pengeluaran ===
+  try {
+    const { data: pengeluaran, error } = await supabase
+      .from("keuangan")
+      .select("jumlah")
+      .eq("jenis", "pengeluaran");
+    if (error) throw error;
+    const total = (pengeluaran || []).reduce((sum, p) => sum + Number(p.jumlah || 0), 0);
+    totalPengeluaranEl.textContent = `Rp ${formatNumber(total)}`;
+  } catch (e) {
+    console.error("Gagal hitung pengeluaran:", e);
+    totalPengeluaranEl.textContent = "Rp 0";
+  }
 
-    // members preview
-    try {
-      const { data: members } = await supabase.from("members").select("id, nama, umur, rt, rw").order("created_at", { ascending: false }).limit(6);
-      if (!members || members.length === 0) membersPreviewTbody.innerHTML = `<tr><td colspan="5" class="empty">Belum ada data</td></tr>`;
-      else membersPreviewTbody.innerHTML = members.map((m,i)=>`<tr>
-        <td>${i+1}</td>
-        <td>${escapeHtml(m.nama)}</td>
-        <td>${m.umur||"-"}</td>
-        <td>${m.rt||"-"} / ${m.rw||"-"}</td>
-        <td>
-          <button class="btn" onclick="window.openMemberModal('${m.id}')">Lihat</button>
-        </td>
-      </tr>`).join("");
-    } catch (e) {
-      membersPreviewTbody.innerHTML = `<tr><td colspan="5" class="empty">Gagal memuat data</td></tr>`;
-      console.error(e);
+  // === Preview Semua Anggota (termasuk admin) ===
+  try {
+    const { data: members, error } = await supabase
+      .from("profiles")
+      .select("id, nama, tanggal_lahir, alamat, rt, rw, avatar_url, role")
+      .order("inserted_at", { ascending: false });
+
+    if (error) throw error;
+
+    if (!members || members.length === 0) {
+      membersPreviewTbody.innerHTML = `
+        <tr><td colspan="7" class="empty">Belum ada data</td></tr>`;
+      return;
     }
 
-    // expose helper to open modal
-    window.openMemberModal = openEditMember;
+    membersPreviewTbody.innerHTML = members
+      .map(
+        (m, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td><img src="${m.avatar_url || "../assets/img/default-avatar.png"}"
+                   alt="avatar" class="avatar-small"></td>
+          <td>${escapeHtml(m.nama || "-")}</td>
+          <td>${
+            m.tanggal_lahir
+              ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID")
+              : "-"
+          }</td>
+          <td>${escapeHtml(m.alamat || "-")}</td>
+          <td>${escapeHtml(m.rt || "-")}</td>
+          <td>${escapeHtml(m.rw || "-")}</td>
+        </tr>`
+      )
+      .join("");
+  } catch (e) {
+    console.error("Gagal load anggota:", e);
+    membersPreviewTbody.innerHTML = `
+      <tr><td colspan="7" class="empty">Gagal memuat data anggota</td></tr>`;
   }
+}
 
 /* ---------------- Members page (pakai tabel profiles) ---------------- */
 async function initMembersPage() {
@@ -863,6 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
 
 
 
