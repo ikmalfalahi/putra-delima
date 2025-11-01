@@ -3,67 +3,129 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Putra Delima</title>
+  <title>Putra Delima — Bersatu, Berbakti, dan Berkarya untuk Desa</title>
   <link rel="stylesheet" href="assets/css/landing.css" />
 </head>
 <body>
-  <header class="header">
-    <div class="container">
+  <!-- HEADER -->
+  <header id="siteHeader" class="site-header">
+    <div class="container header-inner">
       <div class="brand">
-        <img src="assets/img/logo-putra-delima.png" alt="Putra Delima" class="logo" />
-        <h1>Putra Delima</h1>
+        <img src="assets/img/logo-putra-delima.png" alt="logo" class="logo">
+        <span class="brand-title">PUTRA DELIMA</span>
       </div>
-      <button id="menuToggle" class="hamburger">☰</button>
-      <nav id="navMenu" class="nav">
+      <nav id="mainNav" class="nav">
         <a href="#home">Beranda</a>
         <a href="#tentang">Tentang</a>
         <a href="#visi">Visi & Misi</a>
+        <a href="#struktur">Struktur</a>
         <a href="#galeri">Galeri</a>
+        <a href="#agenda">Agenda</a>
         <a href="#kontak">Kontak</a>
         <a href="login.html" class="btn-outline">Masuk</a>
       </nav>
+      <button id="hamburger" class="hamburger">☰</button>
     </div>
   </header>
 
-  <section id="home" class="hero">
+  <!-- HERO -->
+  <section id="home" class="hero" style="background-image:url('assets/img/hero-bg.jpg')">
+    <div class="overlay"></div>
     <div class="hero-content">
-      <h2>Bersatu, Berbakti, Berkarya</h2>
-      <p>Untuk kemajuan desa dan masyarakat kita.</p>
-      <a href="daftar.html" class="btn-primary">Gabung Sekarang</a>
+      <h1>Putra Delima</h1>
+      <p class="sub">Bersatu, Berbakti, dan Berkarya untuk Desa</p>
+      <div class="cta">
+        <a href="daftar.html" class="btn-primary">Gabung Sekarang</a>
+        <a href="#tentang" class="btn-outline">Pelajari Lebih Lanjut</a>
+      </div>
     </div>
   </section>
 
+  <!-- TENTANG -->
   <section id="tentang" class="section">
-    <h3>Tentang Kami</h3>
-    <p>Putra Delima adalah komunitas lokal yang berfokus pada pemberdayaan sosial, budaya, dan ekonomi masyarakat.</p>
-  </section>
-
-  <section id="visi" class="section dark">
-    <h3>Visi & Misi</h3>
-    <ul>
-      <li>Meningkatkan kompetensi ekonomi anggota</li>
-      <li>Menyelenggarakan kegiatan budaya dan sosial</li>
-      <li>Membangun kerjasama lokal</li>
-    </ul>
-  </section>
-
-  <section id="galeri" class="section">
-    <h3>Galeri Kegiatan</h3>
-    <div class="gallery">
-      <img src="assets/img/kegiatan1.jpg" alt="kegiatan1">
-      <img src="assets/img/kegiatan2.jpg" alt="kegiatan2">
-      <img src="assets/img/kegiatan3.jpg" alt="kegiatan3">
+    <div class="container">
+      <h2>Tentang Kami</h2>
+      <p>
+        Putra Delima adalah komunitas sosial yang berdedikasi dalam membangun semangat gotong royong,
+        budaya, dan ekonomi masyarakat desa secara berkelanjutan.
+      </p>
     </div>
   </section>
 
-  <section id="kontak" class="section dark">
-    <h3>Kontak Kami</h3>
-    <p>Email: info@putradelima.org</p>
-    <p>WhatsApp: <a href="https://wa.me/6281234567890" target="_blank">+62 812 3456 7890</a></p>
+  <!-- VISI MISI -->
+  <section id="visi" class="section dark">
+    <div class="container">
+      <h2>Visi & Misi</h2>
+      <div class="cards">
+        <div class="card">
+          <h3>Visi</h3>
+          <p>Menjadi organisasi pelopor kemajuan dan kesejahteraan desa.</p>
+        </div>
+        <div class="card">
+          <h3>Misi</h3>
+          <ul>
+            <li>Meningkatkan kesejahteraan dan ekonomi warga.</li>
+            <li>Mendorong kolaborasi sosial dan budaya.</li>
+            <li>Memberdayakan generasi muda kreatif.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </section>
 
+  <!-- STRUKTUR -->
+  <section id="struktur" class="section">
+    <div class="container">
+      <h2>Struktur Organisasi</h2>
+      <img src="assets/img/struktur.jpg" alt="Struktur Organisasi" class="struktur-img">
+    </div>
+  </section>
+
+  <!-- GALERI -->
+  <section id="galeri" class="section dark">
+    <div class="container">
+      <h2>Galeri Kegiatan</h2>
+      <div class="gallery">
+        <img src="assets/img/kegiatan1.jpg" alt="Kegiatan">
+        <img src="assets/img/kegiatan2.jpg" alt="Kegiatan">
+        <img src="assets/img/kegiatan3.jpg" alt="Kegiatan">
+        <img src="assets/img/kegiatan4.jpg" alt="Kegiatan">
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENDA -->
+  <section id="agenda" class="section">
+    <div class="container">
+      <h2>Agenda Terbaru</h2>
+      <div class="agenda-list">
+        <article>
+          <h4>Pelatihan Kewirausahaan</h4>
+          <p class="meta">12 Nov 2025 • Balai Desa</p>
+        </article>
+        <article>
+          <h4>Bakti Sosial & Donor Darah</h4>
+          <p class="meta">28 Nov 2025 • Lapangan Kecamatan</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- KONTAK -->
+  <section id="kontak" class="section dark">
+    <div class="container">
+      <h2>Kontak Kami</h2>
+      <div class="contact-grid">
+        <div><strong>Alamat:</strong> Jl. Raya Putra No.1, Desa Maju</div>
+        <div><strong>Email:</strong> info@putradelima.org</div>
+        <div><strong>WhatsApp:</strong> <a href="https://wa.me/6281234567890">+62 812-3456-7890</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
   <footer class="footer">
-    © <span id="year"></span> Putra Delima
+    <p>© <span id="year"></span> Putra Delima — Semua hak dilindungi.</p>
   </footer>
 
   <script src="assets/js/landing.js"></script>
