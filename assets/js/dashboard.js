@@ -50,73 +50,127 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
   }
 
-/* ---------------- Dashboard (Terbuka untuk semua role) ---------------- */
-async function initDashboard() {
-  const totalMembersEl = document.getElementById("totalMembers");
-  const totalIuranEl = document.getElementById("totalIuran");
-  const totalPemasukanEl = document.getElementById("totalPemasukan");
-  const totalPengeluaranEl = document.getElementById("totalPengeluaran");
-  const membersPreviewTbody = document.querySelector("#membersPreview tbody");
+// dashboard.js (final stable version)
+document.addEventListener("DOMContentLoaded", () => {
+  const logoutBtns = document.querySelectorAll("#logoutBtn");
+  const toggleSidebarBtns = document.querySelectorAll("#toggleSidebar, .hamburger");
+  const sidebar = document.querySelector(".sidebar");
+  const userNameEl = document.getElementById("userName");
+  const roleLabel = document.getElementById("roleLabel");
 
-  // === Hitung Total Anggota ===
-  try {
-    const { count, error } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true });
-    if (error) throw error;
-    totalMembersEl.textContent = count ?? "0";
-  } catch (e) {
-    console.error("Gagal hitung anggota:", e);
-    totalMembersEl.textContent = "0";
-  }
+  // buat container modal + toast global
+  createUIHelpers();
 
-  // === Total Iuran ===
-  try {
-    const { data: iurans } = await supabase.from("iuran").select("jumlah");
-    const total = (iurans || []).reduce((sum, i) => sum + Number(i.jumlah || 0), 0);
-    totalIuranEl.textContent = `Rp ${formatNumber(total)}`;
-  } catch {
-    totalIuranEl.textContent = "-";
-  }
+  checkAuthAndInit();
+  bindLogout();
+  bindSidebarToggle();
 
-  // === Total Pemasukan & Pengeluaran ===
-  const jenis = ["pemasukan", "pengeluaran"];
-  for (const j of jenis) {
+  // routing halaman
+  const path = location.pathname;
+  if (path.endsWith("/admin.html")) initDashboard();
+  else if (path.endsWith("/anggota.html")) initMembersPage();
+  else if (path.endsWith("/iuran.html")) initIuranPage();
+  else if (path.endsWith("/keuangan.html")) initKeuanganPage();
+  else if (path.endsWith("/profil.html")) initProfilPage();
+
+  /* ---------- AUTH ---------- */
+  async function checkAuthAndInit() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return (window.location.href = "../login.html");
+    const userId = session.user.id;
+
     try {
-      const { data } = await supabase.from("keuangan").select("jumlah").eq("jenis", j);
-      const total = (data || []).reduce((s, x) => s + Number(x.jumlah || 0), 0);
-      if (j === "pemasukan")
-        totalPemasukanEl.textContent = `Rp ${formatNumber(total)}`;
-      else totalPengeluaranEl.textContent = `Rp ${formatNumber(total)}`;
-    } catch {
-      if (j === "pemasukan") totalPemasukanEl.textContent = "Rp 0";
-      else totalPengeluaranEl.textContent = "Rp 0";
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("nama, role")
+        .eq("id", userId)
+        .single();
+
+      if (userNameEl) userNameEl.textContent = profile?.nama || session.user.email;
+      if (roleLabel) roleLabel.textContent = profile?.role || "-";
+    } catch (e) {
+      console.error("profile fetch:", e);
     }
   }
 
-  // === Tampilkan semua anggota ===
-  try {
-    const { data: members, error } = await supabase
-      .from("profiles")
-      .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role")
-      .order("inserted_at", { ascending: false });
+  function bindLogout() {
+    logoutBtns.forEach(b => b.addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "https://ikmalfalahi.github.io/putra-delima/index.html";
+    }));
+  }
 
-    if (error) throw error;
-    if (!members?.length) {
-      membersPreviewTbody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada data</td></tr>`;
-      return;
+  function bindSidebarToggle() {
+    toggleSidebarBtns.forEach(btn => btn.addEventListener("click", () => {
+      sidebar?.classList.toggle("open");
+    }));
+  }
+
+  /* ---------- DASHBOARD ---------- */
+  async function initDashboard() {
+    const totalMembersEl = document.getElementById("totalMembers");
+    const totalIuranEl = document.getElementById("totalIuran");
+    const totalPemasukanEl = document.getElementById("totalPemasukan");
+    const totalPengeluaranEl = document.getElementById("totalPengeluaran");
+    const membersPreviewTbody = document.querySelector("#membersPreview tbody");
+
+    // total anggota
+    try {
+      const { count, error } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true });
+      if (error) throw error;
+      totalMembersEl.textContent = count ?? "0";
+    } catch {
+      totalMembersEl.textContent = "0";
     }
 
-    membersPreviewTbody.innerHTML = members
-      .map(
-        (m, i) => `
+    // total iuran
+    try {
+      const { data } = await supabase.from("iuran").select("jumlah");
+      const total = (data || []).reduce((s, v) => s + Number(v.jumlah || 0), 0);
+      totalIuranEl.textContent = `Rp ${formatNumber(total)}`;
+    } catch {
+      totalIuranEl.textContent = "-";
+    }
+
+    // total pemasukan/pengeluaran
+    for (const jenis of ["pemasukan", "pengeluaran"]) {
+      try {
+        const { data } = await supabase
+          .from("keuangan")
+          .select("jumlah")
+          .eq("jenis", jenis);
+        const total = (data || []).reduce((s, v) => s + Number(v.jumlah || 0), 0);
+        if (jenis === "pemasukan")
+          totalPemasukanEl.textContent = `Rp ${formatNumber(total)}`;
+        else totalPengeluaranEl.textContent = `Rp ${formatNumber(total)}`;
+      } catch {
+        if (jenis === "pemasukan") totalPemasukanEl.textContent = "Rp 0";
+        else totalPengeluaranEl.textContent = "Rp 0";
+      }
+    }
+
+    // preview anggota (dashboard)
+    try {
+      const { data: members } = await supabase
+        .from("profiles")
+        .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role")
+        .order("inserted_at", { ascending: false });
+
+      if (!members?.length) {
+        membersPreviewTbody.innerHTML = `<tr><td colspan="7" class="empty">Belum ada data</td></tr>`;
+        return;
+      }
+
+      membersPreviewTbody.innerHTML = members.map((m, i) => `
         <tr>
           <td>${i + 1}</td>
           <td style="text-align:center;">
             <img 
               src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
               alt="${escapeHtml(m.nama || '-')}"
-              style="width:38px;height:38px;border-radius:50%;object-fit:cover;cursor:pointer;"
+              style="width:35px;height:35px;border-radius:50%;object-fit:cover;cursor:pointer;"
               onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
             />
           </td>
@@ -125,38 +179,33 @@ async function initDashboard() {
           <td>${escapeHtml(m.blok || "-")}</td>
           <td>${escapeHtml(m.rt || "-")}</td>
           <td>${escapeHtml(m.rw || "-")}</td>
-          <td>${escapeHtml(m.role || "-")}</td>
-        </tr>`
-      )
-      .join("");
-  } catch (e) {
-    console.error("Gagal load anggota:", e);
-    membersPreviewTbody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat data anggota</td></tr>`;
+        </tr>
+      `).join("");
+    } catch (e) {
+      console.error("Gagal load anggota:", e);
+      membersPreviewTbody.innerHTML = `<tr><td colspan="7" class="empty">Gagal memuat data</td></tr>`;
+    }
   }
-}
 
-/* ---------------- Members Page ---------------- */
-async function initMembersPage() {
-  const membersTableBody = document.querySelector("#membersTable tbody");
-  const refreshBtn = document.getElementById("refreshMembers");
+  /* ---------- MEMBERS PAGE ---------- */
+  async function initMembersPage() {
+    const membersTableBody = document.querySelector("#membersTable tbody");
+    const refreshBtn = document.getElementById("refreshMembers");
 
-  async function loadMembers() {
-    membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Memuat...</td></tr>`;
-    try {
-      const { data: members, error } = await supabase
-        .from("profiles")
-        .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role, status")
-        .order("inserted_at", { ascending: false });
+    async function loadMembers() {
+      membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Memuat...</td></tr>`;
+      try {
+        const { data: members } = await supabase
+          .from("profiles")
+          .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role, status")
+          .order("inserted_at", { ascending: false });
 
-      if (error) throw error;
-      if (!members?.length) {
-        membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada data</td></tr>`;
-        return;
-      }
+        if (!members?.length) {
+          membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada data</td></tr>`;
+          return;
+        }
 
-      membersTableBody.innerHTML = members
-        .map(
-          (m, i) => `
+        membersTableBody.innerHTML = members.map((m, i) => `
           <tr>
             <td>${i + 1}</td>
             <td style="text-align:center;">
@@ -174,102 +223,407 @@ async function initMembersPage() {
             <td>${escapeHtml(m.rw || "-")}</td>
             <td>${escapeHtml(m.role || "-")}</td>
             <td>${escapeHtml(m.status || "-")}</td>
-          </tr>`
-        )
-        .join("");
-    } catch (e) {
-      console.error("Gagal memuat data anggota:", e);
-      membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat data</td></tr>`;
+          </tr>
+        `).join("");
+      } catch (e) {
+        console.error("Gagal muat anggota:", e);
+        membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat data</td></tr>`;
+      }
+    }
+
+    refreshBtn?.addEventListener("click", loadMembers);
+    await loadMembers();
+  }
+
+  /* ---------- HELPER ---------- */
+  function createUIHelpers() {
+    if (!document.getElementById("toastContainer")) {
+      const t = document.createElement("div");
+      t.id = "toastContainer";
+      t.style.position = "fixed";
+      t.style.right = "18px";
+      t.style.bottom = "18px";
+      t.style.zIndex = 9999;
+      document.body.appendChild(t);
+    }
+    if (!document.getElementById("modalRoot")) {
+      const m = document.createElement("div");
+      m.id = "modalRoot";
+      m.style.position = "fixed";
+      m.style.inset = "0";
+      m.style.display = "none";
+      m.style.alignItems = "center";
+      m.style.justifyContent = "center";
+      m.style.zIndex = 9998;
+      document.body.appendChild(m);
     }
   }
 
-  refreshBtn && refreshBtn.addEventListener("click", loadMembers);
-  await loadMembers();
-}
+  function showToast(type, msg, timeout = 4000) {
+    const c = document.getElementById("toastContainer");
+    const el = document.createElement("div");
+    el.textContent = msg;
+    el.style.padding = "10px 14px";
+    el.style.borderRadius = "10px";
+    el.style.marginTop = "8px";
+    el.style.color = type === "error" ? "#fff" : "#111";
+    el.style.background = type === "error" ? "#d32f2f" : "#f5c542";
+    c.appendChild(el);
+    setTimeout(() => el.remove(), timeout);
+  }
 
-  // === Aksi: Setuju ===
-  window.approveMember = async (id) => {
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ status: "Aktif", role: "anggota" })
-        .eq("id", id);
+  function showModal(innerHtml) {
+    const root = document.getElementById("modalRoot");
+    root.innerHTML = "";
+    root.style.display = "flex";
+    const overlay = document.createElement("div");
+    overlay.style.position = "absolute";
+    overlay.style.inset = "0";
+    overlay.style.background = "rgba(0,0,0,0.5)";
+    overlay.addEventListener("click", closeModal);
+    const dialog = document.createElement("div");
+    dialog.style.background = "#fff";
+    dialog.style.padding = "18px";
+    dialog.style.borderRadius = "10px";
+    dialog.style.maxWidth = "90%";
+    dialog.style.maxHeight = "90%";
+    dialog.style.overflow = "auto";
+    dialog.innerHTML = innerHtml;
+    root.appendChild(overlay);
+    root.appendChild(dialog);
+    return dialog;
+  }
 
-      if (error) throw error;
-      showToast("success", "Anggota berhasil disetujui!");
-      await loadMembers();
-    } catch (e) {
-      console.error(e);
-      showToast("error", "Gagal menyetujui anggota.");
+  window.closeModal = () => {
+    const root = document.getElementById("modalRoot");
+    if (root) {
+      root.style.display = "none";
+      root.innerHTML = "";
     }
   };
 
-  // === Aksi: Tolak ===
-  window.rejectMember = async (id) => {
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ status: "Ditolak" })
-        .eq("id", id);
-
-      if (error) throw error;
-      showToast("success", "Anggota berhasil ditolak.");
-      await loadMembers();
-    } catch (e) {
-      console.error(e);
-      showToast("error", "Gagal menolak anggota.");
-    }
+  window.showAvatarModal = (url, nama) => {
+    if (!url) return showToast("error", "Tidak ada avatar");
+    const html = `
+      <h3>Foto ${escapeHtml(nama)}</h3>
+      <div style="text-align:center;">
+        <img src="${url}" style="max-width:300px;max-height:300px;border-radius:10px;cursor:zoom-in;" id="zoomAvatar" />
+      </div>
+      <div style="text-align:center;margin-top:15px;">
+        <button id="closeAvatar">Tutup</button>
+      </div>`;
+    const modal = showModal(html);
+    const img = modal.querySelector("#zoomAvatar");
+    let zoom = false;
+    img.addEventListener("click", () => {
+      zoom = !zoom;
+      img.style.transform = zoom ? "scale(1.7)" : "scale(1)";
+      img.style.transition = "transform 0.3s ease";
+      img.style.cursor = zoom ? "zoom-out" : "zoom-in";
+    });
+    modal.querySelector("#closeAvatar").addEventListener("click", closeModal);
   };
 
-  // === Aksi: Hapus ===
-  window.deleteMember = async (id) => {
-    if (!confirm("Yakin ingin menghapus anggota ini?")) return;
-    try {
-      const { error } = await supabase.from("profiles").delete().eq("id", id);
-      if (error) throw error;
-      showToast("success", "Anggota berhasil dihapus.");
-      await loadMembers();
-    } catch (e) {
-      console.error(e);
-      showToast("error", "Gagal menghapus anggota.");
-    }
-  };
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+  }
 
-  // === Detail Anggota ===
-  window.openMemberDetail = async (id) => {
+  function formatNumber(n) {
+    return Number(n || 0).toLocaleString("id-ID");
+  }
+});
+// dashboard.js (final stable version)
+document.addEventListener("DOMContentLoaded", () => {
+  const logoutBtns = document.querySelectorAll("#logoutBtn");
+  const toggleSidebarBtns = document.querySelectorAll("#toggleSidebar, .hamburger");
+  const sidebar = document.querySelector(".sidebar");
+  const userNameEl = document.getElementById("userName");
+  const roleLabel = document.getElementById("roleLabel");
+
+  // buat container modal + toast global
+  createUIHelpers();
+
+  checkAuthAndInit();
+  bindLogout();
+  bindSidebarToggle();
+
+  // routing halaman
+  const path = location.pathname;
+  if (path.endsWith("/admin.html")) initDashboard();
+  else if (path.endsWith("/anggota.html")) initMembersPage();
+  else if (path.endsWith("/iuran.html")) initIuranPage();
+  else if (path.endsWith("/keuangan.html")) initKeuanganPage();
+  else if (path.endsWith("/profil.html")) initProfilPage();
+
+  /* ---------- AUTH ---------- */
+  async function checkAuthAndInit() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return (window.location.href = "../login.html");
+    const userId = session.user.id;
+
     try {
-      const { data: member, error } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
-        .select("*")
-        .eq("id", id)
+        .select("nama, role")
+        .eq("id", userId)
         .single();
 
-      if (error) throw error;
-
-      const html = `
-        <h3>Detail Anggota</h3>
-        <p><strong>Nama:</strong> ${escapeHtml(member.nama || "-")}</p>
-        <p><strong>Tanggal Lahir:</strong> ${
-          member.tanggal_lahir
-            ? new Date(member.tanggal_lahir).toLocaleDateString("id-ID")
-            : "-"
-        }</p>
-        <p><strong>RT/RW:</strong> ${member.rt || "-"} / ${member.rw || "-"}</p>
-        <p><strong>Status:</strong> ${escapeHtml(member.status || "-")}</p>
-        <p><strong>Role:</strong> ${escapeHtml(member.role || "-")}</p>
-        <div class="modal-actions"><button id="closeDetail">Tutup</button></div>`;
-
-      const modal = showModal(html);
-      modal.querySelector("#closeDetail").addEventListener("click", closeModal);
+      if (userNameEl) userNameEl.textContent = profile?.nama || session.user.email;
+      if (roleLabel) roleLabel.textContent = profile?.role || "-";
     } catch (e) {
-      console.error(e);
-      showToast("error", "Gagal membuka detail anggota.");
+      console.error("profile fetch:", e);
+    }
+  }
+
+  function bindLogout() {
+    logoutBtns.forEach(b => b.addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "https://ikmalfalahi.github.io/putra-delima/index.html";
+    }));
+  }
+
+  function bindSidebarToggle() {
+    toggleSidebarBtns.forEach(btn => btn.addEventListener("click", () => {
+      sidebar?.classList.toggle("open");
+    }));
+  }
+
+  /* ---------- DASHBOARD ---------- */
+  async function initDashboard() {
+    const totalMembersEl = document.getElementById("totalMembers");
+    const totalIuranEl = document.getElementById("totalIuran");
+    const totalPemasukanEl = document.getElementById("totalPemasukan");
+    const totalPengeluaranEl = document.getElementById("totalPengeluaran");
+    const membersPreviewTbody = document.querySelector("#membersPreview tbody");
+
+    // total anggota
+    try {
+      const { count, error } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true });
+      if (error) throw error;
+      totalMembersEl.textContent = count ?? "0";
+    } catch {
+      totalMembersEl.textContent = "0";
+    }
+
+    // total iuran
+    try {
+      const { data } = await supabase.from("iuran").select("jumlah");
+      const total = (data || []).reduce((s, v) => s + Number(v.jumlah || 0), 0);
+      totalIuranEl.textContent = `Rp ${formatNumber(total)}`;
+    } catch {
+      totalIuranEl.textContent = "-";
+    }
+
+    // total pemasukan/pengeluaran
+    for (const jenis of ["pemasukan", "pengeluaran"]) {
+      try {
+        const { data } = await supabase
+          .from("keuangan")
+          .select("jumlah")
+          .eq("jenis", jenis);
+        const total = (data || []).reduce((s, v) => s + Number(v.jumlah || 0), 0);
+        if (jenis === "pemasukan")
+          totalPemasukanEl.textContent = `Rp ${formatNumber(total)}`;
+        else totalPengeluaranEl.textContent = `Rp ${formatNumber(total)}`;
+      } catch {
+        if (jenis === "pemasukan") totalPemasukanEl.textContent = "Rp 0";
+        else totalPengeluaranEl.textContent = "Rp 0";
+      }
+    }
+
+    // preview anggota (dashboard)
+    try {
+      const { data: members } = await supabase
+        .from("profiles")
+        .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role")
+        .order("inserted_at", { ascending: false });
+
+      if (!members?.length) {
+        membersPreviewTbody.innerHTML = `<tr><td colspan="7" class="empty">Belum ada data</td></tr>`;
+        return;
+      }
+
+      membersPreviewTbody.innerHTML = members.map((m, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td style="text-align:center;">
+            <img 
+              src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
+              alt="${escapeHtml(m.nama || '-')}"
+              style="width:35px;height:35px;border-radius:50%;object-fit:cover;cursor:pointer;"
+              onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
+            />
+          </td>
+          <td>${escapeHtml(m.nama || "-")}</td>
+          <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
+          <td>${escapeHtml(m.blok || "-")}</td>
+          <td>${escapeHtml(m.rt || "-")}</td>
+          <td>${escapeHtml(m.rw || "-")}</td>
+        </tr>
+      `).join("");
+    } catch (e) {
+      console.error("Gagal load anggota:", e);
+      membersPreviewTbody.innerHTML = `<tr><td colspan="7" class="empty">Gagal memuat data</td></tr>`;
+    }
+  }
+
+  /* ---------- MEMBERS PAGE ---------- */
+  async function initMembersPage() {
+    const membersTableBody = document.querySelector("#membersTable tbody");
+    const refreshBtn = document.getElementById("refreshMembers");
+
+    async function loadMembers() {
+      membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Memuat...</td></tr>`;
+      try {
+        const { data: members } = await supabase
+          .from("profiles")
+          .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role, status")
+          .order("inserted_at", { ascending: false });
+
+        if (!members?.length) {
+          membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada data</td></tr>`;
+          return;
+        }
+
+        membersTableBody.innerHTML = members.map((m, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td style="text-align:center;">
+              <img 
+                src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
+                alt="${escapeHtml(m.nama || '-')}"
+                style="width:36px;height:36px;border-radius:50%;object-fit:cover;cursor:pointer;"
+                onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
+              />
+            </td>
+            <td>${escapeHtml(m.nama || "-")}</td>
+            <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
+            <td>${escapeHtml(m.blok || "-")}</td>
+            <td>${escapeHtml(m.rt || "-")}</td>
+            <td>${escapeHtml(m.rw || "-")}</td>
+            <td>${escapeHtml(m.role || "-")}</td>
+            <td>${escapeHtml(m.status || "-")}</td>
+          </tr>
+        `).join("");
+      } catch (e) {
+        console.error("Gagal muat anggota:", e);
+        membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat data</td></tr>`;
+      }
+    }
+
+    refreshBtn?.addEventListener("click", loadMembers);
+    await loadMembers();
+  }
+
+  /* ---------- HELPER ---------- */
+  function createUIHelpers() {
+    if (!document.getElementById("toastContainer")) {
+      const t = document.createElement("div");
+      t.id = "toastContainer";
+      t.style.position = "fixed";
+      t.style.right = "18px";
+      t.style.bottom = "18px";
+      t.style.zIndex = 9999;
+      document.body.appendChild(t);
+    }
+    if (!document.getElementById("modalRoot")) {
+      const m = document.createElement("div");
+      m.id = "modalRoot";
+      m.style.position = "fixed";
+      m.style.inset = "0";
+      m.style.display = "none";
+      m.style.alignItems = "center";
+      m.style.justifyContent = "center";
+      m.style.zIndex = 9998;
+      document.body.appendChild(m);
+    }
+  }
+
+  function showToast(type, msg, timeout = 4000) {
+    const c = document.getElementById("toastContainer");
+    const el = document.createElement("div");
+    el.textContent = msg;
+    el.style.padding = "10px 14px";
+    el.style.borderRadius = "10px";
+    el.style.marginTop = "8px";
+    el.style.color = type === "error" ? "#fff" : "#111";
+    el.style.background = type === "error" ? "#d32f2f" : "#f5c542";
+    c.appendChild(el);
+    setTimeout(() => el.remove(), timeout);
+  }
+
+  function showModal(innerHtml) {
+    const root = document.getElementById("modalRoot");
+    root.innerHTML = "";
+    root.style.display = "flex";
+    const overlay = document.createElement("div");
+    overlay.style.position = "absolute";
+    overlay.style.inset = "0";
+    overlay.style.background = "rgba(0,0,0,0.5)";
+    overlay.addEventListener("click", closeModal);
+    const dialog = document.createElement("div");
+    dialog.style.background = "#fff";
+    dialog.style.padding = "18px";
+    dialog.style.borderRadius = "10px";
+    dialog.style.maxWidth = "90%";
+    dialog.style.maxHeight = "90%";
+    dialog.style.overflow = "auto";
+    dialog.innerHTML = innerHtml;
+    root.appendChild(overlay);
+    root.appendChild(dialog);
+    return dialog;
+  }
+
+  window.closeModal = () => {
+    const root = document.getElementById("modalRoot");
+    if (root) {
+      root.style.display = "none";
+      root.innerHTML = "";
     }
   };
 
-  refreshBtn && refreshBtn.addEventListener("click", loadMembers);
-  await loadMembers();
-}
+  window.showAvatarModal = (url, nama) => {
+    if (!url) return showToast("error", "Tidak ada avatar");
+    const html = `
+      <h3>Foto ${escapeHtml(nama)}</h3>
+      <div style="text-align:center;">
+        <img src="${url}" style="max-width:300px;max-height:300px;border-radius:10px;cursor:zoom-in;" id="zoomAvatar" />
+      </div>
+      <div style="text-align:center;margin-top:15px;">
+        <button id="closeAvatar">Tutup</button>
+      </div>`;
+    const modal = showModal(html);
+    const img = modal.querySelector("#zoomAvatar");
+    let zoom = false;
+    img.addEventListener("click", () => {
+      zoom = !zoom;
+      img.style.transform = zoom ? "scale(1.7)" : "scale(1)";
+      img.style.transition = "transform 0.3s ease";
+      img.style.cursor = zoom ? "zoom-out" : "zoom-in";
+    });
+    modal.querySelector("#closeAvatar").addEventListener("click", closeModal);
+  };
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+  }
+
+  function formatNumber(n) {
+    return Number(n || 0).toLocaleString("id-ID");
+  }
+});
 
  /* ---------------- Iuran page ---------------- */
 async function initIuranPage() {
@@ -920,6 +1274,7 @@ window.showAvatarModal = function (url, nama) {
 
   modal.querySelector("#closeAvatar").addEventListener("click", closeModal);
 };
+
 
 
 
