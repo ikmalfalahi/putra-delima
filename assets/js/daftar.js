@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const email = document.getElementById("email").value.trim();
     const password = passwordInput.value.trim();
 
+    // === Validasi dasar ===
     if (!nama || !email || !password) {
       showMsg("Harap isi semua data wajib!", "red");
       return;
@@ -36,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showMsg("Mendaftarkan akun...", "gray");
 
     // === 1️⃣ Daftar akun Auth ===
-    const { data, error } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -44,18 +45,34 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     });
 
-    if (error) {
-      showMsg(`Gagal daftar: ${error.message}`, "red");
+    if (signUpError) {
+      showMsg(`Gagal daftar: ${signUpError.message}`, "red");
+      console.error(signUpError);
       return;
     }
 
-    const user = data.user;
+    const user = signUpData.user;
     if (!user) {
       showMsg("Gagal membuat akun. Coba lagi nanti.", "red");
       return;
     }
 
-    // === 2️⃣ Simpan ke tabel profiles dengan status "Pending" ===
+    // === 2️⃣ Tunggu session aktif (hindari insert tanpa auth) ===
+    let session = null;
+    for (let i = 0; i < 5; i++) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData.session) {
+        session = sessionData.session;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+
+    if (!session) {
+      console.warn("Session belum aktif, lanjut insert dengan anon role...");
+    }
+
+    // === 3️⃣ Simpan profil ke tabel "profiles" ===
     const { error: insertError } = await supabase.from("profiles").insert([
       {
         id: user.id,
@@ -66,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
         blok,
         rt,
         rw,
-        status: "Pending", // 🔥 belum aktif, menunggu persetujuan admin
+        status: "Pending", // 🔥 menunggu persetujuan admin
         role: "anggota",
         email,
       },
@@ -78,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // === 3️⃣ Berhasil daftar ===
+    // === 4️⃣ Sukses daftar ===
     showMsg("Pendaftaran berhasil! Tunggu persetujuan admin.", "green");
 
     setTimeout(() => {
