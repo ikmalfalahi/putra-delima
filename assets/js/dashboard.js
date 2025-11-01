@@ -106,65 +106,105 @@ document.addEventListener("DOMContentLoaded", () => {
     window.openMemberModal = openEditMember;
   }
 
-  /* ---------------- Members page ---------------- */
-  async function initMembersPage() {
-    const membersTableBody = document.querySelector("#membersTable tbody");
-    const refreshBtn = document.getElementById("refreshMembers");
+/* ---------------- Members page (pakai tabel profiles) ---------------- */
+async function initMembersPage() {
+  const membersTableBody = document.querySelector("#membersTable tbody");
+  const refreshBtn = document.getElementById("refreshMembers");
 
-    async function loadMembers() {
-      membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
-      try {
-        const { data: members } = await supabase.from("members").select("*").order("created_at", { ascending: false });
-        if (!members || members.length === 0) {
-          membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada data</td></tr>`;
-          return;
-        }
-        membersTableBody.innerHTML = members.map((m,i)=>`<tr>
-          <td>${i+1}</td>
-          <td>${escapeHtml(m.nama)}</td>
-          <td>${m.umur||"-"}</td>
-          <td>${m.rt||"-"} / ${m.rw||"-"}</td>
-          <td>${m.status_anggota||"-"}</td>
-          <td>
-            <button onclick="window.openMemberModal('${m.id}')">Detail</button>
-            <button onclick="approveMember('${m.id}')">Setuju</button>
-            <button onclick="rejectMember('${m.id}')">Tolak</button>
-            <button onclick="deleteMember('${m.id}')">Hapus</button>
-          </td>
-        </tr>`).join("");
-      } catch (e) {
-        membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat data</td></tr>`;
-        console.error(e);
+  async function loadMembers() {
+    membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
+    try {
+      // Ambil data dari tabel profiles
+      const { data: members, error } = await supabase
+        .from("profiles")
+        .select("id, nama, tanggal_lahir, rt, rw, role")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      if (!members || members.length === 0) {
+        membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada data anggota</td></tr>`;
+        return;
       }
+
+      membersTableBody.innerHTML = members
+        .map(
+          (m, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${escapeHtml(m.nama || "-")}</td>
+            <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
+            <td>${m.rt || "-"} / ${m.rw || "-"}</td>
+            <td>${escapeHtml(m.role || "-")}</td>
+            <td>
+              <button onclick="openMemberDetail('${m.id}')">Detail</button>
+              <button onclick="approveMember('${m.id}')">Setuju</button>
+              <button onclick="rejectMember('${m.id}')">Tolak</button>
+              <button onclick="deleteMember('${m.id}')">Hapus</button>
+            </td>
+          </tr>`
+        )
+        .join("");
+    } catch (e) {
+      console.error(e);
+      membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat data</td></tr>`;
     }
-
-    // actions
-    window.approveMember = async (id) => {
-      try {
-        await supabase.from("members").update({ status_anggota: "approved" }).eq("id", id);
-        showToast("success","Anggota disetujui.");
-        await loadMembers();
-      } catch (e) { showToast("error","Gagal setuju anggota."); }
-    };
-    window.rejectMember = async (id) => {
-      try {
-        await supabase.from("members").update({ status_anggota: "rejected" }).eq("id", id);
-        showToast("success","Anggota ditolak.");
-        await loadMembers();
-      } catch (e) { showToast("error","Gagal menolak anggota."); }
-    };
-    window.deleteMember = async (id) => {
-      if (!confirm("Hapus anggota ini?")) return;
-      try {
-        await supabase.from("members").delete().eq("id", id);
-        showToast("success","Anggota dihapus.");
-        await loadMembers();
-      } catch (e) { showToast("error","Gagal menghapus anggota."); }
-    };
-
-    refreshBtn && refreshBtn.addEventListener("click", loadMembers);
-    await loadMembers();
   }
+
+  // Tombol aksi
+  window.approveMember = async (id) => {
+    try {
+      await supabase.from("profiles").update({ role: "approved" }).eq("id", id);
+      showToast("success", "Anggota disetujui.");
+      await loadMembers();
+    } catch (e) {
+      showToast("error", "Gagal menyetujui anggota.");
+    }
+  };
+
+  window.rejectMember = async (id) => {
+    try {
+      await supabase.from("profiles").update({ role: "rejected" }).eq("id", id);
+      showToast("success", "Anggota ditolak.");
+      await loadMembers();
+    } catch (e) {
+      showToast("error", "Gagal menolak anggota.");
+    }
+  };
+
+  window.deleteMember = async (id) => {
+    if (!confirm("Hapus anggota ini?")) return;
+    try {
+      await supabase.from("profiles").delete().eq("id", id);
+      showToast("success", "Anggota dihapus.");
+      await loadMembers();
+    } catch (e) {
+      showToast("error", "Gagal menghapus anggota.");
+    }
+  };
+
+  // Fungsi lihat detail sederhana
+  window.openMemberDetail = async (id) => {
+    try {
+      const { data: member } = await supabase.from("profiles").select("*").eq("id", id).single();
+      if (!member) return showToast("error", "Data tidak ditemukan");
+      const html = `
+        <h3>Detail Anggota</h3>
+        <p><strong>Nama:</strong> ${escapeHtml(member.nama || "-")}</p>
+        <p><strong>Tanggal Lahir:</strong> ${member.tanggal_lahir ? new Date(member.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</p>
+        <p><strong>RT/RW:</strong> ${member.rt || "-"} / ${member.rw || "-"}</p>
+        <p><strong>Status:</strong> ${escapeHtml(member.role || "-")}</p>
+        <div class="modal-actions"><button id="closeDetail">Tutup</button></div>`;
+      const modal = showModal(html);
+      modal.querySelector("#closeDetail").addEventListener("click", closeModal);
+    } catch (e) {
+      showToast("error", "Gagal membuka detail anggota.");
+    }
+  };
+
+  refreshBtn && refreshBtn.addEventListener("click", loadMembers);
+  await loadMembers();
+}
 
   /* ---------------- Iuran page ---------------- */
   async function initIuranPage() {
@@ -617,5 +657,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
 
 
