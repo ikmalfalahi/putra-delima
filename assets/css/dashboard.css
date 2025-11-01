@@ -392,3 +392,23 @@ textarea {
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
 }
 
+/* === Avatar kecil di tabel === */
+.avatar-cell {
+  text-align: center;
+  width: 60px;
+}
+
+.avatar-thumb {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.avatar-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.25);
+}
+
