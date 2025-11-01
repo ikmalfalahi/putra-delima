@@ -4,22 +4,24 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin — Putra Delima</title>
-  <link rel="stylesheet" href="assets/css/dashboard.css" />
+
+  <!-- ✅ Link CSS pakai path absolut supaya tidak 404 di GitHub Pages -->
+  <link rel="stylesheet" href="https://ikmalfalahi.github.io/putra-delima/assets/css/dashboard.css" />
 </head>
 <body>
   <div id="app" class="app">
     <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <img src="../assets/img/logo-putra-delima.png" alt="logo" />
+        <img src="https://ikmalfalahi.github.io/putra-delima/assets/img/logo-putra-delima.png" alt="logo" />
         <h3>PUTRA DELIMA</h3>
       </div>
 
       <nav class="nav">
-        <a href="admin.html" class="nav-item active" data-page="dashboard">🏠 Dashboard</a>
-        <a href="anggota.html" class="nav-item" data-page="anggota">👥 Anggota</a>
-        <a href="iuran.html" class="nav-item" data-page="iuran">📄 Iuran</a>
-        <a href="keuangan.html" class="nav-item" data-page="keuangan">💰 Keuangan</a>
-        <a href="profil.html" class="nav-item" data-page="profil">👤 Profil</a>
+        <a href="admin.html" class="nav-item active">🏠 Dashboard</a>
+        <a href="anggota.html" class="nav-item">👥 Anggota</a>
+        <a href="iuran.html" class="nav-item">📄 Iuran</a>
+        <a href="keuangan.html" class="nav-item">💰 Keuangan</a>
+        <a href="profil.html" class="nav-item">👤 Profil</a>
         <button id="logoutBtn" class="nav-logout">🚪 Logout</button>
       </nav>
 
@@ -39,6 +41,7 @@
       <section class="content">
         <h2>Dashboard Admin</h2>
 
+        <!-- ✅ Kartu statistik -->
         <div class="stats-grid">
           <div class="stat card">
             <div class="stat-title">Total Anggota</div>
@@ -58,15 +61,24 @@
           </div>
         </div>
 
+        <!-- ✅ Preview tabel anggota -->
         <div class="card">
           <div class="card-head">Preview Data Anggota Terbaru</div>
           <div class="card-body">
             <table class="table" id="membersPreview">
               <thead>
-                <tr><th>No</th><th>Nama</th><th>Umur</th><th>RT/RW</th><th>Aksi</th></tr>
+                <tr>
+                  <th>No</th>
+                  <th>Avatar</th>
+                  <th>Nama</th>
+                  <th>Tanggal Lahir</th>
+                  <th>Alamat</th>
+                  <th>RT</th>
+                  <th>RW</th>
+                </tr>
               </thead>
               <tbody>
-                <tr><td colspan="5" class="empty">Memuat...</td></tr>
+                <tr><td colspan="7" class="empty">Memuat...</td></tr>
               </tbody>
             </table>
           </div>
@@ -76,7 +88,9 @@
     </main>
   </div>
 
-  <script src="../assets/js/supabase.js"></script>
-  <script src="assets/js/dashboard.js"></script>
+  <!-- ✅ Urutan penting: CDN Supabase → Koneksi → Dashboard -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://ikmalfalahi.github.io/putra-delima/assets/js/supabase.js"></script>
+  <script src="https://ikmalfalahi.github.io/putra-delima/assets/js/dashboard.js"></script>
 </body>
 </html>
