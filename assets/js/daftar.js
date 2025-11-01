@@ -4,12 +4,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const togglePass = document.getElementById("toggle-pass");
   const passwordInput = document.getElementById("password");
 
+  // === Toggle password show/hide ===
   togglePass.addEventListener("click", () => {
     const isHidden = passwordInput.type === "password";
     passwordInput.type = isHidden ? "text" : "password";
     togglePass.textContent = isHidden ? "Sembunyikan" : "Tampilkan";
   });
 
+  // === Tombol daftar diklik ===
   daftarBtn.addEventListener("click", async () => {
     const nama = document.getElementById("nama").value.trim();
     const jenis_kelamin = document.getElementById("jenis_kelamin").value;
@@ -35,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     daftarBtn.textContent = "Memproses...";
     showMsg("Mendaftarkan akun...", "gray");
 
+    // === 1️⃣ Daftar akun ke Supabase Auth ===
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -57,58 +60,41 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // ✅ jika confirm email aktif, beri pesan & hentikan
-    if (signUpData.user && !signUpData.session) {
+    // === 2️⃣ Jika Confirm Email aktif (belum verifikasi) ===
+    if (!signUpData.session) {
       showMsg("Akun berhasil dibuat! Silakan cek email untuk konfirmasi sebelum login.", "green");
       daftarBtn.disabled = false;
       daftarBtn.textContent = "Daftar";
       return;
     }
 
-    // 🔎 Cek apakah profil sudah ada
-    const { data: existing, error: checkError } = await supabase
+    // === 3️⃣ Update profil (bukan insert) ===
+    const { error: updateError } = await supabase
       .from("profiles")
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
+      .update({
+        nama,
+        jenis_kelamin,
+        tanggal_lahir,
+        agama,
+        status_hubungan,
+        blok,
+        rt,
+        rw,
+        status: "Pending",
+        role: "anggota",
+        email,
+      })
+      .eq("id", user.id);
 
-    if (checkError) {
-      console.error(checkError);
-      showMsg("Gagal memeriksa data profil.", "red");
+    if (updateError) {
+      console.error(updateError);
+      showMsg(`Gagal memperbarui profil: ${updateError.message}`, "red");
       daftarBtn.disabled = false;
       daftarBtn.textContent = "Daftar";
       return;
     }
 
-    if (!existing) {
-      const { error: insertError } = await supabase.from("profiles").insert([
-        {
-          id: user.id,
-          nama,
-          jenis_kelamin,
-          tanggal_lahir,
-          agama,
-          status_hubungan,
-          blok,
-          rt,
-          rw,
-          status: "Pending",
-          role: "anggota",
-          email,
-        },
-      ]);
-
-      if (insertError) {
-        console.error(insertError);
-        showMsg(`Gagal simpan profil: ${insertError.message}`, "red");
-        daftarBtn.disabled = false;
-        daftarBtn.textContent = "Daftar";
-        return;
-      }
-    } else {
-      console.warn("Profil sudah ada, tidak disimpan ulang.");
-    }
-
+    // === 4️⃣ Sukses daftar ===
     showMsg("Pendaftaran berhasil! Tunggu persetujuan admin.", "green");
     daftarBtn.textContent = "Selesai";
 
