@@ -131,8 +131,14 @@ async function initDashboard() {
         (m, i) => `
         <tr>
           <td>${i + 1}</td>
-          <td><img src="${m.avatar_url || "../assets/img/default-avatar.png"}"
-                   alt="avatar" class="avatar-small"></td>
+          <td style="text-align:center;">
+          <img 
+          src="${m.avatar_url || "../assets/img/default-avatar.png"}"
+          alt="${escapeHtml(m.nama || '-')}" 
+          style="width:42px;height:42px;object-fit:cover;border-radius:50%;cursor:pointer;transition:transform .2s ease;"
+          onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
+          />
+          </td>
           <td>${escapeHtml(m.nama || "-")}</td>
           <td>${
             m.tanggal_lahir
@@ -936,6 +942,7 @@ window.showAvatarModal = function (url, nama) {
 
   modal.querySelector("#closeAvatar").addEventListener("click", closeModal);
 };
+
 
 
 
