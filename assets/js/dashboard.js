@@ -383,7 +383,7 @@ async function initIuranPage() {
   await loadIuran();
 }
 
-/* ---------------- Keuangan page ---------------- */
+/* ---------------- Keuangan page (versi fix) ---------------- */
 async function initKeuanganPage() {
   const addBtn = document.getElementById("addTransactionBtn");
   const transMsg = document.getElementById("transMsg");
@@ -442,15 +442,22 @@ async function initKeuanganPage() {
     `).join("");
   }
 
-  // --- Tambah transaksi (hanya admin) ---
+  // --- Tambah transaksi (admin only) ---
   if (role === "admin" && addBtn) {
     addBtn.addEventListener("click", async () => {
       const jenis = document.getElementById("trans_jenis").value;
       const jumlah = Number(document.getElementById("trans_jumlah").value);
       const keterangan = document.getElementById("trans_keterangan").value.trim();
 
-      if (!jenis || !jumlah) {
-        transMsg.textContent = "Semua field wajib diisi.";
+      transMsg.textContent = ""; // reset pesan
+
+      // validasi dasar
+      if (jenis !== "pemasukan" && jenis !== "pengeluaran") {
+        transMsg.textContent = "Jenis harus 'pemasukan' atau 'pengeluaran'.";
+        return;
+      }
+      if (!jumlah || jumlah <= 0 || isNaN(jumlah)) {
+        transMsg.textContent = "Jumlah harus angka lebih dari 0.";
         return;
       }
 
@@ -466,9 +473,14 @@ async function initKeuanganPage() {
 
       if (error) {
         console.error(error);
-        transMsg.textContent = `Gagal menambah transaksi: ${error.message}`;
+        showToast("error", `Gagal menambah transaksi: ${error.message}`);
+        transMsg.textContent = `Gagal: ${error.message}`;
       } else {
+        showToast("success", "Transaksi berhasil ditambahkan!");
         transMsg.textContent = "Transaksi berhasil ditambahkan.";
+        document.getElementById("trans_jenis").value = "";
+        document.getElementById("trans_jumlah").value = "";
+        document.getElementById("trans_keterangan").value = "";
         await loadTrans();
       }
     });
@@ -476,7 +488,8 @@ async function initKeuanganPage() {
 
   // --- Edit transaksi (admin only) ---
   window.editTrans = async (id) => {
-    if (role !== "admin") return;
+    if (role !== "admin") return showToast("error", "Hanya admin yang bisa mengedit transaksi.");
+
     const { data: t } = await supabase.from("keuangan").select("*").eq("id", id).single();
     if (!t) return alert("Data tidak ditemukan");
 
@@ -484,23 +497,38 @@ async function initKeuanganPage() {
     const jumlah = prompt("Ubah jumlah:", t.jumlah);
     const ket = prompt("Ubah keterangan:", t.keterangan || "");
 
-    if (!jenis || !jumlah) return;
+    if (!jenis || (jenis !== "pemasukan" && jenis !== "pengeluaran")) {
+      showToast("error", "Jenis tidak valid.");
+      return;
+    }
+    if (!jumlah || jumlah <= 0 || isNaN(jumlah)) {
+      showToast("error", "Jumlah harus angka > 0.");
+      return;
+    }
 
-    await supabase.from("keuangan").update({
-      jenis,
-      jumlah: Number(jumlah),
-      keterangan: ket,
-    }).eq("id", id);
+    const { error } = await supabase
+      .from("keuangan")
+      .update({ jenis, jumlah: Number(jumlah), keterangan: ket })
+      .eq("id", id);
 
-    await loadTrans();
+    if (error) showToast("error", error.message);
+    else {
+      showToast("success", "Transaksi berhasil diperbarui.");
+      await loadTrans();
+    }
   };
 
   // --- Hapus transaksi (admin only) ---
   window.deleteTrans = async (id) => {
-    if (role !== "admin") return;
+    if (role !== "admin") return showToast("error", "Hanya admin yang bisa menghapus transaksi.");
     if (!confirm("Yakin ingin menghapus transaksi ini?")) return;
-    await supabase.from("keuangan").delete().eq("id", id);
-    await loadTrans();
+
+    const { error } = await supabase.from("keuangan").delete().eq("id", id);
+    if (error) showToast("error", error.message);
+    else {
+      showToast("success", "Transaksi berhasil dihapus.");
+      await loadTrans();
+    }
   };
 
   await loadTrans();
@@ -835,6 +863,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
 
 
 
