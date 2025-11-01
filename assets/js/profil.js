@@ -1,6 +1,7 @@
 // === Konfigurasi Supabase ===
 const SUPABASE_URL = "https://sosjorfcrsktcitaawyi.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvc2pvcmZjcnNrdGNpdGFhd3lpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NjcyMjcsImV4cCI6MjA3NzU0MzIyN30.4u1fZs46awWRQve_lfQGHE0bxP4Kqbv8qwhDtBogBUQ";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvc2pvcmZjcnNrdGNpdGFhd3lpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NjcyMjcsImV4cCI6MjA3NzU0MzIyN30.4u1fZs46awWRQve_lfQGHE0bxP4Kqbv8qwhDtBogBUQ";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // === Ambil Elemen HTML ===
@@ -18,9 +19,10 @@ const fields = {
   agama: document.getElementById("agama"),
   tanggal_lahir: document.getElementById("tanggal_lahir"),
   jenis_kelamin: document.getElementById("jenis_kelamin"),
-  alamat: document.getElementById("alamat"),
   rt: document.getElementById("rt"),
   rw: document.getElementById("rw"),
+  blok: document.getElementById("blok"),
+  status_hubungan: document.getElementById("status_hubungan"),
 };
 
 let userId = null;
@@ -31,7 +33,7 @@ async function checkSession() {
   const { data, error } = await supabaseClient.auth.getSession();
   if (error || !data.session) {
     alert("Sesi login berakhir. Silakan login kembali.");
-    window.location.href = "../login.html";
+    window.location.href = "https://ikmalfalahi.github.io/putra-delima/login.html";
     return;
   }
 
@@ -39,7 +41,8 @@ async function checkSession() {
   userId = session.user.id;
   userEmail = session.user.email;
   userName.textContent = session.user.email.split("@")[0];
-  loadProfile();
+
+  await loadProfile();
 }
 
 // === Muat data profil dari Supabase ===
@@ -61,15 +64,16 @@ async function loadProfile() {
   fields.agama.value = data.agama || "";
   fields.tanggal_lahir.value = data.tanggal_lahir || "";
   fields.jenis_kelamin.value = data.jenis_kelamin || "";
-  fields.alamat.value = data.alamat || "";
   fields.rt.value = data.rt || "";
   fields.rw.value = data.rw || "";
+  fields.blok.value = data.blok || "";
+  fields.status_hubungan.value = data.status_hubungan || "";
   statusAnggota.textContent = data.status || "Aktif";
 }
 
 // === Aktifkan mode edit ===
 editBtn.addEventListener("click", () => {
-  Object.values(fields).forEach(el => (el.disabled = false));
+  Object.values(fields).forEach((el) => (el.disabled = false));
 });
 
 // === Simpan perubahan profil ===
@@ -79,9 +83,10 @@ simpanBtn.addEventListener("click", async () => {
     agama: fields.agama.value,
     tanggal_lahir: fields.tanggal_lahir.value,
     jenis_kelamin: fields.jenis_kelamin.value,
-    alamat: fields.alamat.value,
     rt: fields.rt.value,
     rw: fields.rw.value,
+    blok: fields.blok.value,
+    status_hubungan: fields.status_hubungan.value,
   };
 
   const { error } = await supabaseClient.from("profiles").update(updateData).eq("id", userId);
@@ -91,7 +96,7 @@ simpanBtn.addEventListener("click", async () => {
     return;
   }
 
-  Object.values(fields).forEach(el => (el.disabled = true));
+  Object.values(fields).forEach((el) => (el.disabled = true));
   alert("Profil berhasil diperbarui!");
 });
 
@@ -102,19 +107,21 @@ fotoInput.addEventListener("change", async () => {
   const file = fotoInput.files[0];
   if (!file) return;
 
-  const fileName = `${userId}_${Date.now()}.jpg`;
+  // ✅ Pastikan bucket 'avatars' sudah ada dan PUBLIC
+  const fileExt = file.name.split(".").pop();
+  const filePath = `${userId}_${Date.now()}.${fileExt}`;
 
   const { error: uploadError } = await supabaseClient.storage
     .from("avatars")
-    .upload(fileName, file, { upsert: true });
+    .upload(filePath, file, { upsert: true });
 
   if (uploadError) {
     console.error(uploadError);
-    alert("Gagal upload foto.");
+    alert("Gagal upload foto. Pastikan bucket 'avatars' sudah dibuat & public.");
     return;
   }
 
-  const { data: publicURL } = supabaseClient.storage.from("avatars").getPublicUrl(fileName);
+  const { data: publicURL } = supabaseClient.storage.from("avatars").getPublicUrl(filePath);
   const imageUrl = publicURL.publicUrl;
 
   fotoPreview.src = imageUrl;
@@ -127,9 +134,8 @@ fotoInput.addEventListener("change", async () => {
 const logoutBtn = document.getElementById("logoutBtn");
 logoutBtn.addEventListener("click", async () => {
   await supabaseClient.auth.signOut();
-  window.location.href = "../login.html";
+  window.location.href = "https://ikmalfalahi.github.io/putra-delima/login.html";
 });
 
 // === Jalankan ===
 checkSession();
-
