@@ -115,7 +115,7 @@ async function initDashboard() {
   try {
     const { data: members, error } = await supabase
       .from("profiles")
-      .select("id, nama, tanggal_lahir, alamat, rt, rw, avatar_url, role")
+      .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role")
       .order("inserted_at", { ascending: false });
 
     if (error) throw error;
@@ -139,7 +139,7 @@ async function initDashboard() {
               ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID")
               : "-"
           }</td>
-          <td>${escapeHtml(m.alamat || "-")}</td>
+          <td>${escapeHtml(m.blok || "-")}</td>
           <td>${escapeHtml(m.rt || "-")}</td>
           <td>${escapeHtml(m.rw || "-")}</td>
         </tr>`
@@ -909,6 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
 
 
 
