@@ -4,8 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Profil — Putra Delima</title>
-
-  <!-- ✅ Gunakan path absolut agar tidak 404 di GitHub Pages -->
   <link rel="stylesheet" href="https://ikmalfalahi.github.io/putra-delima/assets/css/dashboard.css" />
   <link rel="stylesheet" href="https://ikmalfalahi.github.io/putra-delima/assets/css/profil.css" />
 </head>
@@ -13,7 +11,6 @@
   <div class="app">
     <aside class="sidebar">
       <div class="brand">
-        <!-- ✅ Logo absolut -->
         <img src="https://ikmalfalahi.github.io/putra-delima/assets/img/logo-putra-delima.png" alt="logo" />
         <h3>PUTRA DELIMA</h3>
       </div>
@@ -39,40 +36,23 @@
         <div class="card profil-card">
           <div class="profil-container">
             <div class="foto-section">
-              <!-- ✅ Foto default absolut -->
               <img id="fotoPreview" src="https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png" alt="Foto Profil" />
               <button id="uploadBtn">Ganti Foto</button>
               <input type="file" id="fotoInput" accept="image/*" hidden />
             </div>
 
             <div class="form-section">
-              <div class="form-group">
-                <label>Nama</label>
-                <input type="text" id="nama" placeholder="Tulis Nama" disabled />
-              </div>
-
-              <div class="form-group">
-                <label>Agama</label>
-                <input type="text" id="agama" placeholder="Agama" disabled />
-              </div>
-
-              <div class="form-group">
-                <label>Tanggal Lahir</label>
-                <input type="date" id="tanggal_lahir" disabled />
-              </div>
-
-              <div class="form-group">
-                <label>Jenis Kelamin</label>
+              <div class="form-group"><label>Nama</label><input type="text" id="nama" disabled /></div>
+              <div class="form-group"><label>Agama</label><input type="text" id="agama" disabled /></div>
+              <div class="form-group"><label>Tanggal Lahir</label><input type="date" id="tanggal_lahir" disabled /></div>
+              <div class="form-group"><label>Jenis Kelamin</label>
                 <select id="jenis_kelamin" disabled>
                   <option value="">Pilih</option>
                   <option value="Laki-laki">Laki-laki</option>
                   <option value="Perempuan">Perempuan</option>
                 </select>
               </div>
-
-              <!-- ✅ Tambahan field baru -->
-              <div class="form-group">
-                <label>Status Hubungan</label>
+              <div class="form-group"><label>Status Hubungan</label>
                 <select id="status_hubungan" disabled>
                   <option value="">Pilih</option>
                   <option value="Belum Menikah">Belum Menikah</option>
@@ -80,20 +60,13 @@
                   <option value="Cerai">Cerai</option>
                 </select>
               </div>
-
-              <div class="form-group">
-                <label>Blok</label>
-                <input type="text" id="blok" placeholder="Blok (contoh: A)" disabled />
-              </div>
-
-              <div class="form-group rt-rw">
-                <label>RT/RW</label>
+              <div class="form-group"><label>Blok</label><input type="text" id="blok" disabled /></div>
+              <div class="form-group rt-rw"><label>RT/RW</label>
                 <div class="rt-rw-box">
-                  <input type="text" id="rt" placeholder="RT" disabled />
-                  <input type="text" id="rw" placeholder="RW" disabled />
+                  <input type="text" id="rt" disabled />
+                  <input type="text" id="rw" disabled />
                 </div>
               </div>
-
               <div class="status-group">
                 <label>Status Anggota</label>
                 <span id="statusAnggota" class="aktif">Aktif</span>
@@ -109,13 +82,8 @@
     </main>
   </div>
 
-  <!-- ✅ CDN Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- ✅ Supabase config (berisi createClient) -->
   <script src="https://ikmalfalahi.github.io/putra-delima/assets/js/supabase.js"></script>
-
-  <!-- ✅ Script profil (hanya pakai instance global) -->
   <script src="https://ikmalfalahi.github.io/putra-delima/assets/js/profil.js"></script>
 </body>
 </html>
