@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Keuangan — Putra Delima</title>
-  <link rel="stylesheet" href="assets/css/dashboard.css" />
+  <link rel="stylesheet" href="https://ikmalfalahi.github.io/putra-delima/assets/css/dashboard.css" />
 </head>
 <body>
   <div class="app">
     <aside class="sidebar">
       <div class="brand">
-        <img src="../assets/img/logo-putra-delima.png" alt="logo" />
+        <img src="https://ikmalfalahi.github.io/putra-delima/assets/img/logo-putra-delima.png" alt="logo" />
         <h3>PUTRA DELIMA</h3>
       </div>
       <nav class="nav">
@@ -32,20 +32,22 @@
       <section class="content">
         <h2>Manajemen Keuangan</h2>
 
-        <div class="card">
+        <!-- ✅ Form tambah transaksi (hanya untuk admin) -->
+        <div class="card admin-only">
           <div class="card-head">Tambah Transaksi</div>
           <div class="card-body">
             <div class="form-row">
-              <select id="trans_type">
+              <select id="trans_jenis">
+                <option value="">Pilih Jenis</option>
                 <option value="pemasukan">Pemasukan</option>
                 <option value="pengeluaran">Pengeluaran</option>
               </select>
             </div>
             <div class="form-row">
-              <input type="number" id="trans_amount" placeholder="Jumlah (Rp)">
+              <input type="number" id="trans_jumlah" placeholder="Jumlah (Rp)" />
             </div>
             <div class="form-row">
-              <input type="text" id="trans_keterangan" placeholder="Keterangan">
+              <input type="text" id="trans_keterangan" placeholder="Keterangan" />
             </div>
             <div class="form-row">
               <button id="addTransactionBtn">Tambah</button>
@@ -54,17 +56,30 @@
           </div>
         </div>
 
+        <!-- ✅ Tabel daftar transaksi -->
         <div class="card">
           <div class="card-head">Tabel Transaksi</div>
           <div class="card-body">
             <table class="table" id="transTable">
-              <thead><tr><th>No</th><th>Tipe</th><th>Jumlah</th><th>Keterangan</th><th>Tanggal</th><th>Aksi</th></tr></thead>
-              <tbody><tr><td colspan="6" class="empty">Memuat...</td></tr></tbody>
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Jenis</th>
+                  <th>Jumlah</th>
+                  <th>Keterangan</th>
+                  <th>Tanggal</th>
+                  <th class="admin-only">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="6" class="empty">Memuat...</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
 
-        <div class="table-header">
+        <!-- ✅ Tombol ekspor (hanya admin) -->
+        <div class="table-header admin-only">
           <h2>Data Keuangan</h2>
           <div class="action-btns">
             <button id="exportCSV" class="btn-export">Ekspor CSV</button>
@@ -75,10 +90,11 @@
     </main>
   </div>
 
-  <script src="../assets/js/supabase.js"></script>
-  <!-- jsPDF dan AutoTable -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <script src="assets/js/dashboard.js"></script>
+  <!-- ✅ Supabase + jsPDF -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://ikmalfalahi.github.io/putra-delima/assets/js/supabase.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://ikmalfalahi.github.io/putra-delima/assets/js/dashboard.js"></script>
 </body>
 </html>
