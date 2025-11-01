@@ -257,7 +257,11 @@ async function initIuranPage() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return (window.location.href = "../login.html");
   const userId = session.user.id;
-  const { data: profile } = await supabase.from("profiles").select("role, nama").eq("id", userId).single();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, nama")
+    .eq("id", userId)
+    .single();
   const role = profile?.role || "anggota";
 
   // --- Sembunyikan elemen admin-only ---
@@ -277,47 +281,58 @@ async function initIuranPage() {
   async function loadIuran() {
     iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Memuat...</td></tr>`;
 
-    let query = supabase
+    // Ambil semua iuran
+    let { data: iurans, error } = await supabase
       .from("iuran")
-      .select("*, profiles:nama(user_id)")
+      .select("*")
       .order("inserted_at", { ascending: false });
 
-    // Anggota hanya bisa melihat iuran miliknya
-    if (role !== "admin") query = query.eq("user_id", userId);
-
-    const { data: iurans, error } = await query;
     if (error) {
       console.error(error);
       iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat</td></tr>`;
       return;
     }
 
+    // Filter jika bukan admin
+    if (role !== "admin") {
+      iurans = iurans.filter(u => u.user_id === userId);
+    }
+
+    // Ambil nama dari profiles
+    const userIds = [...new Set(iurans.map(u => u.user_id).filter(Boolean))];
+    const { data: users } = await supabase
+      .from("profiles")
+      .select("id, nama")
+      .in("id", userIds);
+
+    const userMap = {};
+    (users || []).forEach(u => (userMap[u.id] = u.nama));
+
     if (!iurans || iurans.length === 0) {
       iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada data</td></tr>`;
       return;
     }
 
-    iuranTableBody.innerHTML = iurans.map((u, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${escapeHtml(u.profiles?.nama || "-")}</td>
-        <td>${escapeHtml(u.keterangan || "-")}</td>
-        <td>Rp ${formatNumber(u.jumlah)}</td>
-        <td>${u.tanggal ? new Date(u.tanggal).toLocaleDateString("id-ID") : "-"}</td>
-        <td>${u.status || "-"}</td>
-        <td>
-          ${u.bukti_url
-            ? `<a href="${u.bukti_url}" target="_blank">📎 Lihat</a>`
-            : `<span>-</span>`}
-        </td>
-        <td>
-          ${role === "admin"
-            ? `<button onclick="markIuranPaid('${u.id}')">Lunas</button>
-               <button onclick="deleteIuran('${u.id}')">Hapus</button>`
-            : ""}
-        </td>
-      </tr>
-    `).join("");
+    iuranTableBody.innerHTML = iurans
+      .map(
+        (u, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${escapeHtml(userMap[u.user_id] || "-")}</td>
+          <td>${escapeHtml(u.keterangan || "-")}</td>
+          <td>Rp ${formatNumber(u.jumlah)}</td>
+          <td>${u.tanggal ? new Date(u.tanggal).toLocaleDateString("id-ID") : "-"}</td>
+          <td>${u.status || "-"}</td>
+          <td>${u.bukti_url ? `<a href="${u.bukti_url}" target="_blank">📎 Lihat</a>` : "-"}</td>
+          <td>
+            ${role === "admin"
+              ? `<button onclick="markIuranPaid('${u.id}')">Lunas</button>
+                 <button onclick="deleteIuran('${u.id}')">Hapus</button>`
+              : ""}
+          </td>
+        </tr>`
+      )
+      .join("");
   }
 
   // --- Tambah Iuran (Admin Only) ---
@@ -352,14 +367,15 @@ async function initIuranPage() {
   }
 
   // --- Aksi Admin ---
-  window.markIuranPaid = async (id) => {
+  window.markIuranPaid = async id => {
     if (role !== "admin") return;
     await supabase.from("iuran").update({ status: "lunas" }).eq("id", id);
     await loadIuran();
   };
 
-  window.deleteIuran = async (id) => {
+  window.deleteIuran = async id => {
     if (role !== "admin") return;
+    if (!confirm("Yakin ingin menghapus iuran ini?")) return;
     await supabase.from("iuran").delete().eq("id", id);
     await loadIuran();
   };
@@ -489,38 +505,61 @@ async function initIuranPage() {
     } catch (e) { console.error(e); showToast("error","Gagal buka modal"); }
   }
 
-  // open iuran modal
-  async function openEditIuran(id) {
-    try {
-      const { data: iuran, error } = await supabase.from("iuran").select("*").eq("id", id).single();
-      if (error || !iuran) return showToast("error","Gagal ambil data iuran");
-      // fetch members for select
-      const { data: members } = await supabase.from("members").select("id,nama").order("nama");
-      const options = (members||[]).map(m=>`<option value="${m.id}" ${m.id===iuran.member_id?'selected':''}>${escapeHtml(m.nama)}</option>`).join("");
-      const html = `
-        <h3>Edit Iuran</h3>
-        <div class="modal-form">
-          <label>Nama <input id="modal_iuran_nama" value="${escapeHtml(iuran.nama||'')}" /></label>
-          <label>Jumlah <input id="modal_iuran_jumlah" type="number" value="${iuran.jumlah||0}" /></label>
-          <label>Member <select id="modal_iuran_member"><option value="">Pilih</option>${options}</select></label>
-          <label>Status <select id="modal_iuran_status"><option value="belum">belum</option><option value="lunas">lunas</option></select></label>
-          <div class="modal-actions"><button id="modalSaveIuran">Simpan</button><button id="modalCancelIuran">Batal</button></div>
-        </div>`;
-      const modal = showModal(html);
-      modal.querySelector("#modalCancelIuran").addEventListener("click", ()=>closeModal());
-      modal.querySelector("#modalSaveIuran").addEventListener("click", async ()=>{
-        const nama = document.getElementById("modal_iuran_nama").value.trim();
-        const jumlah = Number(document.getElementById("modal_iuran_jumlah").value);
-        const member = document.getElementById("modal_iuran_member").value;
-        const status = document.getElementById("modal_iuran_status").value;
-        if (!nama || !jumlah || !member) return alert("Semua field wajib diisi");
-        try {
-          const { error } = await supabase.from("iuran").update({ nama, jumlah, member_id: member, status }).eq("id", id);
-          if (error) showToast("error", error.message); else { showToast("success","Iuran diperbarui"); closeModal(); reloadCurrentPage(); }
-        } catch (e) { showToast("error","Gagal simpan"); }
-      });
-    } catch (e) { console.error(e); showToast("error","Gagal buka modal"); }
+ // open iuran modal
+async function openEditIuran(id) {
+  try {
+    const { data: iuran, error } = await supabase.from("iuran").select("*").eq("id", id).single();
+    if (error || !iuran) return showToast("error", "Gagal ambil data iuran");
+
+    const { data: users } = await supabase.from("profiles").select("id,nama").eq("role", "anggota");
+    const options = (users || [])
+      .map(u => `<option value="${u.id}" ${u.id === iuran.user_id ? "selected" : ""}>${escapeHtml(u.nama)}</option>`)
+      .join("");
+
+    const html = `
+      <h3>Edit Iuran</h3>
+      <div class="modal-form">
+        <label>Anggota <select id="modal_iuran_user"><option value="">Pilih</option>${options}</select></label>
+        <label>Keterangan <input id="modal_iuran_ket" value="${escapeHtml(iuran.keterangan || "")}" /></label>
+        <label>Jumlah <input id="modal_iuran_jumlah" type="number" value="${iuran.jumlah || 0}" /></label>
+        <label>Status <select id="modal_iuran_status">
+          <option value="belum" ${iuran.status === "belum" ? "selected" : ""}>Belum</option>
+          <option value="lunas" ${iuran.status === "lunas" ? "selected" : ""}>Lunas</option>
+        </select></label>
+        <div class="modal-actions">
+          <button id="modalSaveIuran">Simpan</button>
+          <button id="modalCancelIuran">Batal</button>
+        </div>
+      </div>`;
+
+    const modal = showModal(html);
+    modal.querySelector("#modalCancelIuran").addEventListener("click", closeModal);
+    modal.querySelector("#modalSaveIuran").addEventListener("click", async () => {
+      const user_id = document.getElementById("modal_iuran_user").value;
+      const jumlah = Number(document.getElementById("modal_iuran_jumlah").value);
+      const keterangan = document.getElementById("modal_iuran_ket").value.trim();
+      const status = document.getElementById("modal_iuran_status").value;
+
+      if (!user_id || !jumlah || !keterangan)
+        return alert("Semua field wajib diisi");
+
+      const { error } = await supabase
+        .from("iuran")
+        .update({ user_id, jumlah, keterangan, status })
+        .eq("id", id);
+
+      if (error) showToast("error", error.message);
+      else {
+        showToast("success", "Iuran diperbarui");
+        closeModal();
+        reloadCurrentPage();
+      }
+    });
+  } catch (e) {
+    console.error(e);
+    showToast("error", "Gagal membuka modal iuran");
   }
+}
 
   // open transaction modal
   async function openEditTrans(id) {
@@ -756,6 +795,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
 
 
 
