@@ -179,15 +179,15 @@ membersPreviewTbody.innerHTML = members
     (m, i) => `
       <tr>
         <td>${i + 1}</td>
-        <td>
-          <img 
-            src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
-            alt="${m.nama}" 
-            class="avatar-thumb"
-            onclick="showAvatarModal('${m.avatar_url || ''}', '${m.nama}')"
-          />
-          ${escapeHtml(m.nama || "-")}
+        <td class="avatar-cell">
+        <img 
+        src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
+        alt="${m.nama}" 
+        class="avatar-thumb"
+        onclick="showAvatarModal('${m.avatar_url || ''}', '${m.nama}')"
+        />
         </td>
+        <td>${escapeHtml(m.nama || "-")}</td>
         <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
         <td>${escapeHtml(m.blok || "-")}</td>
         <td>${m.rt || "-"} / ${m.rw || "-"}</td>
@@ -918,3 +918,4 @@ window.showAvatarModal = function (url, nama) {
   const modal = showModal(html);
   modal.querySelector("#closeAvatar").addEventListener("click", closeModal);
 };
+
