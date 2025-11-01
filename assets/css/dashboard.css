@@ -392,23 +392,22 @@ textarea {
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
 }
 
-/* === Avatar kecil di tabel === */
+/* Avatar di tabel dashboard */
 .avatar-cell {
   text-align: center;
-  width: 60px;
 }
 
 .avatar-thumb {
-  width: 45px;
-  height: 45px;
+  width: 40px;           /* ukuran kecil tapi tetap jelas */
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .avatar-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.25);
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.25);
 }
 
