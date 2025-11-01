@@ -383,88 +383,159 @@ async function initIuranPage() {
   await loadIuran();
 }
 
-  /* ---------------- Keuangan page ---------------- */
-  async function initKeuanganPage() {
-    const addBtn = document.getElementById("addTransactionBtn");
-    const transMsg = document.getElementById("transMsg");
-    const transTableBody = document.querySelector("#transTable tbody");
+/* ---------------- Keuangan page (versi sesuai tabel kamu) ---------------- */
+async function initKeuanganPage() {
+  const addBtn = document.getElementById("addTransactionBtn");
+  const transMsg = document.getElementById("transMsg");
+  const transTableBody = document.querySelector("#transTable tbody");
 
-    async function loadTrans() {
-      transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
-      try {
-        const { data: trans } = await supabase.from("transactions").select("*").order("created_at",{ascending:false});
-        if (!trans || trans.length===0) { transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada transaksi</td></tr>`; return; }
-        transTableBody.innerHTML = trans.map((t,i)=>`<tr>
-          <td>${i+1}</td><td>${escapeHtml(t.type)}</td><td>Rp ${formatNumber(t.amount)}</td><td>${escapeHtml(t.keterangan||"-")}</td><td>${new Date(t.created_at).toLocaleString()}</td>
-          <td><button onclick="window.openTransModal('${t.id}')">Edit</button><button onclick="deleteTrans('${t.id}')">Hapus</button></td>
-        </tr>`).join("");
-      } catch (e) { transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat</td></tr>`; console.error(e); }
-    }
+  // === Ambil user login & role ===
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return (window.location.href = "../login.html");
+  const userId = session.user.id;
+  const { data: profile } = await supabase.from("profiles").select("role, nama").eq("id", userId).single();
+  const role = profile?.role || "anggota";
 
-    addBtn.addEventListener("click", async () => {
-      const type = document.getElementById("trans_type").value;
-      const amount = Number(document.getElementById("trans_amount").value);
-      const keterangan = document.getElementById("trans_keterangan").value.trim();
-      if (!amount || !type) { transMsg.textContent = "Field tidak lengkap"; return; }
-      if (isNaN(amount) || amount<=0){ transMsg.textContent="Jumlah harus > 0"; return; }
-      transMsg.textContent = "Menyimpan...";
-      const { error } = await supabase.from("transactions").insert([{ type, amount, keterangan }]);
-      if (error) { transMsg.textContent=`Gagal: ${error.message}`; showToast("error", error.message); }
-      else { transMsg.textContent="Tersimpan."; showToast("success","Transaksi tersimpan"); document.getElementById("trans_amount").value=""; document.getElementById("trans_keterangan").value=""; await loadTrans(); }
-    });
-
-    window.deleteTrans = async (id) => {
-      if (!confirm("Hapus transaksi ini?")) return;
-      try { await supabase.from("transactions").delete().eq("id", id); showToast("success","Transaksi dihapus"); await loadTrans(); } catch (e) { showToast("error","Gagal hapus"); }
-    };
-
-    window.openTransModal = openEditTrans;
-    await loadTrans();
+  // === Sembunyikan fitur admin jika role bukan admin ===
+  if (role !== "admin") {
+    document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
   }
 
-  /* ---------------- Profil page ---------------- */
-  async function initProfilPage() {
-    const saveBtn = document.getElementById("saveProfileBtn");
-    const profileMsg = document.getElementById("profileMsg");
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session.user.id;
-
+  // === Load Data Keuangan ===
+  async function loadKeuangan() {
+    transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
     try {
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", userId).single();
-      if (profile) {
-        document.getElementById("profile_nama").value = profile.nama || "";
-        document.getElementById("profile_email").value = session.user.email || "";
-        document.getElementById("profile_blok").value = profile.blok || "";
-        document.getElementById("profile_rt").value = profile.rt || "";
-        document.getElementById("profile_rw").value = profile.rw || "";
-      }
-    } catch (e) { console.error(e); }
+      let query = supabase
+        .from("keuangan")
+        .select("*, profiles:nama(dibuat_oleh)")
+        .order("inserted_at", { ascending: false });
 
-    saveBtn.addEventListener("click", async () => {
-      profileMsg.textContent = "Menyimpan...";
-      const nama = document.getElementById("profile_nama").value.trim();
-      const blok = document.getElementById("profile_blok").value.trim();
-      const rt = document.getElementById("profile_rt").value.trim();
-      const rw = document.getElementById("profile_rw").value.trim();
-      const avatarFile = document.getElementById("profile_avatar").files?.[0];
+      const { data: trans, error } = await query;
+      if (error) throw error;
 
-      if (!nama) { profileMsg.textContent="Nama wajib diisi"; return; }
-      let avatar_url = null;
-      if (avatarFile) {
-        const fileExt = avatarFile.name.split(".").pop();
-        const filePath = `avatars/${userId}.${fileExt}`;
-        const { error: uploadErr } = await supabase.storage.from("avatars").upload(filePath, avatarFile, { upsert: true });
-        if (uploadErr) { profileMsg.textContent=`Gagal upload: ${uploadErr.message}`; showToast("error", uploadErr.message); return; }
-        const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-        avatar_url = publicData?.publicUrl ?? null;
+      if (!trans || trans.length === 0) {
+        transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada transaksi</td></tr>`;
+        return;
       }
 
-      const updateObj = { nama, blok, rt, rw };
-      if (avatar_url) updateObj.avatar_url = avatar_url;
-      const { error } = await supabase.from("profiles").update(updateObj).eq("id", userId);
-      if (error) { profileMsg.textContent=`Gagal: ${error.message}`; showToast("error", error.message); } else { profileMsg.textContent="Profil tersimpan."; showToast("success","Profil tersimpan"); }
+      transTableBody.innerHTML = trans
+        .map(
+          (t, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${escapeHtml(t.jenis || "-")}</td>
+            <td>Rp ${formatNumber(t.jumlah || 0)}</td>
+            <td>${escapeHtml(t.keterangan || "-")}</td>
+            <td>${t.tanggal ? new Date(t.tanggal).toLocaleDateString("id-ID") : "-"}</td>
+            <td class="admin-only">
+              ${role === "admin"
+                ? `<button onclick="window.openTransModal('${t.id}')">Edit</button>
+                   <button onclick="deleteTrans('${t.id}')">Hapus</button>`
+                : "-"}
+            </td>
+          </tr>`
+        )
+        .join("");
+    } catch (e) {
+      console.error(e);
+      transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat data</td></tr>`;
+    }
+  }
+
+  // === Tambah Data Keuangan (Admin Only) ===
+  if (role === "admin" && addBtn) {
+    addBtn.addEventListener("click", async () => {
+      const jenis = document.getElementById("trans_jenis").value;
+      const jumlah = Number(document.getElementById("trans_jumlah").value);
+      const keterangan = document.getElementById("trans_keterangan").value.trim();
+
+      if (!jenis || !jumlah || jumlah <= 0) {
+        transMsg.textContent = "Semua field wajib diisi dengan benar.";
+        return;
+      }
+
+      transMsg.textContent = "Menyimpan...";
+      try {
+        const { error } = await supabase.from("keuangan").insert([
+          {
+            jenis,
+            jumlah,
+            keterangan,
+            tanggal: new Date().toISOString().split("T")[0],
+            dibuat_oleh: userId,
+          },
+        ]);
+        if (error) throw error;
+        transMsg.textContent = "Transaksi berhasil ditambahkan.";
+        await loadKeuangan();
+      } catch (e) {
+        transMsg.textContent = `Gagal: ${e.message}`;
+        console.error(e);
+      }
     });
   }
+
+  // === Aksi Edit ===
+  window.openTransModal = async (id) => {
+    if (role !== "admin") return;
+    try {
+      const { data: tr } = await supabase.from("keuangan").select("*").eq("id", id).single();
+      if (!tr) return showToast("error", "Data tidak ditemukan");
+
+      const html = `
+        <h3>Edit Transaksi</h3>
+        <div class="modal-form">
+          <label>Jenis
+            <select id="modal_jenis">
+              <option value="pemasukan" ${tr.jenis === "pemasukan" ? "selected" : ""}>Pemasukan</option>
+              <option value="pengeluaran" ${tr.jenis === "pengeluaran" ? "selected" : ""}>Pengeluaran</option>
+            </select>
+          </label>
+          <label>Jumlah <input id="modal_jumlah" type="number" value="${tr.jumlah || 0}" /></label>
+          <label>Keterangan <input id="modal_keterangan" value="${escapeHtml(tr.keterangan || "")}" /></label>
+          <div class="modal-actions">
+            <button id="modalSave">Simpan</button>
+            <button id="modalCancel">Batal</button>
+          </div>
+        </div>`;
+
+      const modal = showModal(html);
+      modal.querySelector("#modalCancel").addEventListener("click", closeModal);
+      modal.querySelector("#modalSave").addEventListener("click", async () => {
+        const jenis = document.getElementById("modal_jenis").value;
+        const jumlah = Number(document.getElementById("modal_jumlah").value);
+        const keterangan = document.getElementById("modal_keterangan").value.trim();
+
+        if (!jenis || !jumlah || jumlah <= 0) return alert("Data tidak valid!");
+
+        const { error } = await supabase.from("keuangan").update({ jenis, jumlah, keterangan }).eq("id", id);
+        if (error) return showToast("error", error.message);
+        showToast("success", "Data diperbarui");
+        closeModal();
+        await loadKeuangan();
+      });
+    } catch (e) {
+      console.error(e);
+      showToast("error", "Gagal membuka modal");
+    }
+  };
+
+  // === Aksi Hapus ===
+  window.deleteTrans = async (id) => {
+    if (role !== "admin") return;
+    if (!confirm("Yakin ingin menghapus transaksi ini?")) return;
+    try {
+      await supabase.from("keuangan").delete().eq("id", id);
+      showToast("success", "Transaksi dihapus");
+      await loadKeuangan();
+    } catch (e) {
+      showToast("error", "Gagal menghapus data");
+      console.error(e);
+    }
+  };
+
+  await loadKeuangan();
+}
 
   /* ---------------- Modal/Edit helpers ---------------- */
 
@@ -795,6 +866,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
 
 
 
