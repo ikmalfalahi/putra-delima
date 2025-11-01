@@ -383,41 +383,36 @@ async function initIuranPage() {
   await loadIuran();
 }
 
-/* ---------------- KEUANGAN PAGE (disesuaikan dengan tabel Supabase) ---------------- */
+/* ---------------- Keuangan page ---------------- */
 async function initKeuanganPage() {
   const addBtn = document.getElementById("addTransactionBtn");
   const transMsg = document.getElementById("transMsg");
   const transTableBody = document.querySelector("#transTable tbody");
 
-  // 🔹 Cek session dan ambil role user
+  // --- Ambil user login dan role ---
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return (window.location.href = "../login.html");
-
   const userId = session.user.id;
   const { data: profile } = await supabase
     .from("profiles")
     .select("role, nama")
     .eq("id", userId)
     .single();
-
   const role = profile?.role || "anggota";
 
-  // 🔹 Sembunyikan form tambah & tombol aksi jika bukan admin
+  // --- Sembunyikan elemen admin-only jika bukan admin ---
   if (role !== "admin") {
-    document.querySelectorAll(".admin-only, .card-head:contains('Tambah Transaksi'), #addTransactionBtn")
-      .forEach(el => el.style.display = "none");
+    document.querySelectorAll(".admin-only").forEach(el => (el.style.display = "none"));
   }
 
-  // === Fungsi memuat tabel keuangan ===
-  async function loadKeuangan() {
+  // --- Fungsi load data keuangan ---
+  async function loadTrans() {
     transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
 
-    let query = supabase
+    const { data: trans, error } = await supabase
       .from("keuangan")
       .select("*")
       .order("inserted_at", { ascending: false });
-
-    const { data: items, error } = await query;
 
     if (error) {
       console.error(error);
@@ -425,33 +420,33 @@ async function initKeuanganPage() {
       return;
     }
 
-    if (!items || items.length === 0) {
+    if (!trans || trans.length === 0) {
       transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada transaksi</td></tr>`;
       return;
     }
 
-    transTableBody.innerHTML = items.map((t, i) => `
+    transTableBody.innerHTML = trans.map((t, i) => `
       <tr>
         <td>${i + 1}</td>
         <td>${escapeHtml(t.jenis || "-")}</td>
         <td>Rp ${formatNumber(t.jumlah || 0)}</td>
         <td>${escapeHtml(t.keterangan || "-")}</td>
-        <td>${t.tanggal ? new Date(t.tanggal).toLocaleDateString("id-ID") : "-"}</td>
-        <td>
+        <td>${t.inserted_at ? new Date(t.inserted_at).toLocaleString("id-ID") : "-"}</td>
+        <td class="admin-only">
           ${role === "admin"
-            ? `<button onclick="window.openTransModal('${t.id}')">Edit</button>
+            ? `<button onclick="editTrans('${t.id}')">Edit</button>
                <button onclick="deleteTrans('${t.id}')">Hapus</button>`
-            : "-"}
+            : ""}
         </td>
       </tr>
     `).join("");
   }
 
-  // === Tambah transaksi (khusus admin) ===
+  // --- Tambah transaksi (hanya admin) ---
   if (role === "admin" && addBtn) {
     addBtn.addEventListener("click", async () => {
-      const jenis = document.getElementById("trans_type").value;
-      const jumlah = Number(document.getElementById("trans_amount").value);
+      const jenis = document.getElementById("trans_jenis").value;
+      const jumlah = Number(document.getElementById("trans_jumlah").value);
       const keterangan = document.getElementById("trans_keterangan").value.trim();
 
       if (!jenis || !jumlah) {
@@ -459,94 +454,56 @@ async function initKeuanganPage() {
         return;
       }
 
-      transMsg.textContent = "Menyimpan...";
-
       const { error } = await supabase.from("keuangan").insert([
         {
           jenis,
           jumlah,
           keterangan,
-          tanggal: new Date().toISOString().split("T")[0],
           dibuat_oleh: userId,
+          inserted_at: new Date().toISOString(),
         },
       ]);
 
       if (error) {
         console.error(error);
-        transMsg.textContent = `Gagal: ${error.message}`;
+        transMsg.textContent = `Gagal menambah transaksi: ${error.message}`;
       } else {
-        transMsg.textContent = "Berhasil ditambahkan.";
-        await loadKeuangan();
+        transMsg.textContent = "Transaksi berhasil ditambahkan.";
+        await loadTrans();
       }
     });
   }
 
-  // === Hapus transaksi (admin only) ===
+  // --- Edit transaksi (admin only) ---
+  window.editTrans = async (id) => {
+    if (role !== "admin") return;
+    const { data: t } = await supabase.from("keuangan").select("*").eq("id", id).single();
+    if (!t) return alert("Data tidak ditemukan");
+
+    const jenis = prompt("Ubah jenis (pemasukan/pengeluaran):", t.jenis);
+    const jumlah = prompt("Ubah jumlah:", t.jumlah);
+    const ket = prompt("Ubah keterangan:", t.keterangan || "");
+
+    if (!jenis || !jumlah) return;
+
+    await supabase.from("keuangan").update({
+      jenis,
+      jumlah: Number(jumlah),
+      keterangan: ket,
+    }).eq("id", id);
+
+    await loadTrans();
+  };
+
+  // --- Hapus transaksi (admin only) ---
   window.deleteTrans = async (id) => {
     if (role !== "admin") return;
     if (!confirm("Yakin ingin menghapus transaksi ini?")) return;
-
-    const { error } = await supabase.from("keuangan").delete().eq("id", id);
-    if (error) {
-      console.error(error);
-      alert("Gagal menghapus transaksi!");
-    } else {
-      await loadKeuangan();
-    }
+    await supabase.from("keuangan").delete().eq("id", id);
+    await loadTrans();
   };
 
-  // === Edit transaksi (admin only) ===
-  window.openTransModal = async (id) => {
-    if (role !== "admin") return;
-
-    const { data: tr, error } = await supabase.from("keuangan").select("*").eq("id", id).single();
-    if (error || !tr) return alert("Data tidak ditemukan!");
-
-    const html = `
-      <h3>Edit Transaksi</h3>
-      <div class="modal-form">
-        <label>Jenis
-          <select id="modal_tr_jenis">
-            <option value="pemasukan" ${tr.jenis === "pemasukan" ? "selected" : ""}>Pemasukan</option>
-            <option value="pengeluaran" ${tr.jenis === "pengeluaran" ? "selected" : ""}>Pengeluaran</option>
-          </select>
-        </label>
-        <label>Jumlah
-          <input id="modal_tr_jumlah" type="number" value="${tr.jumlah || 0}">
-        </label>
-        <label>Keterangan
-          <input id="modal_tr_ket" type="text" value="${escapeHtml(tr.keterangan || "")}">
-        </label>
-        <div class="modal-actions">
-          <button id="modalSaveTrans">Simpan</button>
-          <button id="modalCancelTrans">Batal</button>
-        </div>
-      </div>
-    `;
-
-    const modal = showModal(html);
-    modal.querySelector("#modalCancelTrans").addEventListener("click", closeModal);
-    modal.querySelector("#modalSaveTrans").addEventListener("click", async () => {
-      const jenis = document.getElementById("modal_tr_jenis").value;
-      const jumlah = Number(document.getElementById("modal_tr_jumlah").value);
-      const ket = document.getElementById("modal_tr_ket").value.trim();
-
-      if (!jenis || !jumlah) return alert("Semua field wajib diisi.");
-
-      const { error } = await supabase
-        .from("keuangan")
-        .update({ jenis, jumlah, keterangan: ket })
-        .eq("id", id);
-
-      if (error) alert("Gagal menyimpan perubahan.");
-      else {
-        closeModal();
-        await loadKeuangan();
-      }
-    });
-  };
-
-  await loadKeuangan();
+  await loadTrans();
 }
 
   /* ---------------- Modal/Edit helpers ---------------- */
@@ -878,6 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
 
 
 
