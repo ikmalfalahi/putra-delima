@@ -268,25 +268,30 @@ async function initIuranPage() {
     document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
   }
 
-  // load anggota ke select (khusus admin)
+  // --- Load anggota ke select (khusus admin) ---
   if (role === "admin") {
     try {
-      const { data: members } = await supabase.from("profiles").select("id, nama").eq("role", "anggota").order("nama");
-      iuranSelect.innerHTML = `<option value="">Pilih anggota</option>` +
+      const { data: members } = await supabase
+        .from("profiles")
+        .select("id, nama")
+        .eq("role", "anggota")
+        .order("nama");
+      iuranSelect.innerHTML =
+        `<option value="">Pilih anggota</option>` +
         (members || []).map(m => `<option value="${m.id}">${escapeHtml(m.nama)}</option>`).join("");
     } catch (e) {
       iuranSelect.innerHTML = `<option value="">Gagal memuat anggota</option>`;
     }
   }
 
-  // --- Load daftar iuran (semua user bisa lihat) ---
+  // --- Load daftar iuran ---
   async function loadIuran() {
     iuranTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
     try {
       const { data: iurans } = await supabase
         .from("iuran")
-        .select("*, member_id (nama)")
-        .order("created_at", { ascending: false });
+        .select("*, user_id (nama)")
+        .order("inserted_at", { ascending: false });
 
       if (!iurans || iurans.length === 0) {
         iuranTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada iuran</td></tr>`;
@@ -296,12 +301,11 @@ async function initIuranPage() {
       iuranTableBody.innerHTML = iurans.map((u, i) => `
         <tr>
           <td>${i + 1}</td>
-          <td>${escapeHtml(u.nama)}</td>
-          <td>${escapeHtml(u.member_id?.nama || "-")}</td>
+          <td>${escapeHtml(u.keterangan || "-")}</td>
+          <td>${escapeHtml(u.user_id?.nama || "-")}</td>
           <td>Rp ${formatNumber(u.jumlah || 0)}</td>
           <td>${u.status || "belum"}</td>
           <td>${role === "admin" ? `
-            <button onclick="window.openIuranModal('${u.id}')">Edit</button>
             <button onclick="markIuranPaid('${u.id}')">Lunas</button>
             <button onclick="deleteIuran('${u.id}')">Hapus</button>
           ` : "-"}</td>
@@ -325,7 +329,7 @@ async function initIuranPage() {
       iuranMsg.textContent = "Menyimpan...";
       const { error } = await supabase
         .from("iuran")
-        .insert([{ nama, jumlah, member_id: member, status: "belum" }]);
+        .insert([{ keterangan: nama, jumlah, user_id: member, status: "belum" }]);
       if (error) {
         iuranMsg.textContent = `Gagal: ${error.message}`;
       } else {
@@ -350,7 +354,6 @@ async function initIuranPage() {
     await loadIuran();
   };
 
-  window.openIuranModal = openEditIuran;
   await loadIuran();
 }
 
@@ -743,6 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
 
 
 
