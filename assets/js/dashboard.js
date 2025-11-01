@@ -383,155 +383,167 @@ async function initIuranPage() {
   await loadIuran();
 }
 
-/* ---------------- Keuangan page (versi sesuai tabel kamu) ---------------- */
+/* ---------------- KEUANGAN PAGE (disesuaikan dengan tabel Supabase) ---------------- */
 async function initKeuanganPage() {
   const addBtn = document.getElementById("addTransactionBtn");
   const transMsg = document.getElementById("transMsg");
   const transTableBody = document.querySelector("#transTable tbody");
 
-  // === Ambil user login & role ===
+  // 🔹 Cek session dan ambil role user
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return (window.location.href = "../login.html");
+
   const userId = session.user.id;
-  const { data: profile } = await supabase.from("profiles").select("role, nama").eq("id", userId).single();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, nama")
+    .eq("id", userId)
+    .single();
+
   const role = profile?.role || "anggota";
 
-  // === Sembunyikan fitur admin jika role bukan admin ===
+  // 🔹 Sembunyikan form tambah & tombol aksi jika bukan admin
   if (role !== "admin") {
-    document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".admin-only, .card-head:contains('Tambah Transaksi'), #addTransactionBtn")
+      .forEach(el => el.style.display = "none");
   }
 
-  // === Load Data Keuangan ===
+  // === Fungsi memuat tabel keuangan ===
   async function loadKeuangan() {
     transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
-    try {
-      let query = supabase
-        .from("keuangan")
-        .select("*, profiles:nama(dibuat_oleh)")
-        .order("inserted_at", { ascending: false });
 
-      const { data: trans, error } = await query;
-      if (error) throw error;
+    let query = supabase
+      .from("keuangan")
+      .select("*")
+      .order("inserted_at", { ascending: false });
 
-      if (!trans || trans.length === 0) {
-        transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada transaksi</td></tr>`;
-        return;
-      }
+    const { data: items, error } = await query;
 
-      transTableBody.innerHTML = trans
-        .map(
-          (t, i) => `
-          <tr>
-            <td>${i + 1}</td>
-            <td>${escapeHtml(t.jenis || "-")}</td>
-            <td>Rp ${formatNumber(t.jumlah || 0)}</td>
-            <td>${escapeHtml(t.keterangan || "-")}</td>
-            <td>${t.tanggal ? new Date(t.tanggal).toLocaleDateString("id-ID") : "-"}</td>
-            <td class="admin-only">
-              ${role === "admin"
-                ? `<button onclick="window.openTransModal('${t.id}')">Edit</button>
-                   <button onclick="deleteTrans('${t.id}')">Hapus</button>`
-                : "-"}
-            </td>
-          </tr>`
-        )
-        .join("");
-    } catch (e) {
-      console.error(e);
+    if (error) {
+      console.error(error);
       transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat data</td></tr>`;
+      return;
     }
+
+    if (!items || items.length === 0) {
+      transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada transaksi</td></tr>`;
+      return;
+    }
+
+    transTableBody.innerHTML = items.map((t, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${escapeHtml(t.jenis || "-")}</td>
+        <td>Rp ${formatNumber(t.jumlah || 0)}</td>
+        <td>${escapeHtml(t.keterangan || "-")}</td>
+        <td>${t.tanggal ? new Date(t.tanggal).toLocaleDateString("id-ID") : "-"}</td>
+        <td>
+          ${role === "admin"
+            ? `<button onclick="window.openTransModal('${t.id}')">Edit</button>
+               <button onclick="deleteTrans('${t.id}')">Hapus</button>`
+            : "-"}
+        </td>
+      </tr>
+    `).join("");
   }
 
-  // === Tambah Data Keuangan (Admin Only) ===
+  // === Tambah transaksi (khusus admin) ===
   if (role === "admin" && addBtn) {
     addBtn.addEventListener("click", async () => {
-      const jenis = document.getElementById("trans_jenis").value;
-      const jumlah = Number(document.getElementById("trans_jumlah").value);
+      const jenis = document.getElementById("trans_type").value;
+      const jumlah = Number(document.getElementById("trans_amount").value);
       const keterangan = document.getElementById("trans_keterangan").value.trim();
 
-      if (!jenis || !jumlah || jumlah <= 0) {
-        transMsg.textContent = "Semua field wajib diisi dengan benar.";
+      if (!jenis || !jumlah) {
+        transMsg.textContent = "Semua field wajib diisi.";
         return;
       }
 
       transMsg.textContent = "Menyimpan...";
-      try {
-        const { error } = await supabase.from("keuangan").insert([
-          {
-            jenis,
-            jumlah,
-            keterangan,
-            tanggal: new Date().toISOString().split("T")[0],
-            dibuat_oleh: userId,
-          },
-        ]);
-        if (error) throw error;
-        transMsg.textContent = "Transaksi berhasil ditambahkan.";
+
+      const { error } = await supabase.from("keuangan").insert([
+        {
+          jenis,
+          jumlah,
+          keterangan,
+          tanggal: new Date().toISOString().split("T")[0],
+          dibuat_oleh: userId,
+        },
+      ]);
+
+      if (error) {
+        console.error(error);
+        transMsg.textContent = `Gagal: ${error.message}`;
+      } else {
+        transMsg.textContent = "Berhasil ditambahkan.";
         await loadKeuangan();
-      } catch (e) {
-        transMsg.textContent = `Gagal: ${e.message}`;
-        console.error(e);
       }
     });
   }
 
-  // === Aksi Edit ===
-  window.openTransModal = async (id) => {
-    if (role !== "admin") return;
-    try {
-      const { data: tr } = await supabase.from("keuangan").select("*").eq("id", id).single();
-      if (!tr) return showToast("error", "Data tidak ditemukan");
-
-      const html = `
-        <h3>Edit Transaksi</h3>
-        <div class="modal-form">
-          <label>Jenis
-            <select id="modal_jenis">
-              <option value="pemasukan" ${tr.jenis === "pemasukan" ? "selected" : ""}>Pemasukan</option>
-              <option value="pengeluaran" ${tr.jenis === "pengeluaran" ? "selected" : ""}>Pengeluaran</option>
-            </select>
-          </label>
-          <label>Jumlah <input id="modal_jumlah" type="number" value="${tr.jumlah || 0}" /></label>
-          <label>Keterangan <input id="modal_keterangan" value="${escapeHtml(tr.keterangan || "")}" /></label>
-          <div class="modal-actions">
-            <button id="modalSave">Simpan</button>
-            <button id="modalCancel">Batal</button>
-          </div>
-        </div>`;
-
-      const modal = showModal(html);
-      modal.querySelector("#modalCancel").addEventListener("click", closeModal);
-      modal.querySelector("#modalSave").addEventListener("click", async () => {
-        const jenis = document.getElementById("modal_jenis").value;
-        const jumlah = Number(document.getElementById("modal_jumlah").value);
-        const keterangan = document.getElementById("modal_keterangan").value.trim();
-
-        if (!jenis || !jumlah || jumlah <= 0) return alert("Data tidak valid!");
-
-        const { error } = await supabase.from("keuangan").update({ jenis, jumlah, keterangan }).eq("id", id);
-        if (error) return showToast("error", error.message);
-        showToast("success", "Data diperbarui");
-        closeModal();
-        await loadKeuangan();
-      });
-    } catch (e) {
-      console.error(e);
-      showToast("error", "Gagal membuka modal");
-    }
-  };
-
-  // === Aksi Hapus ===
+  // === Hapus transaksi (admin only) ===
   window.deleteTrans = async (id) => {
     if (role !== "admin") return;
     if (!confirm("Yakin ingin menghapus transaksi ini?")) return;
-    try {
-      await supabase.from("keuangan").delete().eq("id", id);
-      showToast("success", "Transaksi dihapus");
+
+    const { error } = await supabase.from("keuangan").delete().eq("id", id);
+    if (error) {
+      console.error(error);
+      alert("Gagal menghapus transaksi!");
+    } else {
       await loadKeuangan();
-    } catch (e) {
-      showToast("error", "Gagal menghapus data");
-      console.error(e);
     }
+  };
+
+  // === Edit transaksi (admin only) ===
+  window.openTransModal = async (id) => {
+    if (role !== "admin") return;
+
+    const { data: tr, error } = await supabase.from("keuangan").select("*").eq("id", id).single();
+    if (error || !tr) return alert("Data tidak ditemukan!");
+
+    const html = `
+      <h3>Edit Transaksi</h3>
+      <div class="modal-form">
+        <label>Jenis
+          <select id="modal_tr_jenis">
+            <option value="pemasukan" ${tr.jenis === "pemasukan" ? "selected" : ""}>Pemasukan</option>
+            <option value="pengeluaran" ${tr.jenis === "pengeluaran" ? "selected" : ""}>Pengeluaran</option>
+          </select>
+        </label>
+        <label>Jumlah
+          <input id="modal_tr_jumlah" type="number" value="${tr.jumlah || 0}">
+        </label>
+        <label>Keterangan
+          <input id="modal_tr_ket" type="text" value="${escapeHtml(tr.keterangan || "")}">
+        </label>
+        <div class="modal-actions">
+          <button id="modalSaveTrans">Simpan</button>
+          <button id="modalCancelTrans">Batal</button>
+        </div>
+      </div>
+    `;
+
+    const modal = showModal(html);
+    modal.querySelector("#modalCancelTrans").addEventListener("click", closeModal);
+    modal.querySelector("#modalSaveTrans").addEventListener("click", async () => {
+      const jenis = document.getElementById("modal_tr_jenis").value;
+      const jumlah = Number(document.getElementById("modal_tr_jumlah").value);
+      const ket = document.getElementById("modal_tr_ket").value.trim();
+
+      if (!jenis || !jumlah) return alert("Semua field wajib diisi.");
+
+      const { error } = await supabase
+        .from("keuangan")
+        .update({ jenis, jumlah, keterangan: ket })
+        .eq("id", id);
+
+      if (error) alert("Gagal menyimpan perubahan.");
+      else {
+        closeModal();
+        await loadKeuangan();
+      }
+    });
   };
 
   await loadKeuangan();
@@ -866,6 +878,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
 
 
 
