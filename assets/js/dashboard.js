@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
   }
 
-/* ---------------- Dashboard ---------------- */
+/* ---------------- Dashboard (Terbuka untuk semua role) ---------------- */
 async function initDashboard() {
   const totalMembersEl = document.getElementById("totalMembers");
   const totalIuranEl = document.getElementById("totalIuran");
@@ -58,7 +58,7 @@ async function initDashboard() {
   const totalPengeluaranEl = document.getElementById("totalPengeluaran");
   const membersPreviewTbody = document.querySelector("#membersPreview tbody");
 
-  // === Total Anggota (semua dari profiles) ===
+  // === Hitung Total Anggota ===
   try {
     const { count, error } = await supabase
       .from("profiles")
@@ -72,46 +72,29 @@ async function initDashboard() {
 
   // === Total Iuran ===
   try {
-    const { data: iurans, error } = await supabase
-      .from("iuran")
-      .select("jumlah");
-    if (error) throw error;
+    const { data: iurans } = await supabase.from("iuran").select("jumlah");
     const total = (iurans || []).reduce((sum, i) => sum + Number(i.jumlah || 0), 0);
     totalIuranEl.textContent = `Rp ${formatNumber(total)}`;
-  } catch (e) {
-    console.error("Gagal hitung iuran:", e);
+  } catch {
     totalIuranEl.textContent = "-";
   }
 
-  // === Total Pemasukan ===
-  try {
-    const { data: pemasukan, error } = await supabase
-      .from("keuangan")
-      .select("jumlah")
-      .eq("jenis", "pemasukan");
-    if (error) throw error;
-    const total = (pemasukan || []).reduce((sum, p) => sum + Number(p.jumlah || 0), 0);
-    totalPemasukanEl.textContent = `Rp ${formatNumber(total)}`;
-  } catch (e) {
-    console.error("Gagal hitung pemasukan:", e);
-    totalPemasukanEl.textContent = "Rp 0";
+  // === Total Pemasukan & Pengeluaran ===
+  const jenis = ["pemasukan", "pengeluaran"];
+  for (const j of jenis) {
+    try {
+      const { data } = await supabase.from("keuangan").select("jumlah").eq("jenis", j);
+      const total = (data || []).reduce((s, x) => s + Number(x.jumlah || 0), 0);
+      if (j === "pemasukan")
+        totalPemasukanEl.textContent = `Rp ${formatNumber(total)}`;
+      else totalPengeluaranEl.textContent = `Rp ${formatNumber(total)}`;
+    } catch {
+      if (j === "pemasukan") totalPemasukanEl.textContent = "Rp 0";
+      else totalPengeluaranEl.textContent = "Rp 0";
+    }
   }
 
-  // === Total Pengeluaran ===
-  try {
-    const { data: pengeluaran, error } = await supabase
-      .from("keuangan")
-      .select("jumlah")
-      .eq("jenis", "pengeluaran");
-    if (error) throw error;
-    const total = (pengeluaran || []).reduce((sum, p) => sum + Number(p.jumlah || 0), 0);
-    totalPengeluaranEl.textContent = `Rp ${formatNumber(total)}`;
-  } catch (e) {
-    console.error("Gagal hitung pengeluaran:", e);
-    totalPengeluaranEl.textContent = "Rp 0";
-  }
-
-  // === Preview Semua Anggota (termasuk admin) ===
+  // === Tampilkan semua anggota ===
   try {
     const { data: members, error } = await supabase
       .from("profiles")
@@ -119,10 +102,8 @@ async function initDashboard() {
       .order("inserted_at", { ascending: false });
 
     if (error) throw error;
-
-    if (!members || members.length === 0) {
-      membersPreviewTbody.innerHTML = `
-        <tr><td colspan="7" class="empty">Belum ada data</td></tr>`;
+    if (!members?.length) {
+      membersPreviewTbody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada data</td></tr>`;
       return;
     }
 
@@ -132,82 +113,79 @@ async function initDashboard() {
         <tr>
           <td>${i + 1}</td>
           <td style="text-align:center;">
-          <img 
-          src="${m.avatar_url || "../assets/img/default-avatar.png"}"
-          alt="${escapeHtml(m.nama || '-')}" 
-          style="width:42px;height:42px;object-fit:cover;border-radius:50%;cursor:pointer;transition:transform .2s ease;"
-          onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
-          />
+            <img 
+              src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
+              alt="${escapeHtml(m.nama || '-')}"
+              style="width:38px;height:38px;border-radius:50%;object-fit:cover;cursor:pointer;"
+              onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
+            />
           </td>
           <td>${escapeHtml(m.nama || "-")}</td>
-          <td>${
-            m.tanggal_lahir
-              ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID")
-              : "-"
-          }</td>
+          <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
           <td>${escapeHtml(m.blok || "-")}</td>
           <td>${escapeHtml(m.rt || "-")}</td>
           <td>${escapeHtml(m.rw || "-")}</td>
+          <td>${escapeHtml(m.role || "-")}</td>
         </tr>`
       )
       .join("");
   } catch (e) {
     console.error("Gagal load anggota:", e);
-    membersPreviewTbody.innerHTML = `
-      <tr><td colspan="7" class="empty">Gagal memuat data anggota</td></tr>`;
+    membersPreviewTbody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat data anggota</td></tr>`;
   }
 }
 
-/* ---------------- Members page (pakai tabel profiles) ---------------- */
+/* ---------------- Members Page ---------------- */
 async function initMembersPage() {
   const membersTableBody = document.querySelector("#membersTable tbody");
   const refreshBtn = document.getElementById("refreshMembers");
 
-  // === Load daftar anggota ===
   async function loadMembers() {
-    membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
+    membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Memuat...</td></tr>`;
     try {
-      // Ambil data dari tabel profiles
       const { data: members, error } = await supabase
-  .from("profiles")
-  .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role")
-  .order("inserted_at", { ascending: false });
+        .from("profiles")
+        .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role, status")
+        .order("inserted_at", { ascending: false });
 
-if (error) throw error;
+      if (error) throw error;
+      if (!members?.length) {
+        membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada data</td></tr>`;
+        return;
+      }
 
-if (!members || members.length === 0) {
-  membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada data</td></tr>`;
-  return;
-}
-
-membersTableBody.innerHTML = members
-  .map(
-    (m, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td class="avatar-cell" style="text-align:center;">
-          <img 
-            src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
-            alt="${escapeHtml(m.nama || '-')}" 
-            style="width:36px;height:36px;object-fit:cover;border-radius:50%;cursor:pointer;transition:transform .2s ease;"
-            onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
-          />
-        </td>
-        <td>${escapeHtml(m.nama || "-")}</td>
-        <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
-        <td>${escapeHtml(m.blok || "-")}</td>
-        <td>${escapeHtml(m.rt || "-")}</td>
-        <td>${escapeHtml(m.rw || "-")}</td>
-        <td>${escapeHtml(m.role || "-")}</td>
-      </tr>`
-  )
-  .join("");
-
+      membersTableBody.innerHTML = members
+        .map(
+          (m, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td style="text-align:center;">
+              <img 
+                src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
+                alt="${escapeHtml(m.nama || '-')}"
+                style="width:36px;height:36px;border-radius:50%;object-fit:cover;cursor:pointer;"
+                onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
+              />
+            </td>
+            <td>${escapeHtml(m.nama || "-")}</td>
+            <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
+            <td>${escapeHtml(m.blok || "-")}</td>
+            <td>${escapeHtml(m.rt || "-")}</td>
+            <td>${escapeHtml(m.rw || "-")}</td>
+            <td>${escapeHtml(m.role || "-")}</td>
+            <td>${escapeHtml(m.status || "-")}</td>
+          </tr>`
+        )
+        .join("");
     } catch (e) {
-      console.error(e);
-      membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat data</td></tr>`;
+      console.error("Gagal memuat data anggota:", e);
+      membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat data</td></tr>`;
     }
   }
+
+  refreshBtn && refreshBtn.addEventListener("click", loadMembers);
+  await loadMembers();
+}
 
   // === Aksi: Setuju ===
   window.approveMember = async (id) => {
@@ -942,6 +920,7 @@ window.showAvatarModal = function (url, nama) {
 
   modal.querySelector("#closeAvatar").addEventListener("click", closeModal);
 };
+
 
 
 
