@@ -34,6 +34,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // === Disable tombol sementara (hindari spam signup) ===
+    daftarBtn.disabled = true;
     showMsg("Mendaftarkan akun...", "gray");
 
     // === 1️⃣ Daftar akun Auth ===
@@ -48,16 +50,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (signUpError) {
       showMsg(`Gagal daftar: ${signUpError.message}`, "red");
       console.error(signUpError);
+      daftarBtn.disabled = false;
       return;
     }
 
     const user = signUpData.user;
     if (!user) {
       showMsg("Gagal membuat akun. Coba lagi nanti.", "red");
+      daftarBtn.disabled = false;
       return;
     }
 
-    // === 2️⃣ Tunggu session aktif (hindari insert tanpa auth) ===
+    // === 2️⃣ Tunggu session aktif ===
     let session = null;
     for (let i = 0; i < 5; i++) {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -68,39 +72,56 @@ document.addEventListener("DOMContentLoaded", () => {
       await new Promise((r) => setTimeout(r, 500));
     }
 
-    if (!session) {
-      console.warn("Session belum aktif, lanjut insert dengan anon role...");
-    }
+    // === 3️⃣ Cek apakah profil sudah ada ===
+    const { data: existing, error: checkError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
 
-    // === 3️⃣ Simpan profil ke tabel "profiles" ===
-    const { error: insertError } = await supabase.from("profiles").insert([
-      {
-        id: user.id,
-        nama,
-        jenis_kelamin,
-        tanggal_lahir,
-        agama,
-        blok,
-        rt,
-        rw,
-        status: "Pending", // 🔥 menunggu persetujuan admin
-        role: "anggota",
-        email,
-      },
-    ]);
-
-    if (insertError) {
-      console.error(insertError);
-      showMsg(`Gagal simpan profil: ${insertError.message}`, "red");
+    if (checkError) {
+      console.error(checkError);
+      showMsg("Gagal memeriksa data profil.", "red");
+      daftarBtn.disabled = false;
       return;
     }
 
-    // === 4️⃣ Sukses daftar ===
+    if (!existing) {
+      // === 4️⃣ Insert profil baru ===
+      const { error: insertError } = await supabase.from("profiles").insert([
+        {
+          id: user.id,
+          nama,
+          jenis_kelamin,
+          tanggal_lahir,
+          agama,
+          blok,
+          rt,
+          rw,
+          status: "Pending", // 🔥 menunggu persetujuan admin
+          role: "anggota",
+          email,
+        },
+      ]);
+
+      if (insertError) {
+        console.error(insertError);
+        showMsg(`Gagal simpan profil: ${insertError.message}`, "red");
+        daftarBtn.disabled = false;
+        return;
+      }
+    } else {
+      console.warn("Profil sudah ada, tidak disimpan ulang.");
+    }
+
+    // === 5️⃣ Sukses daftar ===
     showMsg("Pendaftaran berhasil! Tunggu persetujuan admin.", "green");
 
     setTimeout(() => {
       window.location.href = "login.html";
-    }, 2000);
+    }, 2500);
+
+    daftarBtn.disabled = false;
   });
 
   // === Fungsi tampilkan pesan ===
