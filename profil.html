@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Profil — Putra Delima</title>
-  <!-- ✅ Gunakan path absolut GitHub agar tidak 404 -->
+
+  <!-- ✅ Gunakan path absolut agar tidak 404 di GitHub Pages -->
   <link rel="stylesheet" href="https://ikmalfalahi.github.io/putra-delima/assets/css/dashboard.css" />
   <link rel="stylesheet" href="https://ikmalfalahi.github.io/putra-delima/assets/css/profil.css" />
 </head>
@@ -12,6 +13,7 @@
   <div class="app">
     <aside class="sidebar">
       <div class="brand">
+        <!-- ✅ Logo absolut -->
         <img src="https://ikmalfalahi.github.io/putra-delima/assets/img/logo-putra-delima.png" alt="logo" />
         <h3>PUTRA DELIMA</h3>
       </div>
@@ -37,7 +39,7 @@
         <div class="card profil-card">
           <div class="profil-container">
             <div class="foto-section">
-              <!-- ✅ Perbaiki path foto default -->
+              <!-- ✅ Foto default absolut -->
               <img id="fotoPreview" src="https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png" alt="Foto Profil" />
               <button id="uploadBtn">Ganti Foto</button>
               <input type="file" id="fotoInput" accept="image/*" hidden />
@@ -68,7 +70,7 @@
                 </select>
               </div>
 
-              <!-- 🧩 Tambahkan field baru dari profil.js -->
+              <!-- ✅ Tambahan field baru -->
               <div class="form-group">
                 <label>Status Hubungan</label>
                 <select id="status_hubungan" disabled>
@@ -109,8 +111,11 @@
 
   <!-- ✅ CDN Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- ✅ Gunakan path absolut JS -->
+
+  <!-- ✅ Supabase config (berisi createClient) -->
   <script src="https://ikmalfalahi.github.io/putra-delima/assets/js/supabase.js"></script>
+
+  <!-- ✅ Script profil (hanya pakai instance global) -->
   <script src="https://ikmalfalahi.github.io/putra-delima/assets/js/profil.js"></script>
 </body>
 </html>
