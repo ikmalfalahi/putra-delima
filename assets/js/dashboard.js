@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
   }
 
-// dashboard.js (final stable version)
+// dashboard.js (FINAL CLEAN VERSION)
 document.addEventListener("DOMContentLoaded", () => {
   const logoutBtns = document.querySelectorAll("#logoutBtn");
   const toggleSidebarBtns = document.querySelectorAll("#toggleSidebar, .hamburger");
@@ -58,14 +58,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const userNameEl = document.getElementById("userName");
   const roleLabel = document.getElementById("roleLabel");
 
-  // buat container modal + toast global
   createUIHelpers();
-
   checkAuthAndInit();
   bindLogout();
   bindSidebarToggle();
 
-  // routing halaman
+  // Routing halaman
   const path = location.pathname;
   if (path.endsWith("/admin.html")) initDashboard();
   else if (path.endsWith("/anggota.html")) initMembersPage();
@@ -73,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
   else if (path.endsWith("/keuangan.html")) initKeuanganPage();
   else if (path.endsWith("/profil.html")) initProfilPage();
 
-  /* ---------- AUTH ---------- */
+  /* ---------------- AUTH ---------------- */
   async function checkAuthAndInit() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return (window.location.href = "../login.html");
@@ -106,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
   }
 
-  /* ---------- DASHBOARD ---------- */
+  /* ---------------- DASHBOARD ---------------- */
   async function initDashboard() {
     const totalMembersEl = document.getElementById("totalMembers");
     const totalIuranEl = document.getElementById("totalIuran");
@@ -114,18 +112,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const totalPengeluaranEl = document.getElementById("totalPengeluaran");
     const membersPreviewTbody = document.querySelector("#membersPreview tbody");
 
-    // total anggota
+    // === Total Anggota ===
     try {
-      const { count, error } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true });
-      if (error) throw error;
+      const { count } = await supabase.from("profiles").select("*", { count: "exact", head: true });
       totalMembersEl.textContent = count ?? "0";
     } catch {
       totalMembersEl.textContent = "0";
     }
 
-    // total iuran
+    // === Total Iuran ===
     try {
       const { data } = await supabase.from("iuran").select("jumlah");
       const total = (data || []).reduce((s, v) => s + Number(v.jumlah || 0), 0);
@@ -134,28 +129,26 @@ document.addEventListener("DOMContentLoaded", () => {
       totalIuranEl.textContent = "-";
     }
 
-    // total pemasukan/pengeluaran
+    // === Total Pemasukan & Pengeluaran ===
     for (const jenis of ["pemasukan", "pengeluaran"]) {
       try {
-        const { data } = await supabase
-          .from("keuangan")
-          .select("jumlah")
-          .eq("jenis", jenis);
+        const { data } = await supabase.from("keuangan").select("jumlah").eq("jenis", jenis);
         const total = (data || []).reduce((s, v) => s + Number(v.jumlah || 0), 0);
         if (jenis === "pemasukan")
           totalPemasukanEl.textContent = `Rp ${formatNumber(total)}`;
-        else totalPengeluaranEl.textContent = `Rp ${formatNumber(total)}`;
+        else
+          totalPengeluaranEl.textContent = `Rp ${formatNumber(total)}`;
       } catch {
         if (jenis === "pemasukan") totalPemasukanEl.textContent = "Rp 0";
         else totalPengeluaranEl.textContent = "Rp 0";
       }
     }
 
-    // preview anggota (dashboard)
+    // === Preview Anggota (Dashboard) ===
     try {
       const { data: members } = await supabase
         .from("profiles")
-        .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role")
+        .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url")
         .order("inserted_at", { ascending: false });
 
       if (!members?.length) {
@@ -170,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <img 
               src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
               alt="${escapeHtml(m.nama || '-')}"
-              style="width:35px;height:35px;border-radius:50%;object-fit:cover;cursor:pointer;"
+              style="width:30px;height:30px;border-radius:50%;object-fit:cover;cursor:pointer;"
               onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
             />
           </td>
@@ -179,15 +172,14 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>${escapeHtml(m.blok || "-")}</td>
           <td>${escapeHtml(m.rt || "-")}</td>
           <td>${escapeHtml(m.rw || "-")}</td>
-        </tr>
-      `).join("");
+        </tr>`).join("");
     } catch (e) {
       console.error("Gagal load anggota:", e);
       membersPreviewTbody.innerHTML = `<tr><td colspan="7" class="empty">Gagal memuat data</td></tr>`;
     }
   }
 
-  /* ---------- MEMBERS PAGE ---------- */
+  /* ---------------- MEMBERS PAGE ---------------- */
   async function initMembersPage() {
     const membersTableBody = document.querySelector("#membersTable tbody");
     const refreshBtn = document.getElementById("refreshMembers");
@@ -212,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <img 
                 src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
                 alt="${escapeHtml(m.nama || '-')}"
-                style="width:36px;height:36px;border-radius:50%;object-fit:cover;cursor:pointer;"
+                style="width:32px;height:32px;border-radius:50%;object-fit:cover;cursor:pointer;"
                 onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
               />
             </td>
@@ -222,9 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <td>${escapeHtml(m.rt || "-")}</td>
             <td>${escapeHtml(m.rw || "-")}</td>
             <td>${escapeHtml(m.role || "-")}</td>
-            <td>${escapeHtml(m.status || "-")}</td>
-          </tr>
-        `).join("");
+          </tr>`).join("");
       } catch (e) {
         console.error("Gagal muat anggota:", e);
         membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat data</td></tr>`;
@@ -235,7 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
     await loadMembers();
   }
 
-  /* ---------- HELPER ---------- */
+  /* ---------------- HELPER FUNCTIONS ---------------- */
   function createUIHelpers() {
     if (!document.getElementById("toastContainer")) {
       const t = document.createElement("div");
@@ -326,11 +316,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function escapeHtml(str) {
     if (!str) return "";
-    return str
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;");
+    return str.replaceAll("&", "&amp;")
+              .replaceAll("<", "&lt;")
+              .replaceAll(">", "&gt;")
+              .replaceAll('"', "&quot;");
   }
 
   function formatNumber(n) {
@@ -987,6 +976,7 @@ window.showAvatarModal = function (url, nama) {
 
   modal.querySelector("#closeAvatar").addEventListener("click", closeModal);
 };
+
 
 
 
