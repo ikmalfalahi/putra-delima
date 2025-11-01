@@ -180,21 +180,23 @@ membersPreviewTbody.innerHTML = members
       <tr>
         <td>${i + 1}</td>
         <td class="avatar-cell">
-        <img 
-        src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
-        alt="${m.nama}" 
-        class="avatar-thumb"
-        onclick="showAvatarModal('${m.avatar_url || ''}', '${m.nama}')"
-        />
+          <img 
+            src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
+            alt="${escapeHtml(m.nama || '-')}" 
+            class="avatar-thumb"
+            onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
+          />
         </td>
         <td>${escapeHtml(m.nama || "-")}</td>
         <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
         <td>${escapeHtml(m.blok || "-")}</td>
-        <td>${m.rt || "-"} / ${m.rw || "-"}</td>
+        <td>${escapeHtml(m.rt || "-")}</td>
+        <td>${escapeHtml(m.rw || "-")}</td>
         <td>${escapeHtml(m.role || "-")}</td>
       </tr>`
   )
   .join("");
+
     } catch (e) {
       console.error(e);
       membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat data</td></tr>`;
@@ -934,5 +936,6 @@ window.showAvatarModal = function (url, nama) {
 
   modal.querySelector("#closeAvatar").addEventListener("click", closeModal);
 };
+
 
 
