@@ -3,167 +3,85 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Putra Delima — Bersatu, Berbakti, dan Berkarya untuk Desa</title>
-  <link rel="stylesheet" href="assets/css/landing.css" />
+  <title>Putra Delima — Bersatu, Berbakti, dan Berkarya</title>
+  <link rel="stylesheet" href="assets/css/landing-mobile.css" />
 </head>
 <body>
   <!-- HEADER -->
-  <header class="site-header" id="siteHeader">
-    <div class="container header-inner">
-      <div class="brand">
-        <a href="index.html"><img src="assets/img/logo-putra-delima.png" alt="Putra Delima" class="logo" /></a>
-        <span class="brand-title">PUTRA DELIMA</span>
+  <header class="header">
+    <div class="nav">
+      <div class="logo-wrap">
+        <img src="assets/img/logo-putra-delima.png" alt="Logo" class="logo" />
+        <span class="title">Putra Delima</span>
       </div>
-
-      <nav class="nav" id="mainNav">
+      <button id="menuToggle" class="menu-toggle">☰</button>
+      <nav id="menu" class="menu">
         <a href="#home">Beranda</a>
         <a href="#tentang">Tentang</a>
-        <a href="#visi">Visi & Misi</a>
-        <a href="#struktur">Struktur</a>
         <a href="#galeri">Galeri</a>
         <a href="#kontak">Kontak</a>
-        <a href="login.html" class="btn-outline">Masuk</a>
+        <a href="login.html" class="btn-login">Masuk</a>
       </nav>
-
-      <button class="hamburger" id="hamburger" aria-label="menu">☰</button>
     </div>
   </header>
 
   <!-- HERO -->
-  <section id="home" class="hero" style="background-image:url('assets/img/hero-bg.jpg')">
-    <div class="hero-overlay"></div>
-    <div class="container hero-inner">
-      <div class="hero-content" data-aos="fade-up">
-        <h1 class="hero-title">Putra Delima</h1>
-        <h2 class="hero-sub">Bersatu, Berbakti, dan Berkarya untuk Desa</h2>
-        <p class="hero-desc">Komunitas yang bergerak untuk kemajuan sosial, kebudayaan, dan ekonomi masyarakat setempat.</p>
-        <div class="hero-cta">
-          <a href="daftar.html" class="btn btn-primary">Gabung Sekarang</a>
-          <a href="#tentang" class="btn btn-ghost">Pelajari Lebih Lanjut</a>
-        </div>
-      </div>
-      <div class="hero-image" data-aos="fade-left">
-        <img src="assets/img/hero-side.jpg" alt="Kegiatan Putra Delima" />
+  <section id="home" class="hero">
+    <div class="hero-inner">
+      <h1>Bersatu, Berbakti, dan Berkarya untuk Desa</h1>
+      <p>Komunitas yang bergerak untuk kemajuan sosial, budaya, dan ekonomi masyarakat setempat.</p>
+      <div class="cta">
+        <a href="daftar.html" class="btn-primary">Gabung Sekarang</a>
+        <a href="#tentang" class="btn-outline">Pelajari</a>
       </div>
     </div>
   </section>
 
   <!-- TENTANG -->
-  <section id="tentang" class="section">
-    <div class="container section-inner">
-      <div class="two-col" data-aos="fade-right">
-        <div class="col text">
-          <h3>Tentang Kami</h3>
-          <p>Putra Delima adalah organisasi lokal yang berfokus pada pemberdayaan masyarakat, pelatihan, dan kegiatan sosial. Kami percaya melalui gotong royong dan kolaborasi, perubahan nyata bisa diwujudkan.</p>
-          <ul class="bullets">
-            <li>Program pemberdayaan ekonomi</li>
-            <li>Kegiatan sosial & budaya</li>
-            <li>Pembinaan generasi muda</li>
-          </ul>
-        </div>
-        <div class="col image">
-          <img src="assets/img/tentang.jpg" alt="Tentang Putra Delima" />
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- VISI & MISI -->
-  <section id="visi" class="section dark">
-    <div class="container section-inner">
-      <h3 class="section-title" data-aos="fade-up">Visi & Misi</h3>
-      <div class="cards" data-aos="fade-up" data-aos-delay="80">
-        <div class="card accent">
-          <h4>Visi</h4>
-          <p>Menjadi organisasi pelopor yang mendorong kemajuan dan kesejahteraan desa secara berkelanjutan.</p>
-        </div>
-        <div class="card">
-          <h4>Misi</h4>
-          <ul>
-            <li>Meningkatkan kompetensi ekonomi anggota</li>
-            <li>Menyelenggarakan kegiatan budaya dan sosial</li>
-            <li>Membangun jaringan kerjasama lokal</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- STRUKTUR -->
-  <section id="struktur" class="section">
-    <div class="container section-inner" data-aos="fade-up">
-      <h3 class="section-title">Struktur Organisasi</h3>
-      <div class="struktur-wrap">
-        <img src="assets/img/struktur.jpg" alt="Struktur Organisasi Putra Delima" />
-      </div>
+  <section id="tentang" class="section about">
+    <h2>Tentang Kami</h2>
+    <div class="about-content">
+      <img src="assets/img/tentang.jpg" alt="Tentang Kami" />
+      <p>Putra Delima adalah organisasi lokal yang fokus pada pemberdayaan masyarakat melalui pelatihan, kegiatan sosial, dan ekonomi kreatif.</p>
+      <ul>
+        <li>Pemberdayaan ekonomi & kewirausahaan</li>
+        <li>Kegiatan sosial & budaya</li>
+        <li>Pengembangan generasi muda</li>
+      </ul>
     </div>
   </section>
 
   <!-- GALERI -->
-  <section id="galeri" class="section dark">
-    <div class="container section-inner">
-      <h3 class="section-title" data-aos="fade-up">Galeri Kegiatan</h3>
-      <div class="gallery-grid" data-aos="fade-up" data-aos-delay="60">
-        <div class="gal"><img src="assets/img/kegiatan1.jpg" alt="kegiatan1"></div>
-        <div class="gal"><img src="assets/img/kegiatan2.jpg" alt="kegiatan2"></div>
-        <div class="gal"><img src="assets/img/kegiatan3.jpg" alt="kegiatan3"></div>
-        <div class="gal"><img src="assets/img/kegiatan4.jpg" alt="kegiatan4"></div>
-        <div class="gal"><img src="assets/img/kegiatan5.jpg" alt="kegiatan5"></div>
-        <div class="gal"><img src="assets/img/kegiatan6.jpg" alt="kegiatan6"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- AGENDA (baru) -->
-  <section id="agenda" class="section">
-    <div class="container section-inner" data-aos="fade-up">
-      <h3 class="section-title">Agenda Kegiatan</h3>
-      <div class="agenda-list">
-        <article class="agenda-item">
-          <h4>Pelatihan Kewirausahaan</h4>
-          <p class="meta">12 Nov 2025 — Balai Desa</p>
-        </article>
-        <article class="agenda-item">
-          <h4>Bakti Sosial & Donor Darah</h4>
-          <p class="meta">28 Nov 2025 — Lapangan Kecamatan</p>
-        </article>
-      </div>
+  <section id="galeri" class="section gallery">
+    <h2>Galeri Kegiatan</h2>
+    <div class="grid">
+      <img src="assets/img/kegiatan1.jpg" alt="Kegiatan 1" />
+      <img src="assets/img/kegiatan2.jpg" alt="Kegiatan 2" />
+      <img src="assets/img/kegiatan3.jpg" alt="Kegiatan 3" />
+      <img src="assets/img/kegiatan4.jpg" alt="Kegiatan 4" />
     </div>
   </section>
 
   <!-- KONTAK -->
-  <section id="kontak" class="section dark">
-    <div class="container section-inner" data-aos="fade-up">
-      <h3 class="section-title">Kontak</h3>
-      <div class="contact-grid">
-        <div class="contact-card">
-          <h4>Alamat</h4>
-          <p>Jl. Raya Putra No.1, Desa Maju</p>
-        </div>
-        <div class="contact-card">
-          <h4>Email</h4>
-          <p>info@putradelima.org</p>
-        </div>
-        <div class="contact-card">
-          <h4>Whatsapp</h4>
-          <p><a href="https://wa.me/6281234567890" target="_blank">+62 812-3456-7890</a></p>
-        </div>
-        <div class="contact-map">
-          <!-- replace with your embed -->
-          <iframe src="https://www.google.com/maps/embed?pb=!1m18" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-        </div>
-      </div>
+  <section id="kontak" class="section contact">
+    <h2>Kontak Kami</h2>
+    <div class="contact-card">
+      <p><strong>Alamat:</strong> Jl. Raya Putra No.1, Desa Maju</p>
+      <p><strong>Email:</strong> info@putradelima.org</p>
+      <p><strong>WhatsApp:</strong> <a href="https://wa.me/6281234567890" target="_blank">+62 812-3456-7890</a></p>
     </div>
   </section>
 
   <!-- FOOTER -->
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <div>© <span id="year"></span> Putra Delima — Semua hak dilindungi</div>
-      <div>Designed with ♥</div>
-    </div>
+  <footer class="footer">
+    <p>© <span id="year"></span> Putra Delima. Semua hak dilindungi.</p>
   </footer>
 
-  <script src="assets/js/landing.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    const toggle = document.getElementById("menuToggle");
+    const menu = document.getElementById("menu");
+    toggle.addEventListener("click", () => menu.classList.toggle("show"));
+  </script>
 </body>
 </html>
