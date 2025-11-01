@@ -163,26 +163,37 @@ async function initMembersPage() {
   const membersTableBody = document.querySelector("#membersTable tbody");
   const refreshBtn = document.getElementById("refreshMembers");
 
+  // === Ambil session user (untuk cek role admin) ===
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return (window.location.href = "../login.html");
+
+  const userId = session.user.id;
+  const { data: currentUser } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+  const isAdmin = currentUser?.role === "admin";
+
   // === Load daftar anggota ===
   async function loadMembers() {
-    membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
+    membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Memuat...</td></tr>`;
     try {
-      // Ambil data dari tabel profiles
       const { data: members, error } = await supabase
-  .from("profiles")
-  .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role")
-  .order("inserted_at", { ascending: false });
+        .from("profiles")
+        .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role, status")
+        .order("inserted_at", { ascending: false });
 
-if (error) throw error;
+      if (error) throw error;
 
-if (!members || members.length === 0) {
-  membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada data</td></tr>`;
-  return;
-}
+      if (!members || members.length === 0) {
+        membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada data</td></tr>`;
+        return;
+      }
 
-membersTableBody.innerHTML = members
-  .map(
-    (m, i) => `
+      membersTableBody.innerHTML = members
+        .map(
+          (m, i) => `
       <tr>
         <td>${i + 1}</td>
         <td class="avatar-cell" style="text-align:center;">
@@ -196,21 +207,32 @@ membersTableBody.innerHTML = members
         <td>${escapeHtml(m.nama || "-")}</td>
         <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
         <td>${escapeHtml(m.blok || "-")}</td>
-        <td>${escapeHtml(m.rt || "-")}</td>
-        <td>${escapeHtml(m.rw || "-")}</td>
-        <td>${escapeHtml(m.role || "-")}</td>
+        <td>${escapeHtml(m.rt || "-")} / ${escapeHtml(m.rw || "-")}</td>
+        <td>${escapeHtml(m.status || "-")}</td>
+        <td>
+          ${
+            isAdmin
+              ? `
+                <button onclick="approveMember('${m.id}')" style="background:#4CAF50;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-right:4px;">✔</button>
+                <button onclick="rejectMember('${m.id}')" style="background:#F44336;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-right:4px;">✖</button>
+                <button onclick="deleteMember('${m.id}')" style="background:#9E9E9E;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-right:4px;">🗑</button>
+              `
+              : "-"
+          }
+          <button onclick="openMemberDetail('${m.id}')" style="background:#2196F3;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🔍</button>
+        </td>
       </tr>`
-  )
-  .join("");
-
+        )
+        .join("");
     } catch (e) {
       console.error(e);
-      membersTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat data</td></tr>`;
+      membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat data</td></tr>`;
     }
   }
 
   // === Aksi: Setuju ===
   window.approveMember = async (id) => {
+    if (!isAdmin) return showToast("error", "Hanya admin yang bisa menyetujui anggota.");
     try {
       const { error } = await supabase
         .from("profiles")
@@ -228,6 +250,7 @@ membersTableBody.innerHTML = members
 
   // === Aksi: Tolak ===
   window.rejectMember = async (id) => {
+    if (!isAdmin) return showToast("error", "Hanya admin yang bisa menolak anggota.");
     try {
       const { error } = await supabase
         .from("profiles")
@@ -245,6 +268,7 @@ membersTableBody.innerHTML = members
 
   // === Aksi: Hapus ===
   window.deleteMember = async (id) => {
+    if (!isAdmin) return showToast("error", "Hanya admin yang bisa menghapus anggota.");
     if (!confirm("Yakin ingin menghapus anggota ini?")) return;
     try {
       const { error } = await supabase.from("profiles").delete().eq("id", id);
@@ -276,7 +300,8 @@ membersTableBody.innerHTML = members
             ? new Date(member.tanggal_lahir).toLocaleDateString("id-ID")
             : "-"
         }</p>
-        <p><strong>RT/RW:</strong> ${member.rt || "-"} / ${member.rw || "-"}</p>
+        <p><strong>Blok:</strong> ${escapeHtml(member.blok || "-")}</p>
+        <p><strong>RT/RW:</strong> ${escapeHtml(member.rt || "-")} / ${escapeHtml(member.rw || "-")}</p>
         <p><strong>Status:</strong> ${escapeHtml(member.status || "-")}</p>
         <p><strong>Role:</strong> ${escapeHtml(member.role || "-")}</p>
         <div class="modal-actions"><button id="closeDetail">Tutup</button></div>`;
@@ -942,3 +967,4 @@ window.showAvatarModal = function (url, nama) {
 
   modal.querySelector("#closeAvatar").addEventListener("click", closeModal);
 };
+
