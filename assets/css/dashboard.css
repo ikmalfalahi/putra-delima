@@ -364,3 +364,14 @@ textarea {
 .action-btns button:hover {
   background: #444;
 }
+
+.badge {
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #fff;
+  font-weight: 500;
+}
+.badge.green { background: #28a745; }
+.badge.red { background: #dc3545; }
+.badge.gray { background: #6c757d; }
