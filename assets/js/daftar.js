@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const jenis_kelamin = document.getElementById("jenis_kelamin").value;
     const tanggal_lahir = document.getElementById("Tanggal_lahir").value;
     const agama = document.getElementById("agama").value.trim();
+    const status_hubungan = document.getElementById("status_hubungan").value; // 🔥 tambahkan ini
     const blok = document.getElementById("blok").value.trim();
     const rt = document.getElementById("rt").value.trim();
     const rw = document.getElementById("rw").value.trim();
@@ -34,7 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // === Disable tombol sementara (hindari spam signup) ===
     daftarBtn.disabled = true;
     showMsg("Mendaftarkan akun...", "gray");
 
@@ -95,10 +95,11 @@ document.addEventListener("DOMContentLoaded", () => {
           jenis_kelamin,
           tanggal_lahir,
           agama,
+          status_hubungan, // 🔥 tambahkan ke insert
           blok,
           rt,
           rw,
-          status: "Pending", // 🔥 menunggu persetujuan admin
+          status: "Pending", // menunggu persetujuan admin
           role: "anggota",
           email,
         },
