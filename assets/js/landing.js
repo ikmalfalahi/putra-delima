@@ -1,42 +1,45 @@
-// landing.js - header shrink, mobile nav, smooth scroll, simple fade-in
 document.addEventListener("DOMContentLoaded", () => {
   const header = document.getElementById("siteHeader");
   const hamburger = document.getElementById("hamburger");
-  const nav = document.getElementById("mainNav");
+  const mobileNav = document.getElementById("mobileNav");
+  const themeToggle = document.getElementById("themeToggle");
   const yearEl = document.getElementById("year");
+
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // shrink header
-  function onScroll() {
-    if (window.scrollY > 40) header.classList.add("shrink");
-    else header.classList.remove("shrink");
+  // Theme toggle
+  const currentTheme = localStorage.getItem("theme");
+  if (currentTheme === "dark") {
+    document.body.classList.add("dark");
+    themeToggle.textContent = "☀️";
   }
-  onScroll();
-  window.addEventListener("scroll", onScroll);
 
-  // toggle mobile nav
-  hamburger?.addEventListener("click", () => {
-    nav.style.display = nav.style.display === "flex" ? "" : "flex";
+  themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+    const dark = document.body.classList.contains("dark");
+    themeToggle.textContent = dark ? "☀️" : "🌙";
+    localStorage.setItem("theme", dark ? "dark" : "light");
   });
 
-  // smooth scroll
-  document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener("click", (e) => {
-      const href = a.getAttribute("href");
-      if (!href || href === "#") return;
-      const target = document.querySelector(href);
-      if (!target) return;
-      e.preventDefault();
-      const y = target.getBoundingClientRect().top + window.scrollY - 70;
-      window.scrollTo({ top: y, behavior: "smooth" });
-      if (window.innerWidth < 768) nav.style.display = "";
+  // Header shrink
+  window.addEventListener("scroll", () => {
+    header.classList.toggle("shrink", window.scrollY > 50);
+  });
+
+  // Mobile nav toggle
+  hamburger.addEventListener("click", () => {
+    mobileNav.classList.toggle("open");
+  });
+
+  document.querySelectorAll("#mobileNav a").forEach(a =>
+    a.addEventListener("click", () => mobileNav.classList.remove("open"))
+  );
+
+  // AOS animation observer
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add("aos-animate");
     });
-  });
-
-  // fade-in (simple AOS)
-  const els = document.querySelectorAll(".section, .hero-content, img");
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(en => en.isIntersecting && en.target.classList.add("fade-in"));
-  }, { threshold: 0.2 });
-  els.forEach(el => obs.observe(el));
+  }, { threshold: 0.12 });
+  document.querySelectorAll("[data-aos]").forEach(el => observer.observe(el));
 });
