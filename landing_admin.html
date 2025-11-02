@@ -1,100 +1,87 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Kelola Landing Page | Putra Delima</title>
-  <link rel="stylesheet" href="assets/css/landing_admin.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kelola Landing Page | Admin Putra Delima</title>
+  <link rel="stylesheet" href="../assets/css/landing_admin.css" />
 </head>
 <body>
-  <div class="admin-wrapper">
-    <aside class="sidebar">
-      <div class="brand">
-        <img src="../assets/img/logo-putra-delima.png" alt="logo" />
-        <h3>PUTRA DELIMA</h3>
-      </div>
-      <nav>
-        <button data-section="hero" class="active">🏠 Hero</button>
-        <button data-section="tentang">ℹ️ Tentang</button>
-        <button data-section="visimisi">🎯 Visi & Misi</button>
-        <button data-section="struktur">👥 Struktur</button>
-        <button data-section="galeri">🖼️ Galeri</button>
-        <button data-section="agenda">📅 Agenda</button>
-        <button data-section="kontak">📞 Kontak & Maps</button>
-        <button id="logoutBtn" class="logout">🚪 Logout</button>
-      </nav>
-    </aside>
+  <header class="admin-header">
+    <h1>Kelola Landing Page</h1>
+    <button id="logoutBtn">Keluar</button>
+  </header>
 
-    <main class="content">
-      <header class="topbar">
-        <h2 id="pageTitle">Kelola Hero Section</h2>
-      </header>
+  <main class="admin-container">
+    <!-- Hero Section -->
+    <section class="admin-section" id="heroSection">
+      <h2>Hero Section</h2>
+      <label>Judul:</label>
+      <input type="text" id="heroTitle" placeholder="Masukkan judul hero" />
+      <label>Deskripsi:</label>
+      <textarea id="heroDesc" placeholder="Masukkan deskripsi hero"></textarea>
+      <label>Gambar:</label>
+      <input type="file" id="heroImage" accept="image/*" />
+      <img id="heroPreview" class="preview" src="" alt="Preview Hero" />
+      <button class="btn-primary" id="saveHero">Simpan Hero</button>
+    </section>
 
-      <section id="hero" class="section active">
-        <h3>Hero Section</h3>
-        <form id="heroForm">
-          <label>Judul:
-            <input type="text" id="hero_title" required />
-          </label>
-          <label>Deskripsi:
-            <textarea id="hero_desc" rows="3"></textarea>
-          </label>
-          <label>Gambar:
-            <input type="file" id="hero_img" accept="image/*" />
-          </label>
-          <button type="submit">💾 Simpan</button>
-        </form>
-        <div id="heroPreview"></div>
-      </section>
+    <!-- Tentang Kami -->
+    <section class="admin-section" id="aboutSection">
+      <h2>Tentang Kami</h2>
+      <textarea id="aboutText" rows="5"></textarea>
+      <button class="btn-primary" id="saveAbout">Simpan Tentang</button>
+    </section>
 
-      <section id="tentang" class="section">
-        <h3>Tentang Kami</h3>
-        <textarea id="about_text" rows="6"></textarea>
-        <button id="saveAbout">💾 Simpan</button>
-      </section>
+    <!-- Visi Misi -->
+    <section class="admin-section" id="visionSection">
+      <h2>Visi & Misi</h2>
+      <label>Visi:</label>
+      <textarea id="visiText"></textarea>
+      <label>Misi:</label>
+      <textarea id="misiText"></textarea>
+      <button class="btn-primary" id="saveVision">Simpan Visi & Misi</button>
+    </section>
 
-      <section id="visimisi" class="section">
-        <h3>Visi & Misi</h3>
-        <div class="cards" id="visimisiList"></div>
-        <button id="addVisiMisi">➕ Tambah</button>
-      </section>
+    <!-- Struktur -->
+    <section class="admin-section" id="strukturSection">
+      <h2>Struktur Organisasi</h2>
+      <input type="file" id="strukturImage" accept="image/*" />
+      <img id="strukturPreview" class="preview" src="" alt="Struktur" />
+      <button class="btn-primary" id="saveStruktur">Simpan Struktur</button>
+    </section>
 
-      <section id="struktur" class="section">
-        <h3>Struktur Organisasi</h3>
-        <input type="file" id="struktur_img" accept="image/*" />
-        <button id="uploadStruktur">📤 Upload</button>
-        <div id="strukturPreview"></div>
-      </section>
+    <!-- Galeri -->
+    <section class="admin-section" id="gallerySection">
+      <h2>Galeri Foto</h2>
+      <input type="file" id="galleryFiles" multiple accept="image/*" />
+      <div id="galleryPreview" class="gallery-preview"></div>
+      <button class="btn-primary" id="uploadGallery">Upload Galeri</button>
+    </section>
 
-      <section id="galeri" class="section">
-        <h3>Galeri Foto</h3>
-        <input type="file" id="galeri_files" multiple accept="image/*" />
-        <button id="uploadGallery">📤 Upload</button>
-        <div id="galeriList" class="gallery"></div>
-      </section>
+    <!-- Agenda -->
+    <section class="admin-section" id="agendaSection">
+      <h2>Agenda Kegiatan</h2>
+      <input type="text" id="agendaTitle" placeholder="Judul kegiatan" />
+      <input type="text" id="agendaDate" placeholder="Tanggal & Lokasi" />
+      <button class="btn-primary" id="addAgenda">Tambah Agenda</button>
+      <div id="agendaList"></div>
+    </section>
 
-      <section id="agenda" class="section">
-        <h3>Agenda Kegiatan</h3>
-        <div id="agendaList"></div>
-        <button id="addAgenda">➕ Tambah Agenda</button>
-      </section>
+    <!-- Kontak -->
+    <section class="admin-section" id="contactSection">
+      <h2>Kontak & Maps</h2>
+      <input type="text" id="alamat" placeholder="Alamat" />
+      <input type="text" id="email" placeholder="Email" />
+      <input type="text" id="whatsapp" placeholder="No. Whatsapp" />
+      <textarea id="mapEmbed" placeholder="Embed code Google Maps"></textarea>
+      <button class="btn-primary" id="saveContact">Simpan Kontak</button>
+    </section>
+  </main>
 
-      <section id="kontak" class="section">
-        <h3>Kontak & Maps</h3>
-        <form id="contactForm">
-          <label>Alamat: <input type="text" id="alamat" /></label>
-          <label>Email: <input type="email" id="email" /></label>
-          <label>WhatsApp: <input type="text" id="wa" /></label>
-          <label>Link Maps Embed:
-            <textarea id="maps" rows="3"></textarea>
-          </label>
-          <button type="submit">💾 Simpan</button>
-        </form>
-      </section>
-    </main>
-  </div>
+  <footer class="admin-footer">© 2025 Putra Delima</footer>
 
   <script src="../assets/js/supabase.js"></script>
-  <script src="assets/js/landing_admin.js"></script>
+  <script src="../assets/js/landing_admin.js"></script>
 </body>
 </html>
