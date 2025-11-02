@@ -127,7 +127,9 @@ async function initDashboard() {
     if (totalSaldoEl) totalSaldoEl.textContent = "Rp 0";
   }
 
-  // === Preview Semua Anggota (termasuk admin) ===
+// === Preview Semua Anggota (termasuk admin) ===
+const membersPreviewTbody = document.querySelector("#membersPreview tbody");
+if (membersPreviewTbody) {
   try {
     const { data: members, error } = await supabase
       .from("profiles")
@@ -145,32 +147,15 @@ async function initDashboard() {
     membersPreviewTbody.innerHTML = members
       .map(
         (m, i) => `
-        <tr>
-          <td>${i + 1}</td>
-          <td style="text-align:center;">
-          <img 
-          src="${m.avatar_url || "../assets/img/default-avatar.png"}"
-          alt="${escapeHtml(m.nama || '-')}" 
-          style="width:42px;height:42px;object-fit:cover;border-radius:50%;cursor:pointer;transition:transform .2s ease;"
-          onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
-          />
-          </td>
-          <td>${escapeHtml(m.nama || "-")}</td>
-          <td>${
-            m.tanggal_lahir
-              ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID")
-              : "-"
-          }</td>
-          <td>${escapeHtml(m.blok || "-")}</td>
-          <td>${escapeHtml(m.rt || "-")}</td>
-          <td>${escapeHtml(m.rw || "-")}</td>
-        </tr>`
+          <tr>
+            <td>${i + 1}</td>
+            <td>${escapeHtml(m.nama || "-")}</td>
+            <td>${escapeHtml(m.role || "-")}</td>
+          </tr>`
       )
       .join("");
   } catch (e) {
     console.error("Gagal load anggota:", e);
-    membersPreviewTbody.innerHTML = `
-      <tr><td colspan="7" class="empty">Gagal memuat data anggota</td></tr>`;
   }
 }
 
@@ -1030,3 +1015,4 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
