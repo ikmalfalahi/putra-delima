@@ -111,6 +111,27 @@ async function initDashboard() {
     totalPengeluaranEl.textContent = "Rp 0";
   }
 
+    // === Total Saldo ===
+  try {
+    // ambil nilai dari elemen yang sudah dihitung sebelumnya
+    const iuranValue = Number((totalIuranEl.textContent.replace(/[^\d]/g, "")) || 0);
+    const pemasukanValue = Number((totalPemasukanEl.textContent.replace(/[^\d]/g, "")) || 0);
+    const pengeluaranValue = Number((totalPengeluaranEl.textContent.replace(/[^\d]/g, "")) || 0);
+
+    const totalSaldo = iuranValue + pemasukanValue - pengeluaranValue;
+
+    // buat elemen tampilannya di dashboard.html
+    const totalSaldoEl = document.getElementById("totalSaldo");
+    if (totalSaldoEl) {
+      totalSaldoEl.textContent = `Rp ${formatNumber(totalSaldo)}`;
+    }
+  } catch (e) {
+    console.error("Gagal hitung saldo:", e);
+    const totalSaldoEl = document.getElementById("totalSaldo");
+    if (totalSaldoEl) totalSaldoEl.textContent = "Rp 0";
+  }
+
+
   // === Preview Semua Anggota (termasuk admin) ===
   try {
     const { data: members, error } = await supabase
@@ -991,4 +1012,5 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
