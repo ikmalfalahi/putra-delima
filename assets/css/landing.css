@@ -53,32 +53,72 @@ a { color: #f5c542; text-decoration: none; }
 }
 .btn-outline:hover { background: #f5c542; color: #000; }
 
-/* === HERO === */
+/* === HERO (update) === */
 .hero {
-  background: url("../img/hero-bg.jpg") center/cover no-repeat;
-  position: relative; height: 100vh;
-  display: flex; align-items: center; justify-content: center;
-  text-align: center; color: #fff;
+  position: relative;
+  min-height: 100dvh; /* gunakan dynamic viewport height (mendukung HP modern) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: url("../img/hero-bg.jpg") center center / cover no-repeat;
+  color: #fff;
+  overflow: hidden;
 }
-.hero-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.85));
-}
-.hero-content {
-  z-index: 2; padding: 0 20px;
-  max-width: 400px; animation: fadeIn 1s ease;
-}
-.hero h1 { font-size: 2.2rem; color: #f5c542; margin-bottom: 10px; }
-.hero p { color: #eee; margin-bottom: 20px; font-size: 1rem; }
 
-.cta a {
-  display: inline-block; margin: 5px;
-  padding: 10px 16px; border-radius: 8px;
-  font-weight: 600;
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(1.5px);
 }
-.btn-primary { background: #f5c542; color: #111; }
-.btn-primary:hover { background: #fff; }
-.btn-outline { border: 1px solid #f5c542; color: #f5c542; }
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 0 20px;
+  max-width: 480px;
+  animation: fadeIn 1s ease;
+}
+
+.hero h1 {
+  font-size: 2rem;
+  color: #f5c542;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.hero p {
+  font-size: 1rem;
+  color: #eee;
+  margin-bottom: 18px;
+}
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+    padding: 100px 60px;
+  }
+  .hero-content {
+    max-width: 600px;
+  }
+  .hero h1 {
+    font-size: 2.6rem;
+  }
+  .hero p {
+    font-size: 1.1rem;
+  }
+}
 
 /* === SECTIONS === */
 .section { padding: 70px 20px; text-align: center; }
@@ -216,3 +256,4 @@ body.dark .btn-outline {
   border-color: #f1c40f;
   color: #f1c40f;
 }
+
