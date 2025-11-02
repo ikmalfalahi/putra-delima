@@ -4,7 +4,7 @@
   --dark: #121212;
   --muted: #1e1e1e;
   --white: #fff;
-  --accent: #fff;
+  --accent: #f5c542;
   --glass-bg: rgba(255, 255, 255, 0.06);
   --glass-border: rgba(255, 255, 255, 0.1);
 }
@@ -68,11 +68,13 @@ body::before {
   text-align: center;
   margin-bottom: 20px;
 }
+
 .brand img {
   width: 80px;
   border-radius: 50%;
-  filter: drop-shadow(0 0 8px rgba(255,255,255,0.25));
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.25));
 }
+
 .brand h3 {
   margin-top: 10px;
   font-size: 16px;
@@ -86,6 +88,7 @@ body::before {
   gap: 8px;
   margin-top: 10px;
 }
+
 .nav-item {
   color: #fff;
   text-decoration: none;
@@ -94,9 +97,11 @@ body::before {
   transition: 0.25s;
   font-weight: 600;
 }
+
 .nav-item:hover {
   background: rgba(255, 255, 255, 0.08);
 }
+
 .nav-item.active {
   background: rgba(245, 197, 66, 0.2);
   color: var(--accent);
@@ -128,7 +133,7 @@ body::before {
   color: #fff;
 }
 
-/* === CONTENT CARD === */
+/* === CARD UMUM === */
 .card {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -156,23 +161,9 @@ button {
   cursor: pointer;
   transition: all 0.3s ease;
 }
+
 button:hover {
   background: #ffe27a;
-}
-
-/* === TABLE === */
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  color: #fff;
-}
-.table th,
-.table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-.table th {
-  color: var(--accent);
 }
 
 /* === FOOTER === */
@@ -200,9 +191,8 @@ button:hover {
   }
 }
 
-/* === PROFIL PAGE STYLING === */
+/* === PROFIL PAGE === */
 .profil-card {
-  position: relative;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
@@ -213,24 +203,12 @@ button:hover {
   margin-top: 20px;
 }
 
-.profil-card h2 {
-  font-size: 1.4rem;
-  margin-bottom: 20px;
-  color: #fff;
-  text-align: center;
-}
-
 .profil-container {
   display: flex;
   flex-wrap: wrap;
   gap: 30px;
   align-items: flex-start;
   justify-content: center;
-}
-
-.foto-section {
-  flex: 1;
-  text-align: center;
 }
 
 .foto-section img {
@@ -243,28 +221,6 @@ button:hover {
   transition: transform 0.25s ease;
 }
 
-.foto-section img:hover {
-  transform: scale(1.05);
-}
-
-.foto-section button {
-  margin-top: 10px;
-  background: #fff;
-  color: #111;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.foto-section button:hover {
-  background: #fff;
-  color: #000;
-}
-
-/* === FORM STYLING === */
 .form-section {
   flex: 2;
   display: flex;
@@ -296,244 +252,71 @@ button:hover {
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #fff;
+  border-color: var(--accent);
   background: rgba(255, 255, 255, 0.15);
 }
 
-.form-group input[readonly] {
-  background: rgba(255, 255, 255, 0.05);
-  color: #ccc;
-}
-
-button.simpan,
-button.edit {
-  background: #fff;
-  color: #111;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.25s;
-}
-
-button.simpan:hover,
-button.edit:hover {
-  background: #fff;
-  color: #000;
-}
-
-.action-btns {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .profil-container {
-    flex-direction: column;
-    align-items: center;
-  }
-  .foto-section img {
-    width: 160px;
-    height: 200px;
-  }
-}
-
-/* === IURAN KEUANGAN PAGE === */
-.keuangan-card {
+/* === FORM IURAN & KEUANGAN (SAMA DENGAN PROFIL) === */
+.keuangan-card,
+.iuran-card {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   padding: 30px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-  color: #fff;
-  margin-top: 20px;
-}
-
-.keuangan-card h2 {
-  font-size: 1.4rem;
-  color: #f5c542;
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-/* === FORM KEUANGAN === */
-.keuangan-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.keuangan-form .form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.keuangan-form label {
-  color: #f5c542;
-  font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 6px;
-}
-
-.keuangan-form input,
-.keuangan-form select,
-.keuangan-form textarea {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-size: 0.95rem;
-  transition: border-color 0.3s, background 0.3s;
-}
-
-.keuangan-form input:focus,
-.keuangan-form select:focus,
-.keuangan-form textarea:focus {
-  border-color: #f5c542;
-  background: rgba(255, 255, 255, 0.15);
-  outline: none;
-}
-
-/* === TOMBOL === */
-.keuangan-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.keuangan-actions button {
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.25s;
-}
-
-.keuangan-actions .btn-save {
-  background: #f5c542;
-  color: #111;
-}
-
-.keuangan-actions .btn-cancel {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.keuangan-actions .btn-save:hover {
-  background: #fff;
-  color: #000;
-}
-
-.keuangan-actions .btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* === TABEL IURAN === */
-.table-keuangan {
-  width: 100%;
-  border-collapse: collapse;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  overflow: hidden;
-  margin-top: 20px;
-}
-
-.table-keuangan th, .table-keuangan td {
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  text-align: left;
-}
-
-.table-keuangan th {
-  background: rgba(255, 255, 255, 0.1);
-  color: #f5c542;
-}
-
-.table-keuangan tr:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .keuangan-card {
-    padding: 20px;
-  }
-}
-
-/* === FORM GAYA PROFIL UNTUK HALAMAN IURAN & KEUANGAN === */
-.keuangan-card form,
-.iuran-card form {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
-  border-radius: 20px;
-  padding: 25px 30px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   color: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  margin-top: 20px;
+  max-width: 600px;
+  margin-inline: auto;
 }
 
 .keuangan-card h2,
 .iuran-card h2 {
-  color: #f5c542;
+  font-size: 1.4rem;
+  color: var(--accent);
   text-align: center;
   margin-bottom: 20px;
-  font-size: 1.4rem;
 }
 
-/* input, select, textarea seragam */
+.keuangan-card form,
+.iuran-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .keuangan-card input,
 .keuangan-card select,
-.keuangan-card textarea,
 .iuran-card input,
-.iuran-card select,
-.iuran-card textarea {
+.iuran-card select {
   width: 100%;
-  padding: 12px 15px;
-  border-radius: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
   font-size: 0.95rem;
-  transition: border-color 0.3s, background 0.3s;
+  backdrop-filter: blur(8px);
+  transition: 0.3s ease;
 }
 
-.keuangan-card input::placeholder,
-.iuran-card input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* efek saat focus */
 .keuangan-card input:focus,
 .keuangan-card select:focus,
-.keuangan-card textarea:focus,
 .iuran-card input:focus,
-.iuran-card select:focus,
-.iuran-card textarea:focus {
-  outline: none;
-  border-color: #f5c542;
+.iuran-card select:focus {
+  border-color: var(--accent);
   background: rgba(255, 255, 255, 0.15);
+  outline: none;
 }
 
-/* tombol */
 .keuangan-card button,
 .iuran-card button {
-  background: #f5c542;
+  background: var(--accent);
   color: #111;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px;
-  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -545,17 +328,15 @@ button.edit:hover {
   transform: translateY(-2px);
 }
 
-/* agar tampilan tetap proporsional */
-.keuangan-card,
-.iuran-card {
-  max-width: 600px;
-  margin: 0 auto;
-}
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .profil-container {
+    flex-direction: column;
+    align-items: center;
+  }
 
-/* responsif */
-@media (max-width: 600px) {
-  .keuangan-card form,
-  .iuran-card form {
+  .keuangan-card,
+  .iuran-card {
     padding: 20px;
   }
 }
