@@ -47,15 +47,15 @@ a { color: #f5c542; text-decoration: none; }
   z-index: 999;
 }
 .mobile-nav.open { right: 0; }
-.mobile-nav a { color: #f5c542; font-weight: 500; }
+.mobile-nav a { color: #fff; font-weight: 500; }
 .mobile-nav a:hover { color: #fff; }
 
 .btn-outline {
-  border: 1px solid #f5c542;
+  border: 1px solid #fff;
   padding: 6px 10px;
   border-radius: 6px;
   text-align: center;
-  color: #f5c542;
+  color: #fff;
 }
 .btn-outline:hover { background: #f5c542; color: #000; }
 
@@ -73,12 +73,32 @@ a { color: #f5c542; text-decoration: none; }
   overflow: hidden;
 }
 
-.hero-overlay { display: none; }
+/* === HERO === */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: rgba(255,255,255,0.3); /* putih transparan */
+  backdrop-filter: blur(12px);        /* efek kaca */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.2); /* sedikit overlay untuk teks lebih jelas */
+  backdrop-filter: blur(8px);
+  z-index: 1;
+}
 
 .hero-content {
   position: relative;
   z-index: 2;
-  color: #111;
+  color: #111; /* teks gelap */
   padding: 0 20px;
   max-width: 600px;
   text-align: center;
@@ -88,11 +108,13 @@ a { color: #f5c542; text-decoration: none; }
 .hero h1 {
   font-size: 2.2rem;
   margin-bottom: 10px;
+  color: #111; /* teks hero */
 }
 
 .hero p {
   font-size: 1rem;
   margin-bottom: 20px;
+  color: #333; /* deskripsi hero */
 }
 
 .cta {
@@ -101,6 +123,7 @@ a { color: #f5c542; text-decoration: none; }
   flex-wrap: wrap;
   gap: 10px;
 }
+
 .cta .btn-primary {
   background: #f5c542;
   color: #111;
@@ -108,6 +131,7 @@ a { color: #f5c542; text-decoration: none; }
   border-radius: 6px;
   font-weight: 600;
 }
+
 .cta .btn-outline {
   border: 1px solid #f5c542;
   color: #f5c542;
@@ -210,3 +234,4 @@ body.dark .btn-outline { border-color: #f1c40f; color: #f1c40f; }
   transition: transform 0.2s;
 }
 #themeToggle:hover { transform: rotate(20deg); }
+
