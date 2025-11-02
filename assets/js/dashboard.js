@@ -340,6 +340,7 @@ async function initIuranPage() {
   const addIuranBtn = document.getElementById("addIuranBtn");
   const iuranMsg = document.getElementById("iuranMsg");
   const iuranTableBody = document.querySelector("#iuranTable tbody");
+  const searchInput = document.getElementById("searchIuran");
 
   // --- Ambil user login dan role ---
   const { data: { session } } = await supabase.auth.getSession();
@@ -352,29 +353,26 @@ async function initIuranPage() {
     .single();
   const role = profile?.role || "anggota";
 
-  // --- Sembunyikan elemen admin-only ---
+  // --- Sembunyikan elemen admin-only jika bukan admin ---
   if (role !== "admin") {
     document.querySelectorAll(".admin-only").forEach(el => (el.style.display = "none"));
   }
 
-  // --- Muat daftar anggota ke select (sekarang termasuk admin) ---
-  if (role === "admin") {
-    const { data: members } = await supabase
-      .from("profiles")
-      .select("id, nama, role");
-
+  // --- Muat daftar anggota (termasuk admin) ke dropdown tambah iuran ---
+  const { data: members } = await supabase.from("profiles").select("id, nama, role");
+  if (members && members.length) {
     iuranSelect.innerHTML =
       `<option value="">Pilih Anggota</option>` +
-      (members || [])
-        .map(m => `<option value="${m.id}">${m.nama} (${m.role})</option>`)
-        .join("");
+      members.map(m => `<option value="${m.id}">${m.nama} (${m.role})</option>`).join("");
   }
+
+  // --- Simpan data global untuk pencarian ---
+  let allIurans = [];
 
   // --- Fungsi Load Iuran ---
   async function loadIuran() {
     iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Memuat...</td></tr>`;
 
-    // Ambil semua iuran
     let { data: iurans, error } = await supabase
       .from("iuran")
       .select("*")
@@ -386,12 +384,7 @@ async function initIuranPage() {
       return;
     }
 
-    // Filter jika bukan admin
-    if (role !== "admin") {
-      iurans = iurans.filter(u => u.user_id === userId);
-    }
-
-    // Ambil nama dari profiles
+    // Ambil nama user dari profiles
     const userIds = [...new Set(iurans.map(u => u.user_id).filter(Boolean))];
     const { data: users } = await supabase
       .from("profiles")
@@ -401,17 +394,28 @@ async function initIuranPage() {
     const userMap = {};
     (users || []).forEach(u => (userMap[u.id] = `${u.nama} (${u.role})`));
 
-    if (!iurans || iurans.length === 0) {
-      iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada data</td></tr>`;
+    allIurans = iurans.map((u, i) => ({
+      ...u,
+      nama_user: userMap[u.user_id] || "-",
+      index: i + 1,
+    }));
+
+    renderIuran(allIurans);
+  }
+
+  // --- Fungsi Render Iuran ke Tabel ---
+  function renderIuran(data) {
+    if (!data || data.length === 0) {
+      iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Tidak ada hasil.</td></tr>`;
       return;
     }
 
-    iuranTableBody.innerHTML = iurans
+    iuranTableBody.innerHTML = data
       .map(
-        (u, i) => `
+        (u) => `
         <tr>
-          <td>${i + 1}</td>
-          <td>${escapeHtml(userMap[u.user_id] || "-")}</td>
+          <td>${u.index}</td>
+          <td>${escapeHtml(u.nama_user)}</td>
           <td>${escapeHtml(u.keterangan || "-")}</td>
           <td>Rp ${formatNumber(u.jumlah)}</td>
           <td>${u.tanggal ? new Date(u.tanggal).toLocaleDateString("id-ID") : "-"}</td>
@@ -428,7 +432,20 @@ async function initIuranPage() {
       .join("");
   }
 
-  // --- Tambah Iuran (Admin Only) ---
+  // --- Event: Kolom pencarian real-time ---
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value.toLowerCase();
+      const filtered = allIurans.filter(u =>
+        (u.nama_user?.toLowerCase().includes(query)) ||
+        (u.keterangan?.toLowerCase().includes(query)) ||
+        (u.status?.toLowerCase().includes(query))
+      );
+      renderIuran(filtered);
+    });
+  }
+
+  // --- Tambah Iuran (Admin bisa menambah atas nama siapa pun, termasuk dirinya sendiri) ---
   if (role === "admin" && addIuranBtn) {
     addIuranBtn.addEventListener("click", async () => {
       const keterangan = document.getElementById("iuran_keterangan").value.trim();
@@ -440,9 +457,7 @@ async function initIuranPage() {
         return;
       }
 
-      // Jika admin tidak memilih siapa pun, otomatis untuk dirinya sendiri
-      const targetUser = member || userId;
-
+      const targetUser = member || userId; // admin bisa memilih dirinya sendiri
       const { error } = await supabase.from("iuran").insert([
         {
           user_id: targetUser,
@@ -1015,9 +1030,3 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
-
-
-
-
-
-
