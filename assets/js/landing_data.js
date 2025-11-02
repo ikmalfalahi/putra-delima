@@ -8,26 +8,33 @@ document.addEventListener("DOMContentLoaded", async () => {
   const safeHTML = (el, html) => { if (el) el.innerHTML = html || ""; };
 
   // === HERO ===
-  try {
-    const { data: hero, error } = await supabase
-      .from("landing_hero")
-      .select("title, description, image_url")
-      .limit(1);
+try {
+  const { data: hero, error } = await supabase
+    .from("landing_hero")
+    .select("title, description, image_url")
+    .limit(1);
 
-    if (error) console.warn("Hero error:", error.message);
+  if (error) console.warn("Hero error:", error.message);
 
-    if (hero?.length) {
-      const h = hero[0];
-      safeText(document.getElementById("heroTitle"), h.title);
-      safeText(document.getElementById("heroDesc"), h.description);
+  if (hero?.length) {
+    const h = hero[0];
+    safeText(document.getElementById("heroTitle"), h.title);
+    safeText(document.getElementById("heroDesc"), h.description);
 
-      const heroImg = document.getElementById("heroImage");
-      if (heroImg && h.image_url) {
-        heroImg.src = h.image_url;
-        heroImg.style.display = "block";
-      }
+    const heroImg = document.getElementById("heroImage");
+    if (heroImg && h.image_url) {
+      heroImg.src = h.image_url;
+      heroImg.style.display = "block";
+
+      // Tambahkan AOS attributes supaya animasi zoom muncul
+      heroImg.setAttribute("data-aos", "zoom-in");
+      heroImg.setAttribute("data-aos-delay", "200");
+      heroImg.classList.add("aos-animate"); // pastikan AOS trigger langsung
     }
-  } catch (err) { console.error("Gagal load hero:", err); }
+  }
+} catch (err) {
+  console.error("Gagal load hero:", err);
+}
 
   // === TENTANG ===
   try {
