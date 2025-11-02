@@ -58,69 +58,53 @@ async function initDashboard() {
   const totalPengeluaranEl = document.getElementById("totalPengeluaran");
   const membersPreviewTbody = document.querySelector("#membersPreview tbody");
 
-  // === Total Anggota (semua dari profiles) ===
-  try {
-    const { count, error } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true });
-    if (error) throw error;
-    totalMembersEl.textContent = count ?? "0";
-  } catch (e) {
-    console.error("Gagal hitung anggota:", e);
-    totalMembersEl.textContent = "0";
-  }
-
-  // === Total Iuran ===
+    // === Total Iuran ===
+  let totalIuranValue = 0;
   try {
     const { data: iurans, error } = await supabase
       .from("iuran")
       .select("jumlah");
     if (error) throw error;
-    const total = (iurans || []).reduce((sum, i) => sum + Number(i.jumlah || 0), 0);
-    totalIuranEl.textContent = `Rp ${formatNumber(total)}`;
+    totalIuranValue = (iurans || []).reduce((sum, i) => sum + Number(i.jumlah || 0), 0);
+    totalIuranEl.textContent = `Rp ${formatNumber(totalIuranValue)}`;
   } catch (e) {
     console.error("Gagal hitung iuran:", e);
     totalIuranEl.textContent = "-";
   }
 
   // === Total Pemasukan ===
+  let totalPemasukanValue = 0;
   try {
     const { data: pemasukan, error } = await supabase
       .from("keuangan")
       .select("jumlah")
       .eq("jenis", "pemasukan");
     if (error) throw error;
-    const total = (pemasukan || []).reduce((sum, p) => sum + Number(p.jumlah || 0), 0);
-    totalPemasukanEl.textContent = `Rp ${formatNumber(total)}`;
+    totalPemasukanValue = (pemasukan || []).reduce((sum, p) => sum + Number(p.jumlah || 0), 0);
+    totalPemasukanEl.textContent = `Rp ${formatNumber(totalPemasukanValue)}`;
   } catch (e) {
     console.error("Gagal hitung pemasukan:", e);
     totalPemasukanEl.textContent = "Rp 0";
   }
 
   // === Total Pengeluaran ===
+  let totalPengeluaranValue = 0;
   try {
     const { data: pengeluaran, error } = await supabase
       .from("keuangan")
       .select("jumlah")
       .eq("jenis", "pengeluaran");
     if (error) throw error;
-    const total = (pengeluaran || []).reduce((sum, p) => sum + Number(p.jumlah || 0), 0);
-    totalPengeluaranEl.textContent = `Rp ${formatNumber(total)}`;
+    totalPengeluaranValue = (pengeluaran || []).reduce((sum, p) => sum + Number(p.jumlah || 0), 0);
+    totalPengeluaranEl.textContent = `Rp ${formatNumber(totalPengeluaranValue)}`;
   } catch (e) {
     console.error("Gagal hitung pengeluaran:", e);
     totalPengeluaranEl.textContent = "Rp 0";
   }
 
-    // === Total Saldo ===
+  // === Total Saldo ===
   try {
-    // ambil nilai dari elemen yang sudah dihitung sebelumnya
-    const iuranValue = Number((totalIuranEl.textContent.replace(/[^\d]/g, "")) || 0);
-    const pemasukanValue = Number((totalPemasukanEl.textContent.replace(/[^\d]/g, "")) || 0);
-    const pengeluaranValue = Number((totalPengeluaranEl.textContent.replace(/[^\d]/g, "")) || 0);
-
-    const totalSaldo = iuranValue + pemasukanValue - pengeluaranValue;
-
-    // buat elemen tampilannya di dashboard.html
+    const totalSaldo = totalIuranValue + totalPemasukanValue - totalPengeluaranValue;
     const totalSaldoEl = document.getElementById("totalSaldo");
     if (totalSaldoEl) {
       totalSaldoEl.textContent = `Rp ${formatNumber(totalSaldo)}`;
@@ -130,7 +114,6 @@ async function initDashboard() {
     const totalSaldoEl = document.getElementById("totalSaldo");
     if (totalSaldoEl) totalSaldoEl.textContent = "Rp 0";
   }
-
 
   // === Preview Semua Anggota (termasuk admin) ===
   try {
@@ -1012,5 +995,6 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
 
