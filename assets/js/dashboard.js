@@ -56,9 +56,10 @@ async function initDashboard() {
   const totalIuranEl = document.getElementById("totalIuran");
   const totalPemasukanEl = document.getElementById("totalPemasukan");
   const totalPengeluaranEl = document.getElementById("totalPengeluaran");
-  const membersPreviewTbody = document.querySelector("#membersPreview tbody");
+  const totalSaldoEl = document.getElementById("totalSaldo");
+  const membersPreviewTbody = document.querySelector("#membersPreview tbody"); // deklarasi hanya sekali
 
-  // === Total Anggota (semua dari profiles) ===
+  // === Total Anggota ===
   try {
     const { count, error } = await supabase
       .from("profiles")
@@ -117,47 +118,43 @@ async function initDashboard() {
   // === Total Saldo ===
   try {
     const totalSaldo = totalIuranValue + totalPemasukanValue - totalPengeluaranValue;
-    const totalSaldoEl = document.getElementById("totalSaldo");
-    if (totalSaldoEl) {
-      totalSaldoEl.textContent = `Rp ${formatNumber(totalSaldo)}`;
-    }
+    if (totalSaldoEl) totalSaldoEl.textContent = `Rp ${formatNumber(totalSaldo)}`;
   } catch (e) {
     console.error("Gagal hitung saldo:", e);
-    const totalSaldoEl = document.getElementById("totalSaldo");
     if (totalSaldoEl) totalSaldoEl.textContent = "Rp 0";
   }
 
-// === Preview Semua Anggota (termasuk admin) ===
-const membersPreviewTbody = document.querySelector("#membersPreview tbody");
-if (membersPreviewTbody) {
-  try {
-    const { data: members, error } = await supabase
-      .from("profiles")
-      .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role")
-      .order("inserted_at", { ascending: false });
+  // === Preview Semua Anggota (termasuk admin) ===
+  if (membersPreviewTbody) {
+    try {
+      const { data: members, error } = await supabase
+        .from("profiles")
+        .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role")
+        .order("inserted_at", { ascending: false });
 
-    if (error) throw error;
+      if (error) throw error;
 
-    if (!members || members.length === 0) {
-      membersPreviewTbody.innerHTML = `
-        <tr><td colspan="7" class="empty">Belum ada data</td></tr>`;
-      return;
+      if (!members || members.length === 0) {
+        membersPreviewTbody.innerHTML = `<tr><td colspan="7" class="empty">Belum ada data</td></tr>`;
+        return;
+      }
+
+      membersPreviewTbody.innerHTML = members
+        .map(
+          (m, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${escapeHtml(m.nama || "-")}</td>
+              <td>${escapeHtml(m.role || "-")}</td>
+            </tr>`
+        )
+        .join("");
+    } catch (e) {
+      console.error("Gagal load anggota:", e);
     }
-
-    membersPreviewTbody.innerHTML = members
-      .map(
-        (m, i) => `
-          <tr>
-            <td>${i + 1}</td>
-            <td>${escapeHtml(m.nama || "-")}</td>
-            <td>${escapeHtml(m.role || "-")}</td>
-          </tr>`
-      )
-      .join("");
-  } catch (e) {
-    console.error("Gagal load anggota:", e);
   }
 }
+
 
 /* ---------------- Members page (pakai tabel profiles) ---------------- */
 async function initMembersPage() {
@@ -1015,4 +1012,5 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
