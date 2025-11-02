@@ -289,8 +289,8 @@ button:hover {
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.2);
-  background: #fff;
-  color: #111;
+  background: #ffffff29;
+  color: #fff;
   font-size: 0.95rem;
   transition: 0.3s ease;
 }
@@ -345,4 +345,5 @@ button:hover {
     padding: 20px;
   }
 }
+
 
