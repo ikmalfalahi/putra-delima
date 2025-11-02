@@ -1,87 +1,221 @@
+/* === RESET & DASAR === */
+* {
+  box-sizing: border-box;
+}
 body {
   font-family: "Poppins", sans-serif;
   background: #0b0b0b;
   color: #f5f5f5;
   margin: 0;
   padding: 0;
+  line-height: 1.6;
 }
 
+/* === HEADER === */
 .admin-header {
-  background: #111;
+  background: linear-gradient(90deg, #111, #1b1b1b);
   color: #f5c542;
   padding: 15px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #333;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.admin-header h1 {
+  font-size: 1.3rem;
+  margin: 0;
+}
+.admin-header button {
+  background: #f5c542;
+  color: #111;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+.admin-header button:hover {
+  background: #ffe27a;
 }
 
+/* === KONTEN UTAMA === */
 .admin-container {
   padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
+/* === SETIAP SECTION === */
 .admin-section {
   background: #1a1a1a;
   border-radius: 10px;
   padding: 20px;
   margin-bottom: 25px;
   border: 1px solid #333;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
-
 .admin-section h2 {
   color: #f5c542;
   margin-bottom: 15px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 6px;
 }
 
+/* === INPUT & TEXTAREA === */
 input[type="text"],
-textarea {
+textarea,
+input[type="file"] {
   width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
+  padding: 10px;
+  margin-bottom: 12px;
   background: #111;
   border: 1px solid #333;
   color: #f5f5f5;
   border-radius: 6px;
+  font-size: 0.95rem;
+}
+textarea {
+  resize: vertical;
+  min-height: 90px;
 }
 
+/* === TOMBOL === */
 button.btn-primary {
   background: #f5c542;
   color: #111;
-  padding: 8px 12px;
+  padding: 10px 16px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
+  transition: 0.25s ease;
 }
 button.btn-primary:hover {
   background: #ffe27a;
 }
 
+/* === PREVIEW GAMBAR === */
 .preview {
   display: block;
   width: 100%;
-  max-width: 320px;
+  max-width: 340px;
   border-radius: 10px;
   margin-top: 10px;
+  border: 1px solid #444;
 }
 
+/* === GALERI PREVIEW === */
 .gallery-preview {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 10px;
+  margin-top: 12px;
 }
 .gallery-preview img {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   object-fit: cover;
   border-radius: 6px;
+  border: 1px solid #444;
+  transition: transform 0.2s;
+}
+.gallery-preview img:hover {
+  transform: scale(1.05);
 }
 
+/* === GALERI ITEM (CRUD) === */
+.gallery-item {
+  background: #141414;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  width: 120px;
+}
+.gallery-item img {
+  width: 100%;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+.gallery-item button {
+  background: #f04f4f;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.gallery-item button:hover {
+  background: #ff6d6d;
+}
+
+/* === AGENDA LIST === */
+.agenda-item {
+  background: #141414;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.agenda-item input {
+  flex: 1;
+  background: #0e0e0e;
+  border: 1px solid #444;
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+.agenda-item button {
+  background: #f5c542;
+  color: #111;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: 0.2s;
+}
+.agenda-item button.delete-btn {
+  background: #f04f4f;
+  color: #fff;
+}
+.agenda-item button:hover {
+  opacity: 0.85;
+}
+
+/* === FOOTER === */
 footer.admin-footer {
   text-align: center;
   padding: 15px;
   color: #888;
   border-top: 1px solid #222;
-  margin-top: 20px;
+  margin-top: 40px;
+  font-size: 0.9rem;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .admin-container {
+    padding: 15px;
+  }
+  .agenda-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .gallery-item {
+    width: 46%;
+  }
 }
