@@ -357,12 +357,17 @@ async function initIuranPage() {
     document.querySelectorAll(".admin-only").forEach(el => (el.style.display = "none"));
   }
 
-  // --- Muat daftar anggota ke select (khusus admin) ---
+  // --- Muat daftar anggota ke select (sekarang termasuk admin) ---
   if (role === "admin") {
-    const { data: members } = await supabase.from("profiles").select("id, nama").eq("role", "anggota");
+    const { data: members } = await supabase
+      .from("profiles")
+      .select("id, nama, role");
+
     iuranSelect.innerHTML =
-      `<option value="">Pilih anggota</option>` +
-      (members || []).map(m => `<option value="${m.id}">${m.nama}</option>`).join("");
+      `<option value="">Pilih Anggota</option>` +
+      (members || [])
+        .map(m => `<option value="${m.id}">${m.nama} (${m.role})</option>`)
+        .join("");
   }
 
   // --- Fungsi Load Iuran ---
@@ -390,11 +395,11 @@ async function initIuranPage() {
     const userIds = [...new Set(iurans.map(u => u.user_id).filter(Boolean))];
     const { data: users } = await supabase
       .from("profiles")
-      .select("id, nama")
+      .select("id, nama, role")
       .in("id", userIds);
 
     const userMap = {};
-    (users || []).forEach(u => (userMap[u.id] = u.nama));
+    (users || []).forEach(u => (userMap[u.id] = `${u.nama} (${u.role})`));
 
     if (!iurans || iurans.length === 0) {
       iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada data</td></tr>`;
@@ -430,14 +435,17 @@ async function initIuranPage() {
       const jumlah = Number(document.getElementById("iuran_jumlah").value);
       const member = document.getElementById("iuran_user").value;
 
-      if (!keterangan || !jumlah || !member) {
-        iuranMsg.textContent = "Semua field wajib diisi.";
+      if (!keterangan || !jumlah) {
+        iuranMsg.textContent = "Keterangan dan jumlah wajib diisi.";
         return;
       }
 
+      // Jika admin tidak memilih siapa pun, otomatis untuk dirinya sendiri
+      const targetUser = member || userId;
+
       const { error } = await supabase.from("iuran").insert([
         {
-          user_id: member,
+          user_id: targetUser,
           jumlah,
           tanggal: new Date().toISOString().split("T")[0],
           status: "belum",
@@ -448,7 +456,7 @@ async function initIuranPage() {
       if (error) {
         iuranMsg.textContent = `Gagal: ${error.message}`;
       } else {
-        iuranMsg.textContent = "Berhasil ditambahkan.";
+        iuranMsg.textContent = "✅ Iuran berhasil ditambahkan.";
         await loadIuran();
       }
     });
@@ -1007,6 +1015,7 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
 
 
