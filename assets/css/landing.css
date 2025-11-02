@@ -53,70 +53,98 @@ a { color: #f5c542; text-decoration: none; }
 }
 .btn-outline:hover { background: #f5c542; color: #000; }
 
-/* === HERO (update) === */
+/* === HERO (Tampilan landscape meski HP portrait) === */
 .hero {
   position: relative;
-  min-height: 100dvh; /* gunakan dynamic viewport height (mendukung HP modern) */
+  width: 100%;
+  height: 100vh;
+  background: url("../img/hero-bg.jpg") center center / cover no-repeat;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  background: url("../img/hero-bg.jpg") center center / cover no-repeat;
-  color: #fff;
   overflow: hidden;
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(1.5px);
+  background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.85));
+  z-index: 1;
 }
 
 .hero-content {
   position: relative;
   z-index: 2;
+  color: #fff;
   padding: 0 20px;
-  max-width: 480px;
+  max-width: 600px;
+  text-align: center;
   animation: fadeIn 1s ease;
 }
 
 .hero h1 {
-  font-size: 2rem;
+  font-size: 2.2rem;
   color: #f5c542;
-  margin-bottom: 8px;
-  letter-spacing: 1px;
+  margin-bottom: 10px;
 }
 
 .hero p {
   font-size: 1rem;
   color: #eee;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .cta {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 10px;
 }
+.cta .btn-primary {
+  background: #f5c542;
+  color: #111;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.cta .btn-outline {
+  border: 1px solid #f5c542;
+  color: #f5c542;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+}
 
-@media (min-width: 768px) {
+/* ✅ MODE HP PORTRAIT — tampilan tetap landscape */
+@media (max-width: 768px) and (orientation: portrait) {
   .hero {
-    flex-direction: row;
-    justify-content: space-between;
-    text-align: left;
-    padding: 100px 60px;
+    height: 80vh; /* tidak terlalu tinggi */
+    background-size: contain; /* jaga proporsi landscape */
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: #000; /* isi ruang kosong di atas/bawah */
   }
   .hero-content {
-    max-width: 600px;
+    position: absolute;
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
   }
   .hero h1 {
-    font-size: 2.6rem;
+    font-size: 1.8rem;
   }
   .hero p {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* ✅ MODE DESKTOP atau HP LANDSCAPE */
+@media (min-width: 769px), (orientation: landscape) {
+  .hero {
+    background-size: cover;
+    background-attachment: fixed;
   }
 }
 
@@ -256,4 +284,5 @@ body.dark .btn-outline {
   border-color: #f1c40f;
   color: #f1c40f;
 }
+
 
