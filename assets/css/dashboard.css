@@ -340,3 +340,130 @@ button.edit:hover {
     height: 200px;
   }
 }
+
+/* === IURAN KEUANGAN PAGE === */
+.keuangan-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 30px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  margin-top: 20px;
+}
+
+.keuangan-card h2 {
+  font-size: 1.4rem;
+  color: #f5c542;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* === FORM KEUANGAN === */
+.keuangan-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.keuangan-form .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.keuangan-form label {
+  color: #f5c542;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.keuangan-form input,
+.keuangan-form select,
+.keuangan-form textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 0.95rem;
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.keuangan-form input:focus,
+.keuangan-form select:focus,
+.keuangan-form textarea:focus {
+  border-color: #f5c542;
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+
+/* === TOMBOL === */
+.keuangan-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.keuangan-actions button {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.keuangan-actions .btn-save {
+  background: #f5c542;
+  color: #111;
+}
+
+.keuangan-actions .btn-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.keuangan-actions .btn-save:hover {
+  background: #fff;
+  color: #000;
+}
+
+.keuangan-actions .btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* === TABEL IURAN === */
+.table-keuangan {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.table-keuangan th, .table-keuangan td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+}
+
+.table-keuangan th {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f5c542;
+}
+
+.table-keuangan tr:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .keuangan-card {
+    padding: 20px;
+  }
+}
