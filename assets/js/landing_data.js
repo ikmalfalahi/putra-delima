@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const safeText = (el, text) => { if (el) el.textContent = text || ""; };
   const safeHTML = (el, html) => { if (el) el.innerHTML = html || ""; };
 
-  // === HERO ===
+// === HERO ===
 try {
   const { data: hero, error } = await supabase
     .from("landing_hero")
@@ -26,10 +26,10 @@ try {
       heroImg.src = h.image_url;
       heroImg.style.display = "block";
 
-      // Tambahkan AOS attributes supaya animasi zoom muncul
+      // AOS animation
       heroImg.setAttribute("data-aos", "zoom-in");
       heroImg.setAttribute("data-aos-delay", "200");
-      heroImg.classList.add("aos-animate"); // pastikan AOS trigger langsung
+      heroImg.classList.add("aos-animate");
     }
   }
 } catch (err) {
