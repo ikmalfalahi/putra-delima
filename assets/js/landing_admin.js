@@ -1,8 +1,13 @@
-// assets/js/landing_admin.js (Final Sinkron Version)
+// ==========================
+//  landing_admin.js (FINAL)
+// ==========================
 document.addEventListener("DOMContentLoaded", async () => {
-  // ===== CEK LOGIN & ROLE ADMIN =====
+  // === CEK LOGIN ===
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return (window.location.href = "../login.html");
+  if (!session) {
+    alert("Silakan login terlebih dahulu.");
+    return (window.location.href = "../login.html");
+  }
 
   const userId = session.user.id;
   const { data: profile } = await supabase
@@ -18,22 +23,40 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   console.log(`✅ Halo Admin ${profile.nama}`);
 
-  const showToast = (msg) => alert(msg);
+  function showToast(msg) {
+    alert(msg);
+  }
 
-  // ===== UPLOAD FILE SUPABASE STORAGE =====
   async function uploadFile(file, folder) {
     const filePath = `${folder}/${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage
+    const { error: uploadErr } = await supabase.storage
       .from("landing_assets")
       .upload(filePath, file, { upsert: true });
-    if (error) throw error;
+    if (uploadErr) throw uploadErr;
+
     const { data: pub } = supabase.storage
       .from("landing_assets")
       .getPublicUrl(filePath);
     return pub.publicUrl;
   }
 
-  // ================= HERO =================
+  // ===============================
+  // 🧱 Fungsi General untuk Replace
+  // ===============================
+  async function replaceData(table, newData) {
+    try {
+      await supabase.from(table).delete(); // hapus semua dulu
+      const { error } = await supabase.from(table).insert(newData);
+      if (error) throw error;
+    } catch (err) {
+      console.error(`❌ Gagal replace data ${table}:`, err);
+      throw err;
+    }
+  }
+
+  // ===============================
+  // 🎯 HERO
+  // ===============================
   const heroTitle = document.getElementById("heroTitle");
   const heroDesc = document.getElementById("heroDesc");
   const heroImage = document.getElementById("heroImage");
@@ -48,60 +71,57 @@ document.addEventListener("DOMContentLoaded", async () => {
   saveHeroBtn?.addEventListener("click", async () => {
     try {
       let img = heroPreview.src;
-      if (heroImage.files.length > 0)
-        img = await uploadFile(heroImage.files[0], "hero");
+      if (heroImage.files.length > 0) img = await uploadFile(heroImage.files[0], "hero");
 
-      // hapus semua lama
-      await supabase.from("landing_hero").delete().neq("id", 0);
-      const { error } = await supabase
-        .from("landing_hero")
-        .insert([{ title: heroTitle.value, description: heroDesc.value, image_url: img }]);
-      if (error) throw error;
-      showToast("✅ Hero diperbarui!");
-    } catch (e) {
-      console.error(e);
-      showToast("❌ Gagal menyimpan Hero");
+      await replaceData("landing_hero", [{
+        title: heroTitle.value.trim(),
+        description: heroDesc.value.trim(),
+        image_url: img
+      }]);
+
+      showToast("✅ Hero berhasil diperbarui!");
+    } catch (err) {
+      showToast("❌ Gagal menyimpan hero");
     }
   });
 
-  // ================= TENTANG KAMI =================
+  // ===============================
+  // 🧍 TENTANG KAMI
+  // ===============================
   const aboutText = document.getElementById("aboutText");
   const saveAboutBtn = document.getElementById("saveAbout");
 
   saveAboutBtn?.addEventListener("click", async () => {
     try {
-      await supabase.from("landing_tentang").delete().neq("id", 0);
-      const { error } = await supabase
-        .from("landing_tentang")
-        .insert([{ content: aboutText.value }]);
-      if (error) throw error;
+      await replaceData("landing_tentang", [{ content: aboutText.value.trim() }]);
       showToast("✅ Tentang Kami diperbarui!");
-    } catch (e) {
-      console.error(e);
+    } catch {
       showToast("❌ Gagal simpan Tentang Kami");
     }
   });
 
-  // ================= VISI & MISI =================
+  // ===============================
+  // 🌟 VISI & MISI
+  // ===============================
   const visiText = document.getElementById("visiText");
   const misiText = document.getElementById("misiText");
   const saveVisionBtn = document.getElementById("saveVision");
 
   saveVisionBtn?.addEventListener("click", async () => {
     try {
-      await supabase.from("landing_visi_misi").delete().neq("id", 0);
-      const { error } = await supabase
-        .from("landing_visi_misi")
-        .insert([{ visi: visiText.value, misi: misiText.value }]);
-      if (error) throw error;
+      await replaceData("landing_visi_misi", [{
+        visi: visiText.value.trim(),
+        misi: misiText.value.trim()
+      }]);
       showToast("✅ Visi & Misi diperbarui!");
-    } catch (e) {
-      console.error(e);
-      showToast("❌ Gagal simpan Visi Misi");
+    } catch {
+      showToast("❌ Gagal simpan Visi & Misi");
     }
   });
 
-  // ================= STRUKTUR =================
+  // ===============================
+  // 🧩 STRUKTUR
+  // ===============================
   const strukturImage = document.getElementById("strukturImage");
   const strukturPreview = document.getElementById("strukturPreview");
   const saveStrukturBtn = document.getElementById("saveStruktur");
@@ -117,17 +137,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (strukturImage.files.length > 0)
         url = await uploadFile(strukturImage.files[0], "struktur");
 
-      await supabase.from("landing_struktur").delete().neq("id", 0);
-      const { error } = await supabase.from("landing_struktur").insert([{ image_url: url }]);
-      if (error) throw error;
-      showToast("✅ Struktur Organisasi diperbarui!");
-    } catch (e) {
-      console.error(e);
-      showToast("❌ Gagal menyimpan Struktur");
+      await replaceData("landing_struktur", [{ image_url: url }]);
+      showToast("✅ Struktur berhasil diperbarui!");
+    } catch {
+      showToast("❌ Gagal simpan struktur");
     }
   });
 
-  // ================= GALERI =================
+  // ===============================
+  // 🖼️ GALERI (Hanya tambah & hapus manual)
+  // ===============================
   const galleryFiles = document.getElementById("galleryFiles");
   const galleryPreview = document.getElementById("galleryPreview");
   const uploadGalleryBtn = document.getElementById("uploadGallery");
@@ -149,14 +168,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         const url = await uploadFile(file, "galeri");
         await supabase.from("landing_galeri").insert([{ image_url: url }]);
       }
-      showToast("✅ Galeri berhasil diupload!");
-    } catch (e) {
-      console.error(e);
+      showToast("✅ Foto galeri berhasil diunggah!");
+    } catch {
       showToast("❌ Gagal upload galeri");
     }
   });
 
-  // ================= AGENDA =================
+  // ===============================
+  // 📅 AGENDA
+  // ===============================
   const agendaTitle = document.getElementById("agendaTitle");
   const agendaDate = document.getElementById("agendaDate");
   const addAgendaBtn = document.getElementById("addAgenda");
@@ -170,24 +190,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     agendaList.innerHTML = data
       .map(
         (a) => `
-        <div class="agenda-item">
-          <strong>${a.title}</strong><br>
-          <small>${a.tanggal}</small>
-          <button onclick="deleteAgenda('${a.id}')">🗑</button>
-        </div>`
+      <div class="agenda-item">
+        <strong>${a.title}</strong><br>
+        <small>${a.tanggal}</small>
+        <button onclick="deleteAgenda('${a.id}')">🗑</button>
+      </div>`
       )
       .join("");
   }
 
   addAgendaBtn?.addEventListener("click", async () => {
     try {
-      await supabase.from("landing_agenda").insert([{ title: agendaTitle.value, tanggal: agendaDate.value }]);
-      showToast("✅ Agenda ditambahkan!");
+      await supabase.from("landing_agenda").insert([{
+        title: agendaTitle.value.trim(),
+        tanggal: agendaDate.value.trim()
+      }]);
       agendaTitle.value = "";
       agendaDate.value = "";
       loadAgenda();
-    } catch (e) {
-      console.error(e);
+      showToast("✅ Agenda ditambah!");
+    } catch {
       showToast("❌ Gagal menambah agenda");
     }
   });
@@ -199,7 +221,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   loadAgenda();
 
-  // ================= KONTAK =================
+  // ===============================
+  // ☎️ KONTAK & MAPS
+  // ===============================
   const alamat = document.getElementById("alamat");
   const email = document.getElementById("email");
   const whatsapp = document.getElementById("whatsapp");
@@ -208,25 +232,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   saveContactBtn?.addEventListener("click", async () => {
     try {
-      await supabase.from("landing_kontak").delete().neq("id", 0);
-      const { error } = await supabase.from("landing_kontak").insert([{
-        alamat: alamat.value,
-        email: email.value,
-        whatsapp: whatsapp.value,
-        map_embed: mapEmbed.value
+      await replaceData("landing_kontak", [{
+        alamat: alamat.value.trim(),
+        email: email.value.trim(),
+        whatsapp: whatsapp.value.trim(),
+        map_embed: mapEmbed.value.trim()
       }]);
-      if (error) throw error;
       showToast("✅ Kontak diperbarui!");
-    } catch (e) {
-      console.error(e);
+    } catch {
       showToast("❌ Gagal simpan kontak");
     }
-  });
-
-  // ================= LOGOUT =================
-  const logoutBtn = document.getElementById("logoutBtn");
-  logoutBtn?.addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    window.location.href = "../login.html";
   });
 });
