@@ -59,39 +59,25 @@ a { color: #f5c542; text-decoration: none; }
 }
 .btn-outline:hover { background: #f5c542; color: #000; }
 
-/* === HERO (Putih + Blur Kaca) === */
+/* HERO dengan blur kaca putih */
 .hero {
   position: relative;
   width: 100%;
   height: 100vh;
-  background: rgba(255,255,255,0.4);
-  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.1); /* putih tipis */
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   overflow: hidden;
-}
-
-/* === HERO === */
-.hero {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  background: rgba(255,255,255,0.3); /* putih transparan */
-  backdrop-filter: blur(12px);        /* efek kaca */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  overflow: hidden;
+  backdrop-filter: blur(12px); /* efek kaca */
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(255,255,255,0.2); /* sedikit overlay untuk teks lebih jelas */
-  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.2); /* putih semi transparan */
+  backdrop-filter: blur(12px); /* efek kaca */
   z-index: 1;
 }
 
@@ -108,13 +94,11 @@ a { color: #f5c542; text-decoration: none; }
 .hero h1 {
   font-size: 2.2rem;
   margin-bottom: 10px;
-  color: #111; /* teks hero */
 }
 
 .hero p {
   font-size: 1rem;
   margin-bottom: 20px;
-  color: #333; /* deskripsi hero */
 }
 
 .cta {
@@ -138,6 +122,15 @@ a { color: #f5c542; text-decoration: none; }
   padding: 10px 16px;
   border-radius: 6px;
   font-weight: 600;
+}
+
+/* Hero image */
+.hero-dynamic {
+  max-width: 90%;
+  margin-top: 16px;
+  border-radius: 12px;
+  display: block; /* wajib tampil untuk animasi */
+  z-index: 2;
 }
 
 /* === SECTIONS === */
@@ -165,7 +158,7 @@ a { color: #f5c542; text-decoration: none; }
 .footer {
   background: #111; /* gelap */
   color: #fff;
-  text-align: center; padding: 18px;
+  text-align: center; padding: 14px;
   border-top: 1px solid #222;
 }
 
@@ -234,4 +227,5 @@ body.dark .btn-outline { border-color: #f1c40f; color: #f1c40f; }
   transition: transform 0.2s;
 }
 #themeToggle:hover { transform: rotate(20deg); }
+
 
