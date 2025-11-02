@@ -54,13 +54,31 @@ document.addEventListener("DOMContentLoaded", async () => {
       </article>`).join("");
   }
 
-  // KONTAK
-  const { data: kontak } = await supabase.from("landing_kontak").select("*").limit(1);
-  if (kontak?.length) {
-    const k = kontak[0];
-    document.getElementById("alamatText").textContent = `📍 ${k.alamat}`;
-    if (k.map_embed) document.getElementById("mapFrame").src = k.map_embed;
+ // === KONTAK ===
+const { data: kontak } = await supabase.from("landing_kontak").select("*").single();
+if (kontak) {
+  document.getElementById("alamatText").textContent = `📍 ${kontak.alamat || ""}`;
+  document.getElementById("emailText").textContent = `✉️ ${kontak.email || ""}`;
+  const wa = document.querySelector("#whatsappText a");
+  if (wa) {
+    wa.href = `https://wa.me/${kontak.whatsapp}`;
+    wa.textContent = kontak.whatsapp;
   }
+
+  const mapContainer = document.querySelector(".map-container");
+  if (mapContainer && kontak.map_embed) {
+    if (kontak.map_embed.includes("<iframe")) {
+      // Jika di database sudah disimpan <iframe> lengkap
+      mapContainer.innerHTML = kontak.map_embed;
+    } else {
+      // Jika hanya link embed
+      mapContainer.innerHTML = `
+        <iframe src="${kontak.map_embed}"
+          width="100%" height="280" style="border:0;"
+          allowfullscreen="" loading="lazy"></iframe>`;
+    }
+  }
+}
 
   document.getElementById("year").textContent = new Date().getFullYear();
 });
