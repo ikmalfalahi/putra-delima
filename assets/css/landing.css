@@ -59,27 +59,25 @@ a { color: #f5c542; text-decoration: none; }
 }
 .btn-outline:hover { background: #f5c542; color: #000; }
 
-/* HERO dengan blur kaca putih */
+/* === HERO SECTION === */
 .hero {
   position: relative;
   width: 100%;
-  height: 100vh;
-  background: rgba(255,255,255,0.1); /* putih tipis */
+  min-height: 90vh;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   overflow: hidden;
-  backdrop-filter: blur(12px); /* efek kaca */
+
+  /* Background kaca */
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(255,255,255,0.2); /* putih semi transparan */
-  backdrop-filter: blur(12px); /* efek kaca */
-  z-index: 1;
-}
+/* overlay tidak perlu lagi */
+.hero-overlay { display: none; }
 
 .hero-content {
   position: relative;
@@ -126,11 +124,23 @@ a { color: #f5c542; text-decoration: none; }
 
 /* Hero image */
 .hero-dynamic {
-  max-width: 90%;
+  width: 90%;
+  max-width: 600px;
   margin-top: 16px;
   border-radius: 12px;
-  display: block; /* wajib tampil untuk animasi */
-  z-index: 2;
+  display: block;
+  object-fit: cover;
+}
+
+/* RESPONSIVE HERO */
+@media (max-width: 768px) {
+  .hero {
+    min-height: 60vh;
+    padding: 20px;
+  }
+  .hero h1 { font-size: 1.8rem; }
+  .hero p { font-size: 0.95rem; }
+  .hero-dynamic { max-height: 50vh; }
 }
 
 /* === SECTIONS === */
@@ -227,5 +237,6 @@ body.dark .btn-outline { border-color: #f1c40f; color: #f1c40f; }
   transition: transform 0.2s;
 }
 #themeToggle:hover { transform: rotate(20deg); }
+
 
 
