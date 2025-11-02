@@ -288,7 +288,7 @@ button:hover {
   width: 100%;
   padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 1);
   background: #ffffff29;
   color: #fff;
   font-size: 0.95rem;
@@ -345,5 +345,6 @@ button:hover {
     padding: 20px;
   }
 }
+
 
 
