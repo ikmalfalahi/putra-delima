@@ -3,9 +3,10 @@
 html, body { scroll-behavior: smooth; }
 body {
   font-family: "Poppins", sans-serif;
-  background: #fff; /* konten utama terang */
-  color: #111; /* teks gelap */
   overflow-x: hidden;
+  background: #fff;
+  color: #111;
+  transition: all 0.4s ease;
 }
 a { color: #f5c542; text-decoration: none; }
 
@@ -13,11 +14,12 @@ a { color: #f5c542; text-decoration: none; }
 .site-header {
   position: fixed; top: 0; left: 0;
   width: 100%;
-  background: #111; /* header gelap */
-  color: #f5f5f5;
+  background: #111; /* gelap */
+  color: #fff;
   padding: 12px 20px;
   z-index: 1000;
-  display: flex; flex-direction: column;
+  display: flex;
+  flex-direction: column;
   align-items: stretch;
   transition: all 0.3s ease;
 }
@@ -28,10 +30,10 @@ a { color: #f5c542; text-decoration: none; }
 }
 .brand { display: flex; align-items: center; gap: 10px; }
 .logo { width: 36px; height: 36px; }
-.brand-title { font-weight: 600; color: #f5c542; }
+.brand-title { font-weight: 600; color: #fff; }
 
 .hamburger {
-  background: none; border: none; color: #f5c542;
+  background: none; border: none; color: #fff;
   font-size: 26px; cursor: pointer;
 }
 
@@ -39,8 +41,7 @@ a { color: #f5c542; text-decoration: none; }
 .mobile-nav {
   position: fixed; top: 0; right: -250px;
   width: 220px; height: 100vh;
-  background: #111;
-  display: flex; flex-direction: column;
+  background: #111; display: flex; flex-direction: column;
   padding: 80px 20px; gap: 15px;
   transition: right 0.35s ease;
   z-index: 999;
@@ -58,24 +59,26 @@ a { color: #f5c542; text-decoration: none; }
 }
 .btn-outline:hover { background: #f5c542; color: #000; }
 
-/* === HERO === */
+/* === HERO (Putih + Blur Kaca) === */
 .hero {
   position: relative;
   width: 100%;
   height: 100vh;
-  background: rgba(255,255,255,0.6); /* putih semi-transparent */
-  backdrop-filter: blur(12px); /* efek kaca blur */
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   overflow: hidden;
-  color: #111; /* teks gelap */
 }
+
+.hero-overlay { display: none; }
 
 .hero-content {
   position: relative;
   z-index: 2;
+  color: #111;
   padding: 0 20px;
   max-width: 600px;
   text-align: center;
@@ -84,13 +87,11 @@ a { color: #f5c542; text-decoration: none; }
 
 .hero h1 {
   font-size: 2.2rem;
-  color: #111; /* teks gelap */
   margin-bottom: 10px;
 }
 
 .hero p {
   font-size: 1rem;
-  color: #111; /* teks gelap */
   margin-bottom: 20px;
 }
 
@@ -116,13 +117,14 @@ a { color: #f5c542; text-decoration: none; }
 }
 
 /* === SECTIONS === */
-.section { padding: 70px 20px; text-align: center; background: #fff; color: #111; }
-.section h2 { color: #111; margin-bottom: 14px; font-size: 1.4rem; }
-.section p, .section li { color: #111; font-size: 0.95rem; line-height: 1.6; }
+.section { padding: 70px 20px; text-align: center; }
+.section.dark { background: #f5f5f5; color: #111; } /* bisa jadi mode terang di sections */
+.section h2 { color: #f5c542; margin-bottom: 14px; font-size: 1.4rem; }
+.section p, .section li { color: #333; font-size: 0.95rem; line-height: 1.6; }
 
 .cards { display: flex; flex-direction: column; gap: 16px; align-items: center; margin-top: 20px; }
-.card { background: rgba(255,255,255,0.8); padding: 18px; border-radius: 10px; width: 90%; max-width: 320px; border: 1px solid #ccc; }
-.card h3 { color: #111; margin-bottom: 8px; }
+.card { background: #fff; padding: 18px; border-radius: 10px; width: 90%; max-width: 320px; border: 1px solid #ddd; }
+.card h3 { color: #f5c542; margin-bottom: 8px; }
 
 /* === GALERI === */
 .gallery {
@@ -137,8 +139,8 @@ a { color: #f5c542; text-decoration: none; }
 
 /* === FOOTER === */
 .footer {
-  background: #111; /* footer gelap */
-  color: #f5f5f5;
+  background: #111; /* gelap */
+  color: #fff;
   text-align: center; padding: 18px;
   border-top: 1px solid #222;
 }
@@ -149,6 +151,17 @@ a { color: #f5c542; text-decoration: none; }
 @keyframes fadeIn { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
 
 /* === RESPONSIVE === */
+@media (max-width: 768px) and (orientation: portrait) {
+  .hero { height: 80vh; }
+  .hero-content { position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); width: 90%; }
+  .hero h1 { font-size: 1.8rem; }
+  .hero p { font-size: 0.9rem; }
+}
+
+@media (min-width: 769px), (orientation: landscape) {
+  .hero { background-size: cover; background-attachment: fixed; }
+}
+
 @media (min-width: 768px) {
   .mobile-nav { display: none; }
   .site-header { flex-direction: row; }
@@ -157,29 +170,7 @@ a { color: #f5c542; text-decoration: none; }
   .gallery { grid-template-columns: repeat(4, 1fr); }
 }
 
-/* === AOS ANIMATIONS === */
-[data-aos] {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: all 0.8s ease-out;
-}
-[data-aos].aos-animate {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Tombol mode */
-#themeToggle {
-  background: none;
-  border: none;
-  color: #f5c542;
-  font-size: 1.4em;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-#themeToggle:hover { transform: rotate(20deg); }
-
-/* Map responsive */
+/* === MAP === */
 .map-container {
   width: 100%;
   height: 280px;
@@ -188,8 +179,34 @@ a { color: #f5c542; text-decoration: none; }
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
-.map-container iframe {
-  width: 100%;
-  height: 100%;
+.map-container iframe { width: 100%; height: 100%; border: none; }
+
+/* === AOS ANIMATIONS === */
+[data-aos] { opacity: 0; transform: translateY(40px); transition: all 0.8s ease-out; }
+[data-aos].aos-animate { opacity: 1; transform: translateY(0); }
+[data-aos="fade-up"] { transform: translateY(40px); }
+[data-aos="fade-down"] { transform: translateY(-40px); }
+[data-aos="fade-left"] { transform: translateX(40px); }
+[data-aos="fade-right"] { transform: translateX(-40px); }
+[data-aos="zoom-in"] { transform: scale(0.85); }
+[data-aos="flip-left"] { transform: rotateY(90deg); }
+[data-aos="flip-right"] { transform: rotateY(-90deg); }
+[data-aos].aos-animate[data-aos="zoom-in"],
+[data-aos].aos-animate[data-aos="flip-left"],
+[data-aos].aos-animate[data-aos="flip-right"] { transform: none; }
+
+/* === DARK MODE === */
+body.dark .section.dark { background: #121212; color: #f1f1f1; }
+body.dark .btn-primary { background: #f1c40f; color: #111; }
+body.dark .btn-outline { border-color: #f1c40f; color: #f1c40f; }
+
+/* Tombol mode */
+#themeToggle {
+  background: none;
   border: none;
+  color: #b38e00;
+  font-size: 1.4em;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
+#themeToggle:hover { transform: rotate(20deg); }
