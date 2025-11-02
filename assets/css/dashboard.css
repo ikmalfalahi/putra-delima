@@ -4,7 +4,7 @@
   --dark: #121212;
   --muted: #1e1e1e;
   --white: #fff;
-  --accent: #f5c542;
+  --accent: #ffffff; /* Ganti gold jadi putih */
   --glass-bg: rgba(255, 255, 255, 0.06);
   --glass-border: rgba(255, 255, 255, 0.1);
 }
@@ -103,7 +103,7 @@ body::before {
 }
 
 .nav-item.active {
-  background: rgba(245, 197, 66, 0.2);
+  background: rgba(255, 255, 255, 0.2);
   color: var(--accent);
 }
 
@@ -153,7 +153,7 @@ body::before {
 /* === BUTTONS === */
 button {
   background: var(--accent);
-  color: #000;
+  color: #111;
   border: none;
   border-radius: 10px;
   padding: 10px 16px;
@@ -163,7 +163,7 @@ button {
 }
 
 button:hover {
-  background: #ffe27a;
+  background: #e6e6e6;
 }
 
 /* === FOOTER === */
@@ -203,60 +203,7 @@ button:hover {
   margin-top: 20px;
 }
 
-.profil-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  align-items: flex-start;
-  justify-content: center;
-}
-
-.foto-section img {
-  width: 180px;
-  height: 220px;
-  border-radius: 12px;
-  object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-  transition: transform 0.25s ease;
-}
-
-.form-section {
-  flex: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-group label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 6px;
-  color: #fff;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-size: 0.95rem;
-  transition: border-color 0.3s, background 0.3s;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* === FORM IURAN & KEUANGAN (SAMA DENGAN PROFIL) === */
+/* === FORM IURAN & KEUANGAN === */
 .keuangan-card,
 .iuran-card {
   background: rgba(255, 255, 255, 0.06);
@@ -267,65 +214,72 @@ button:hover {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   color: #fff;
   margin-top: 20px;
-  max-width: 600px;
+  max-width: 700px;
   margin-inline: auto;
 }
 
 .keuangan-card h2,
 .iuran-card h2 {
   font-size: 1.4rem;
-  color: var(--accent);
+  color: #fff;
   text-align: center;
   margin-bottom: 20px;
 }
 
-.keuangan-card form,
-.iuran-card form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
+/* === FORM PUTIH === */
 .keuangan-card input,
 .keuangan-card select,
 .iuran-card input,
-.iuran-card select {
+.iuran-card select,
+.form-group input,
+.form-group select,
+.form-group textarea {
   width: 100%;
-  padding: 14px 16px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #fff;
+  color: #111;
   font-size: 0.95rem;
-  backdrop-filter: blur(8px);
   transition: 0.3s ease;
 }
 
 .keuangan-card input:focus,
 .keuangan-card select:focus,
 .iuran-card input:focus,
-.iuran-card select:focus {
-  border-color: var(--accent);
-  background: rgba(255, 255, 255, 0.15);
+.iuran-card select:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.3);
   outline: none;
 }
 
-.keuangan-card button,
-.iuran-card button {
-  background: var(--accent);
-  color: #111;
-  border: none;
-  border-radius: 12px;
-  padding: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+/* === TABLE STYLING === */
+.table-keuangan {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  color: #fff;
+  margin-top: 15px;
 }
 
-.keuangan-card button:hover,
-.iuran-card button:hover {
-  background: #ffe05c;
-  transform: translateY(-2px);
+.table-keuangan th,
+.table-keuangan td {
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: none;
+}
+
+.table-keuangan th {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-weight: 700;
+}
+
+.table-keuangan tr:hover td {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* === RESPONSIVE === */
