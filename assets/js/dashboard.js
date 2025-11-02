@@ -58,6 +58,18 @@ async function initDashboard() {
   const totalPengeluaranEl = document.getElementById("totalPengeluaran");
   const membersPreviewTbody = document.querySelector("#membersPreview tbody");
 
+  // === Total Anggota (semua dari profiles) ===
+  try {
+    const { count, error } = await supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true });
+    if (error) throw error;
+    totalMembersEl.textContent = count ?? "0";
+  } catch (e) {
+    console.error("Gagal hitung anggota:", e);
+    totalMembersEl.textContent = "0";
+  }
+
   // === Total Iuran ===
   let totalIuranValue = 0;
   try {
@@ -995,6 +1007,7 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
 
 
