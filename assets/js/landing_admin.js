@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===== Upload File ke Supabase Storage =====
   async function uploadFile(file, folder) {
     const filePath = `${folder}/${Date.now()}_${file.name}`;
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from("landing_assets")
       .upload(filePath, file, { upsert: true });
     if (error) throw error;
@@ -34,26 +34,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       const file = document.getElementById("heroImage").files[0];
       if (file) img = await uploadFile(file, "hero");
 
-      await supabase.from("landing_hero").delete();
+      await supabase.from("landing_hero").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       await supabase.from("landing_hero").insert([{
         title: document.getElementById("heroTitle").value,
         description: document.getElementById("heroDesc").value,
         image_url: img
       }]);
       showToast("✅ Hero diperbarui!");
-    } catch (e) { showToast("❌ Gagal menyimpan Hero"); }
+    } catch (e) {
+      console.error(e);
+      showToast("❌ Gagal menyimpan Hero");
+    }
   });
 
   // ================= TENTANG =================
   document.getElementById("saveAbout").addEventListener("click", async () => {
-    await supabase.from("landing_tentang").delete();
+    await supabase.from("landing_tentang").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     await supabase.from("landing_tentang").insert([{ content: document.getElementById("aboutText").value }]);
     showToast("✅ Tentang Kami diperbarui!");
   });
 
   // ================= VISI MISI =================
   document.getElementById("saveVision").addEventListener("click", async () => {
-    await supabase.from("landing_visi_misi").delete();
+    await supabase.from("landing_visi_misi").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     await supabase.from("landing_visi_misi").insert([{
       visi: document.getElementById("visiText").value,
       misi: document.getElementById("misiText").value
@@ -68,10 +71,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       const file = document.getElementById("strukturImage").files[0];
       if (file) img = await uploadFile(file, "struktur");
 
-      await supabase.from("landing_struktur").delete();
+      await supabase.from("landing_struktur").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       await supabase.from("landing_struktur").insert([{ image_url: img }]);
       showToast("✅ Struktur diperbarui!");
-    } catch (e) { showToast("❌ Gagal simpan Struktur"); }
+    } catch (e) {
+      console.error(e);
+      showToast("❌ Gagal simpan Struktur");
+    }
   });
 
   // ================= GALERI FOTO (CRUD) =================
@@ -80,10 +86,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const uploadGalleryBtn = document.getElementById("uploadGallery");
 
   async function loadGallery() {
-    const { data } = await supabase
-      .from("landing_galeri")
-      .select("*")
-      .order("uploaded_at", { ascending: false });
+    const { data } = await supabase.from("landing_galeri").select("*").order("uploaded_at", { ascending: false });
     galleryPreview.innerHTML = data.map(
       (g) => `
       <div class="gallery-item">
@@ -92,6 +95,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <button class="delete-btn" data-id="${g.id}">🗑 Hapus</button>
       </div>`
     ).join("");
+
     document.querySelectorAll(".delete-btn").forEach(btn => {
       btn.addEventListener("click", async () => {
         await supabase.from("landing_galeri").delete().eq("id", btn.dataset.id);
@@ -111,6 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       showToast("✅ Galeri diupload!");
       loadGallery();
     } catch (e) {
+      console.error(e);
       showToast("❌ Gagal upload galeri");
     }
   });
@@ -122,8 +127,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const { data } = await supabase.from("landing_agenda").select("*").order("created_at", { ascending: false });
     agendaList.innerHTML = data.map(a => `
       <div class="agenda-item">
-        <input value="${a.title}" data-id="${a.id}" class="edit-title"/>
-        <input value="${a.tanggal}" data-id="${a.id}" class="edit-date"/>
+        <input value="${a.title || ''}" data-id="${a.id}" class="edit-title"/>
+        <input value="${a.tanggal || ''}" data-id="${a.id}" class="edit-date"/>
         <input value="${a.lokasi || ''}" data-id="${a.id}" class="edit-lokasi"/>
         <button class="save-btn" data-id="${a.id}">💾 Simpan</button>
         <button class="delete-btn" data-id="${a.id}">🗑 Hapus</button>
@@ -154,7 +159,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await supabase.from("landing_agenda").insert([{
       title: document.getElementById("agendaTitle").value,
       tanggal: document.getElementById("agendaDate").value,
-      lokasi: document.getElementById("agendaLocation").value
+      lokasi: document.getElementById("agendaLocation")?.value || ""
     }]);
     showToast("✅ Agenda baru ditambahkan!");
     loadAgenda();
@@ -163,7 +168,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ================= KONTAK =================
   document.getElementById("saveContact").addEventListener("click", async () => {
-    await supabase.from("landing_kontak").delete();
+    await supabase.from("landing_kontak").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     await supabase.from("landing_kontak").insert([{
       alamat: document.getElementById("alamat").value,
       email: document.getElementById("email").value,
