@@ -1,246 +1,181 @@
-// ==========================
-//  landing_admin.js (FINAL)
-// ==========================
 document.addEventListener("DOMContentLoaded", async () => {
-  // === CEK LOGIN ===
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    alert("Silakan login terlebih dahulu.");
-    return (window.location.href = "../login.html");
-  }
+  if (!session) return (window.location.href = "../login.html");
 
-  const userId = session.user.id;
   const { data: profile } = await supabase
     .from("profiles")
     .select("role, nama")
-    .eq("id", userId)
+    .eq("id", session.user.id)
     .single();
 
   if (!profile || profile.role !== "admin") {
-    alert("Akses ditolak! Hanya admin yang dapat mengelola landing page.");
+    alert("Akses ditolak. Hanya admin yang dapat mengelola landing page.");
     return (window.location.href = "../index.html");
   }
 
   console.log(`✅ Halo Admin ${profile.nama}`);
 
-  function showToast(msg) {
-    alert(msg);
-  }
+  const showToast = (msg) => alert(msg);
 
+  // ===== Upload File ke Supabase Storage =====
   async function uploadFile(file, folder) {
     const filePath = `${folder}/${Date.now()}_${file.name}`;
-    const { error: uploadErr } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from("landing_assets")
       .upload(filePath, file, { upsert: true });
-    if (uploadErr) throw uploadErr;
-
-    const { data: pub } = supabase.storage
-      .from("landing_assets")
-      .getPublicUrl(filePath);
-    return pub.publicUrl;
+    if (error) throw error;
+    return supabase.storage.from("landing_assets").getPublicUrl(filePath).data.publicUrl;
   }
 
-  // ===============================
-  // 🧱 Fungsi General untuk Replace
-  // ===============================
-  async function replaceData(table, newData) {
+  // ================= HERO =================
+  document.getElementById("saveHero").addEventListener("click", async () => {
     try {
-      await supabase.from(table).delete(); // hapus semua dulu
-      const { error } = await supabase.from(table).insert(newData);
-      if (error) throw error;
-    } catch (err) {
-      console.error(`❌ Gagal replace data ${table}:`, err);
-      throw err;
-    }
-  }
+      let img = document.getElementById("heroPreview").src;
+      const file = document.getElementById("heroImage").files[0];
+      if (file) img = await uploadFile(file, "hero");
 
-  // ===============================
-  // 🎯 HERO
-  // ===============================
-  const heroTitle = document.getElementById("heroTitle");
-  const heroDesc = document.getElementById("heroDesc");
-  const heroImage = document.getElementById("heroImage");
-  const heroPreview = document.getElementById("heroPreview");
-  const saveHeroBtn = document.getElementById("saveHero");
-
-  heroImage?.addEventListener("change", () => {
-    const f = heroImage.files[0];
-    if (f) heroPreview.src = URL.createObjectURL(f);
-  });
-
-  saveHeroBtn?.addEventListener("click", async () => {
-    try {
-      let img = heroPreview.src;
-      if (heroImage.files.length > 0) img = await uploadFile(heroImage.files[0], "hero");
-
-      await replaceData("landing_hero", [{
-        title: heroTitle.value.trim(),
-        description: heroDesc.value.trim(),
+      await supabase.from("landing_hero").delete();
+      await supabase.from("landing_hero").insert([{
+        title: document.getElementById("heroTitle").value,
+        description: document.getElementById("heroDesc").value,
         image_url: img
       }]);
-
-      showToast("✅ Hero berhasil diperbarui!");
-    } catch (err) {
-      showToast("❌ Gagal menyimpan hero");
-    }
+      showToast("✅ Hero diperbarui!");
+    } catch (e) { showToast("❌ Gagal menyimpan Hero"); }
   });
 
-  // ===============================
-  // 🧍 TENTANG KAMI
-  // ===============================
-  const aboutText = document.getElementById("aboutText");
-  const saveAboutBtn = document.getElementById("saveAbout");
+  // ================= TENTANG =================
+  document.getElementById("saveAbout").addEventListener("click", async () => {
+    await supabase.from("landing_tentang").delete();
+    await supabase.from("landing_tentang").insert([{ content: document.getElementById("aboutText").value }]);
+    showToast("✅ Tentang Kami diperbarui!");
+  });
 
-  saveAboutBtn?.addEventListener("click", async () => {
+  // ================= VISI MISI =================
+  document.getElementById("saveVision").addEventListener("click", async () => {
+    await supabase.from("landing_visi_misi").delete();
+    await supabase.from("landing_visi_misi").insert([{
+      visi: document.getElementById("visiText").value,
+      misi: document.getElementById("misiText").value
+    }]);
+    showToast("✅ Visi & Misi diperbarui!");
+  });
+
+  // ================= STRUKTUR =================
+  document.getElementById("saveStruktur").addEventListener("click", async () => {
     try {
-      await replaceData("landing_tentang", [{ content: aboutText.value.trim() }]);
-      showToast("✅ Tentang Kami diperbarui!");
-    } catch {
-      showToast("❌ Gagal simpan Tentang Kami");
-    }
+      let img = document.getElementById("strukturPreview").src;
+      const file = document.getElementById("strukturImage").files[0];
+      if (file) img = await uploadFile(file, "struktur");
+
+      await supabase.from("landing_struktur").delete();
+      await supabase.from("landing_struktur").insert([{ image_url: img }]);
+      showToast("✅ Struktur diperbarui!");
+    } catch (e) { showToast("❌ Gagal simpan Struktur"); }
   });
 
-  // ===============================
-  // 🌟 VISI & MISI
-  // ===============================
-  const visiText = document.getElementById("visiText");
-  const misiText = document.getElementById("misiText");
-  const saveVisionBtn = document.getElementById("saveVision");
-
-  saveVisionBtn?.addEventListener("click", async () => {
-    try {
-      await replaceData("landing_visi_misi", [{
-        visi: visiText.value.trim(),
-        misi: misiText.value.trim()
-      }]);
-      showToast("✅ Visi & Misi diperbarui!");
-    } catch {
-      showToast("❌ Gagal simpan Visi & Misi");
-    }
-  });
-
-  // ===============================
-  // 🧩 STRUKTUR
-  // ===============================
-  const strukturImage = document.getElementById("strukturImage");
-  const strukturPreview = document.getElementById("strukturPreview");
-  const saveStrukturBtn = document.getElementById("saveStruktur");
-
-  strukturImage?.addEventListener("change", () => {
-    const f = strukturImage.files[0];
-    if (f) strukturPreview.src = URL.createObjectURL(f);
-  });
-
-  saveStrukturBtn?.addEventListener("click", async () => {
-    try {
-      let url = strukturPreview.src;
-      if (strukturImage.files.length > 0)
-        url = await uploadFile(strukturImage.files[0], "struktur");
-
-      await replaceData("landing_struktur", [{ image_url: url }]);
-      showToast("✅ Struktur berhasil diperbarui!");
-    } catch {
-      showToast("❌ Gagal simpan struktur");
-    }
-  });
-
-  // ===============================
-  // 🖼️ GALERI (Hanya tambah & hapus manual)
-  // ===============================
+  // ================= GALERI FOTO (CRUD) =================
   const galleryFiles = document.getElementById("galleryFiles");
   const galleryPreview = document.getElementById("galleryPreview");
   const uploadGalleryBtn = document.getElementById("uploadGallery");
 
-  galleryFiles?.addEventListener("change", () => {
-    galleryPreview.innerHTML = "";
-    for (const file of galleryFiles.files) {
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(file);
-      img.style.width = "80px";
-      img.style.margin = "4px";
-      galleryPreview.appendChild(img);
-    }
-  });
+  async function loadGallery() {
+    const { data } = await supabase
+      .from("landing_galeri")
+      .select("*")
+      .order("uploaded_at", { ascending: false });
+    galleryPreview.innerHTML = data.map(
+      (g) => `
+      <div class="gallery-item">
+        <img src="${g.image_url}" alt="${g.caption || ''}" />
+        <p>${g.caption || '-'}</p>
+        <button class="delete-btn" data-id="${g.id}">🗑 Hapus</button>
+      </div>`
+    ).join("");
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await supabase.from("landing_galeri").delete().eq("id", btn.dataset.id);
+        showToast("🗑 Foto dihapus!");
+        loadGallery();
+      });
+    });
+  }
 
-  uploadGalleryBtn?.addEventListener("click", async () => {
+  uploadGalleryBtn.addEventListener("click", async () => {
     try {
+      const caption = document.getElementById("galleryCaption")?.value || "";
       for (const file of galleryFiles.files) {
         const url = await uploadFile(file, "galeri");
-        await supabase.from("landing_galeri").insert([{ image_url: url }]);
+        await supabase.from("landing_galeri").insert([{ image_url: url, caption }]);
       }
-      showToast("✅ Foto galeri berhasil diunggah!");
-    } catch {
+      showToast("✅ Galeri diupload!");
+      loadGallery();
+    } catch (e) {
       showToast("❌ Gagal upload galeri");
     }
   });
+  loadGallery();
 
-  // ===============================
-  // 📅 AGENDA
-  // ===============================
-  const agendaTitle = document.getElementById("agendaTitle");
-  const agendaDate = document.getElementById("agendaDate");
-  const addAgendaBtn = document.getElementById("addAgenda");
+  // ================= AGENDA (CRUD) =================
   const agendaList = document.getElementById("agendaList");
-
   async function loadAgenda() {
-    const { data } = await supabase
-      .from("landing_agenda")
-      .select("*")
-      .order("created_at", { ascending: false });
-    agendaList.innerHTML = data
-      .map(
-        (a) => `
+    const { data } = await supabase.from("landing_agenda").select("*").order("created_at", { ascending: false });
+    agendaList.innerHTML = data.map(a => `
       <div class="agenda-item">
-        <strong>${a.title}</strong><br>
-        <small>${a.tanggal}</small>
-        <button onclick="deleteAgenda('${a.id}')">🗑</button>
-      </div>`
-      )
-      .join("");
+        <input value="${a.title}" data-id="${a.id}" class="edit-title"/>
+        <input value="${a.tanggal}" data-id="${a.id}" class="edit-date"/>
+        <input value="${a.lokasi || ''}" data-id="${a.id}" class="edit-lokasi"/>
+        <button class="save-btn" data-id="${a.id}">💾 Simpan</button>
+        <button class="delete-btn" data-id="${a.id}">🗑 Hapus</button>
+      </div>`).join("");
+
+    document.querySelectorAll(".save-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const title = document.querySelector(`.edit-title[data-id="${id}"]`).value;
+        const tanggal = document.querySelector(`.edit-date[data-id="${id}"]`).value;
+        const lokasi = document.querySelector(`.edit-lokasi[data-id="${id}"]`).value;
+        await supabase.from("landing_agenda").update({ title, tanggal, lokasi }).eq("id", id);
+        showToast("✅ Agenda diperbarui!");
+        loadAgenda();
+      });
+    });
+
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await supabase.from("landing_agenda").delete().eq("id", btn.dataset.id);
+        showToast("🗑 Agenda dihapus!");
+        loadAgenda();
+      });
+    });
   }
 
-  addAgendaBtn?.addEventListener("click", async () => {
-    try {
-      await supabase.from("landing_agenda").insert([{
-        title: agendaTitle.value.trim(),
-        tanggal: agendaDate.value.trim()
-      }]);
-      agendaTitle.value = "";
-      agendaDate.value = "";
-      loadAgenda();
-      showToast("✅ Agenda ditambah!");
-    } catch {
-      showToast("❌ Gagal menambah agenda");
-    }
-  });
-
-  window.deleteAgenda = async (id) => {
-    await supabase.from("landing_agenda").delete().eq("id", id);
+  document.getElementById("addAgenda").addEventListener("click", async () => {
+    await supabase.from("landing_agenda").insert([{
+      title: document.getElementById("agendaTitle").value,
+      tanggal: document.getElementById("agendaDate").value,
+      lokasi: document.getElementById("agendaLocation").value
+    }]);
+    showToast("✅ Agenda baru ditambahkan!");
     loadAgenda();
-  };
-
+  });
   loadAgenda();
 
-  // ===============================
-  // ☎️ KONTAK & MAPS
-  // ===============================
-  const alamat = document.getElementById("alamat");
-  const email = document.getElementById("email");
-  const whatsapp = document.getElementById("whatsapp");
-  const mapEmbed = document.getElementById("mapEmbed");
-  const saveContactBtn = document.getElementById("saveContact");
+  // ================= KONTAK =================
+  document.getElementById("saveContact").addEventListener("click", async () => {
+    await supabase.from("landing_kontak").delete();
+    await supabase.from("landing_kontak").insert([{
+      alamat: document.getElementById("alamat").value,
+      email: document.getElementById("email").value,
+      whatsapp: document.getElementById("whatsapp").value,
+      map_embed: document.getElementById("mapEmbed").value
+    }]);
+    showToast("✅ Kontak diperbarui!");
+  });
 
-  saveContactBtn?.addEventListener("click", async () => {
-    try {
-      await replaceData("landing_kontak", [{
-        alamat: alamat.value.trim(),
-        email: email.value.trim(),
-        whatsapp: whatsapp.value.trim(),
-        map_embed: mapEmbed.value.trim()
-      }]);
-      showToast("✅ Kontak diperbarui!");
-    } catch {
-      showToast("❌ Gagal simpan kontak");
-    }
+  // ================= LOGOUT =================
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    window.location.href = "../login.html";
   });
 });
