@@ -113,3 +113,27 @@ document.getElementById("logoutBtn").addEventListener("click", async () => {
 
 // === Jalankan ===
 checkSession();
+
+// === TOGGLE MODE ===
+document.addEventListener("DOMContentLoaded", () => {
+  const themeToggle = document.getElementById("themeToggle");
+  const currentTheme = localStorage.getItem("theme") || "dark";
+
+  // Set tema awal
+  if (currentTheme === "light") {
+    document.body.classList.add("light");
+    themeToggle.textContent = "☀️";
+  } else {
+    document.body.classList.remove("light");
+    themeToggle.textContent = "🌙";
+  }
+
+  // Saat tombol diklik
+  themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("light");
+    const isLight = document.body.classList.contains("light");
+
+    localStorage.setItem("theme", isLight ? "light" : "dark");
+    themeToggle.textContent = isLight ? "☀️" : "🌙";
+  });
+});
