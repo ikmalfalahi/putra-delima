@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kelola Landing Page | Putra Delima</title>
+  <link rel="stylesheet" href="assets/css/landing_admin.css" />
+</head>
+<body>
+  <div class="admin-wrapper">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../assets/img/logo-putra-delima.png" alt="logo" />
+        <h3>PUTRA DELIMA</h3>
+      </div>
+      <nav>
+        <button data-section="hero" class="active">🏠 Hero</button>
+        <button data-section="tentang">ℹ️ Tentang</button>
+        <button data-section="visimisi">🎯 Visi & Misi</button>
+        <button data-section="struktur">👥 Struktur</button>
+        <button data-section="galeri">🖼️ Galeri</button>
+        <button data-section="agenda">📅 Agenda</button>
+        <button data-section="kontak">📞 Kontak & Maps</button>
+        <button id="logoutBtn" class="logout">🚪 Logout</button>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <h2 id="pageTitle">Kelola Hero Section</h2>
+      </header>
+
+      <section id="hero" class="section active">
+        <h3>Hero Section</h3>
+        <form id="heroForm">
+          <label>Judul:
+            <input type="text" id="hero_title" required />
+          </label>
+          <label>Deskripsi:
+            <textarea id="hero_desc" rows="3"></textarea>
+          </label>
+          <label>Gambar:
+            <input type="file" id="hero_img" accept="image/*" />
+          </label>
+          <button type="submit">💾 Simpan</button>
+        </form>
+        <div id="heroPreview"></div>
+      </section>
+
+      <section id="tentang" class="section">
+        <h3>Tentang Kami</h3>
+        <textarea id="about_text" rows="6"></textarea>
+        <button id="saveAbout">💾 Simpan</button>
+      </section>
+
+      <section id="visimisi" class="section">
+        <h3>Visi & Misi</h3>
+        <div class="cards" id="visimisiList"></div>
+        <button id="addVisiMisi">➕ Tambah</button>
+      </section>
+
+      <section id="struktur" class="section">
+        <h3>Struktur Organisasi</h3>
+        <input type="file" id="struktur_img" accept="image/*" />
+        <button id="uploadStruktur">📤 Upload</button>
+        <div id="strukturPreview"></div>
+      </section>
+
+      <section id="galeri" class="section">
+        <h3>Galeri Foto</h3>
+        <input type="file" id="galeri_files" multiple accept="image/*" />
+        <button id="uploadGallery">📤 Upload</button>
+        <div id="galeriList" class="gallery"></div>
+      </section>
+
+      <section id="agenda" class="section">
+        <h3>Agenda Kegiatan</h3>
+        <div id="agendaList"></div>
+        <button id="addAgenda">➕ Tambah Agenda</button>
+      </section>
+
+      <section id="kontak" class="section">
+        <h3>Kontak & Maps</h3>
+        <form id="contactForm">
+          <label>Alamat: <input type="text" id="alamat" /></label>
+          <label>Email: <input type="email" id="email" /></label>
+          <label>WhatsApp: <input type="text" id="wa" /></label>
+          <label>Link Maps Embed:
+            <textarea id="maps" rows="3"></textarea>
+          </label>
+          <button type="submit">💾 Simpan</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/js/supabase.js"></script>
+  <script src="assets/js/landing_admin.js"></script>
+</body>
+</html>
