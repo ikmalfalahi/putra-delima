@@ -42,4 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }, { threshold: 0.12 });
   document.querySelectorAll("[data-aos]").forEach(el => observer.observe(el));
+
+  // ======= LOAD DYNAMIC CONTENT FROM landing_data.js =======
+  if (typeof loadLandingData === "function") loadLandingData();
 });
