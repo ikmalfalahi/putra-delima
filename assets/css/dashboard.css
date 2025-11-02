@@ -307,20 +307,48 @@ button:hover {
   outline: none;
 }
 
-/* === TABLE STYLING === */
+/* === TABLE KEUANGAN & IURAN === */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto; /* scroll ke samping */
+  overflow-y: auto; /* scroll ke bawah */
+  max-height: 500px; /* batas tinggi tabel biar scroll muncul */
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  margin-top: 20px;
+  padding-bottom: 10px;
+}
+
+/* Scrollbar custom */
+.table-wrapper::-webkit-scrollbar {
+  height: 10px;
+  width: 8px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
 .table-keuangan {
   width: 100%;
+  min-width: 900px; /* biar kolom lebar dan bisa di-scroll horizontal */
   border-collapse: separate;
-  border-spacing: 0 8px;
+  border-spacing: 0 12px; /* jarak antar baris */
   color: #fff;
-  margin-top: 15px;
+  font-size: 0.95rem;
+  text-align: left;
 }
 
 .table-keuangan th,
 .table-keuangan td {
-  padding: 12px 18px;
+  padding: 14px 28px; /* lebih lebar antar kolom */
   background: rgba(255, 255, 255, 0.05);
   border-bottom: none;
+  white-space: nowrap; /* teks tidak pecah ke bawah */
 }
 
 .table-keuangan th {
@@ -333,18 +361,26 @@ button:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* === RESPONSIVE === */
-@media (max-width: 768px) {
-  .profil-container {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .keuangan-card,
-  .iuran-card {
-    padding: 20px;
-  }
+.table-keuangan td:first-child,
+.table-keuangan th:first-child {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
 }
 
+.table-keuangan td:last-child,
+.table-keuangan th:last-child {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
 
+/* Responsif tambahan */
+@media (max-width: 768px) {
+  .table-wrapper {
+    max-height: 400px;
+  }
 
+  .table-keuangan th,
+  .table-keuangan td {
+    padding: 10px 18px;
+  }
+}
