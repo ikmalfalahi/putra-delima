@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const waAnchor = document.querySelector("#whatsappText a");
       if (waAnchor && kontak.whatsapp) {
         waAnchor.href = `https://wa.me/${kontak.whatsapp.replace(/\D/g,'')}`;
-        waAnchor.textContent = kont ak.whatsapp || kontak.whatsapp;
+        waAnchor.textContent = kontak.whatsapp || kontak.whatsapp;
       }
 
       const mapFrame = document.getElementById("mapFrame");
