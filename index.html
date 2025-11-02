@@ -38,21 +38,22 @@
   <section id="home" class="hero" data-aos="fade-up">
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <h1 data-aos="fade-down">Putra Delima</h1>
-      <p data-aos="fade-up" data-aos-delay="100">
+      <h1 id="heroTitle" data-aos="fade-down">Putra Delima</h1>
+      <p id="heroDesc" data-aos="fade-up" data-aos-delay="100">
         Bersatu, Berbakti, dan Berkarya untuk Desa
       </p>
       <div class="cta" data-aos="zoom-in" data-aos-delay="200">
         <a href="daftar.html" class="btn-primary">Gabung Sekarang</a>
         <a href="#tentang" class="btn-outline">Pelajari Lebih Lanjut</a>
       </div>
+      <img id="heroImage" class="hero-dynamic" src="" alt="Hero Image" data-aos="zoom-in" style="max-width: 90%; margin-top: 16px; border-radius: 12px; display:none;" />
     </div>
   </section>
 
   <!-- TENTANG -->
   <section id="tentang" class="section" data-aos="fade-up">
     <h2>Tentang Kami</h2>
-    <p>
+    <p id="aboutText">
       Putra Delima adalah komunitas sosial yang berfokus pada kegiatan gotong royong,
       budaya, dan pemberdayaan ekonomi masyarakat desa.
     </p>
@@ -64,11 +65,11 @@
     <div class="cards">
       <div class="card" data-aos="flip-left">
         <h3>Visi</h3>
-        <p>Menjadi pelopor kemajuan dan kesejahteraan desa.</p>
+        <p id="visiText">Menjadi pelopor kemajuan dan kesejahteraan desa.</p>
       </div>
       <div class="card" data-aos="flip-right" data-aos-delay="100">
         <h3>Misi</h3>
-        <ul>
+        <ul id="misiText">
           <li>Memberdayakan generasi muda</li>
           <li>Meningkatkan kesejahteraan warga</li>
           <li>Menjaga kebersamaan & budaya lokal</li>
@@ -80,43 +81,29 @@
   <!-- STRUKTUR -->
   <section id="struktur" class="section" data-aos="fade-up">
     <h2>Struktur Organisasi</h2>
-    <img src="assets/img/struktur.jpg" alt="Struktur Organisasi" class="struktur-img" data-aos="zoom-in">
+    <img id="strukturImage" src="assets/img/struktur.jpg" alt="Struktur Organisasi" class="struktur-img" data-aos="zoom-in">
   </section>
 
   <!-- GALERI -->
   <section id="galeri" class="section dark" data-aos="fade-up">
     <h2>Galeri Kegiatan</h2>
-    <div class="gallery">
-      <img src="assets/img/kegiatan1.jpg" alt="" data-aos="zoom-in">
-      <img src="assets/img/kegiatan2.jpg" alt="" data-aos="zoom-in" data-aos-delay="100">
-      <img src="assets/img/kegiatan3.jpg" alt="" data-aos="zoom-in" data-aos-delay="200">
-      <img src="assets/img/kegiatan4.jpg" alt="" data-aos="zoom-in" data-aos-delay="300">
-    </div>
+    <div id="galleryContainer" class="gallery"></div>
   </section>
 
   <!-- AGENDA -->
   <section id="agenda" class="section" data-aos="fade-up">
     <h2>Agenda Kegiatan</h2>
-    <article class="agenda-item" data-aos="fade-right">
-      <h4>Pelatihan Kewirausahaan</h4>
-      <p>12 Nov 2025 — Balai Desa</p>
-    </article>
-    <article class="agenda-item" data-aos="fade-left">
-      <h4>Bakti Sosial & Donor Darah</h4>
-      <p>28 Nov 2025 — Lapangan Kecamatan</p>
-    </article>
+    <div id="agendaList"></div>
   </section>
 
   <!-- KONTAK -->
   <section id="kontak" class="section" data-aos="fade-up">
     <h2>Kontak Kami</h2>
-    <!--<p>✉️ info@putradelima.org</p>-->
-    <!--<p>📞 <a href="https://wa.me/6281234567890">+62 812-3456-7890</a></p>-->
-    <p>📍 Jl. Raya Putra No.1, Desa Maju</p>
+    <p id="alamatText">📍 Jl. Raya Putra No.1, Desa Maju</p>
+    <p id="emailText">✉️ info@putradelima.org</p>
+    <p id="whatsappText">📞 <a href="#">+62 812-3456-7890</a></p>
     <div class="map-container" data-aos="zoom-in">
-      <iframe 
-        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.1400288626963!2d110.36678931533146!3d-7.878910880015031!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a58a0d7cb715b%3A0x5027a76e355d010!2sDesa%20Maju!5e0!3m2!1sid!2sid!4v1700456789012"
-        width="100%" height="280" style="border:0;" allowfullscreen loading="lazy"></iframe>
+      <iframe id="mapFrame" src="" loading="lazy" allowfullscreen></iframe>
     </div>
   </section>
 
@@ -125,19 +112,10 @@
     <p>© <span id="year"></span> Putra Delima — Semua hak dilindungi.</p>
   </footer>
 
-<!-- 1. Supabase library (CDN) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- 2. Client setup -->
-<script src="assets/js/supabase.js"></script>
-
-<!-- 3. Interaksi UI -->
-<script src="assets/js/landing.js"></script>
-<script src="assets/js/landing_data.js"></script>
-
+  <!-- === SCRIPTS === -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/landing.js"></script>
+  <script src="assets/js/landing_data.js"></script>
 </body>
 </html>
-
-
-
-
