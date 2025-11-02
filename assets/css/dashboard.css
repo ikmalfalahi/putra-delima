@@ -467,3 +467,95 @@ button.edit:hover {
     padding: 20px;
   }
 }
+
+/* === FORM GAYA PROFIL UNTUK HALAMAN IURAN & KEUANGAN === */
+.keuangan-card form,
+.iuran-card form {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 25px 30px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.keuangan-card h2,
+.iuran-card h2 {
+  color: #f5c542;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+}
+
+/* input, select, textarea seragam */
+.keuangan-card input,
+.keuangan-card select,
+.keuangan-card textarea,
+.iuran-card input,
+.iuran-card select,
+.iuran-card textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 0.95rem;
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.keuangan-card input::placeholder,
+.iuran-card input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* efek saat focus */
+.keuangan-card input:focus,
+.keuangan-card select:focus,
+.keuangan-card textarea:focus,
+.iuran-card input:focus,
+.iuran-card select:focus,
+.iuran-card textarea:focus {
+  outline: none;
+  border-color: #f5c542;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* tombol */
+.keuangan-card button,
+.iuran-card button {
+  background: #f5c542;
+  color: #111;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.keuangan-card button:hover,
+.iuran-card button:hover {
+  background: #ffe05c;
+  transform: translateY(-2px);
+}
+
+/* agar tampilan tetap proporsional */
+.keuangan-card,
+.iuran-card {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* responsif */
+@media (max-width: 600px) {
+  .keuangan-card form,
+  .iuran-card form {
+    padding: 20px;
+  }
+}
