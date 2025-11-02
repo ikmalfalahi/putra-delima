@@ -4,17 +4,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  const safeText = (el, text) => {
-    if (el) el.textContent = text || "";
-  };
-
-  const safeHTML = (el, html) => {
-    if (el) el.innerHTML = html || "";
-  };
+  const safeText = (el, text) => { if (el) el.textContent = text || ""; };
+  const safeHTML = (el, html) => { if (el) el.innerHTML = html || ""; };
 
   // === HERO ===
   try {
-    const { data: hero, error } = await supabase.from("landing_hero").select("*").limit(1);
+    const { data: hero, error } = await supabase
+      .from("landing_hero")
+      .select("title, description, image_url")
+      .limit(1);
+
     if (error) console.warn("Hero error:", error.message);
 
     if (hero?.length) {
@@ -22,28 +21,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       safeText(document.getElementById("heroTitle"), h.title);
       safeText(document.getElementById("heroDesc"), h.description);
 
-      if (h.image_url) {
-        const heroImg = document.getElementById("heroImage");
+      const heroImg = document.getElementById("heroImage");
+      if (heroImg && h.image_url) {
         heroImg.src = h.image_url;
         heroImg.style.display = "block";
       }
     }
-  } catch (err) {
-    console.error("Gagal load hero:", err);
-  }
+  } catch (err) { console.error("Gagal load hero:", err); }
 
   // === TENTANG ===
   try {
-    const { data: tentang } = await supabase.from("landing_tentang").select("*").limit(1);
+    const { data: tentang } = await supabase
+      .from("landing_tentang")
+      .select("content")
+      .limit(1);
+
     if (tentang?.length)
       safeText(document.getElementById("aboutText"), tentang[0].content);
-  } catch (err) {
-    console.error("Gagal load tentang:", err);
-  }
+  } catch (err) { console.error("Gagal load tentang:", err); }
 
   // === VISI & MISI ===
   try {
-    const { data: visi } = await supabase.from("landing_visi_misi").select("*").limit(1);
+    const { data: visi } = await supabase
+      .from("landing_visi_misi")
+      .select("visi, misi")
+      .limit(1);
+
     if (visi?.length) {
       const v = visi[0];
       safeText(document.getElementById("visiText"), v.visi);
@@ -54,40 +57,48 @@ document.addEventListener("DOMContentLoaded", async () => {
         .join("");
       safeHTML(document.getElementById("misiText"), misiHTML);
     }
-  } catch (err) {
-    console.error("Gagal load visi & misi:", err);
-  }
+  } catch (err) { console.error("Gagal load visi & misi:", err); }
 
   // === STRUKTUR ===
   try {
-    const { data: struktur, error } = await supabase.from("landing_struktur").select("*").limit(1);
+    const { data: struktur, error } = await supabase
+      .from("landing_struktur")
+      .select("image_url")
+      .limit(1);
+
     if (error) console.warn("Struktur error:", error.message);
+
     const strukturImg = document.getElementById("strukturImage");
     if (struktur?.length && struktur[0].image_url) {
       strukturImg.src = struktur[0].image_url;
+      strukturImg.alt = "Struktur Organisasi";
+      strukturImg.style.display = "block";
     } else {
       strukturImg.src = "assets/img/struktur.jpg"; // fallback lokal
     }
-  } catch (err) {
-    console.error("Gagal load struktur:", err);
-  }
+  } catch (err) { console.error("Gagal load struktur:", err); }
 
   // === GALERI ===
   try {
     const { data: galeri, error } = await supabase
       .from("landing_galeri")
-      .select("*")
+      .select("image_url, caption")
       .order("uploaded_at", { ascending: false });
 
     if (error) console.warn("Galeri error:", error.message);
-    const container = document.getElementById("galleryContainer");
 
-    if (galeri?.length) {
+    const container =
+      document.getElementById("galleryContainer") ||
+      document.querySelector("#galeri .gallery");
+
+    if (!container) {
+      console.warn("Elemen galeri tidak ditemukan di halaman.");
+    } else if (galeri?.length) {
       container.innerHTML = galeri
         .map(
           (g) => `
           <div class="galeri-item" data-aos="zoom-in">
-            <img src="${g.image_url}" alt="${g.caption || ''}" />
+            <img src="${g.image_url}" alt="${g.caption || ""}" />
             ${g.caption ? `<p class="caption">${g.caption}</p>` : ""}
           </div>`
         )
@@ -95,21 +106,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       container.innerHTML = `<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>`;
     }
-  } catch (err) {
-    console.error("Gagal load galeri:", err);
-  }
+  } catch (err) { console.error("Gagal load galeri:", err); }
 
   // === AGENDA ===
   try {
     const { data: agenda, error } = await supabase
       .from("landing_agenda")
-      .select("*")
+      .select("title, tanggal, lokasi")
       .order("created_at", { ascending: false });
 
     if (error) console.warn("Agenda error:", error.message);
-    const list = document.getElementById("agendaList");
 
-    if (agenda?.length) {
+    const list =
+      document.getElementById("agendaList") ||
+      document.querySelector("#agenda .agenda-list");
+
+    if (!list) {
+      console.warn("Elemen agenda tidak ditemukan di halaman.");
+    } else if (agenda?.length) {
       list.innerHTML = agenda
         .map(
           (a) => `
@@ -122,13 +136,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       list.innerHTML = `<p style="color:#aaa;text-align:center;">Belum ada agenda kegiatan.</p>`;
     }
-  } catch (err) {
-    console.error("Gagal load agenda:", err);
-  }
+  } catch (err) { console.error("Gagal load agenda:", err); }
 
   // === KONTAK ===
   try {
-    const { data: kontak, error } = await supabase.from("landing_kontak").select("*").limit(1);
+    const { data: kontak, error } = await supabase
+      .from("landing_kontak")
+      .select("alamat, email, whatsapp, map_embed")
+      .limit(1);
+
     if (error) console.warn("Kontak error:", error.message);
 
     if (kontak?.length) {
@@ -154,9 +170,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
     }
-  } catch (err) {
-    console.error("Gagal load kontak:", err);
-  }
+  } catch (err) { console.error("Gagal load kontak:", err); }
 
   // === FOOTER YEAR ===
   const yearEl = document.getElementById("year");
