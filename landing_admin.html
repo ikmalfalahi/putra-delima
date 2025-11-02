@@ -13,82 +13,75 @@
   </header>
 
   <main class="admin-container">
-    <!-- Hero Section -->
-    <section class="admin-section" id="heroSection">
+
+    <!-- HERO -->
+    <section class="admin-section">
       <h2>Hero Section</h2>
-      <label>Judul:</label>
-      <input type="text" id="heroTitle" placeholder="Masukkan judul hero" />
-      <label>Deskripsi:</label>
-      <textarea id="heroDesc" placeholder="Masukkan deskripsi hero"></textarea>
-      <label>Gambar:</label>
+      <input id="heroTitle" placeholder="Judul Hero" />
+      <textarea id="heroDesc" placeholder="Deskripsi Hero"></textarea>
       <input type="file" id="heroImage" accept="image/*" />
-      <img id="heroPreview" class="preview" src="" alt="Preview Hero" />
-      <button class="btn-primary" id="saveHero">Simpan Hero</button>
+      <img id="heroPreview" class="preview" alt="Hero Preview" />
+      <button id="saveHero" class="btn-primary">Simpan Hero</button>
     </section>
 
-    <!-- Tentang Kami -->
-    <section class="admin-section" id="aboutSection">
+    <!-- TENTANG -->
+    <section class="admin-section">
       <h2>Tentang Kami</h2>
-      <textarea id="aboutText" rows="5"></textarea>
-      <button class="btn-primary" id="saveAbout">Simpan Tentang</button>
+      <textarea id="aboutText" rows="4" placeholder="Deskripsi tentang kami"></textarea>
+      <button id="saveAbout" class="btn-primary">Simpan Tentang</button>
     </section>
 
-    <!-- Visi Misi -->
-    <section class="admin-section" id="visionSection">
+    <!-- VISI MISI -->
+    <section class="admin-section">
       <h2>Visi & Misi</h2>
-      <label>Visi:</label>
-      <textarea id="visiText"></textarea>
-      <label>Misi:</label>
-      <textarea id="misiText"></textarea>
-      <button class="btn-primary" id="saveVision">Simpan Visi & Misi</button>
+      <textarea id="visiText" placeholder="Visi"></textarea>
+      <textarea id="misiText" placeholder="Misi (pisahkan dengan baris baru)"></textarea>
+      <button id="saveVision" class="btn-primary">Simpan Visi & Misi</button>
     </section>
 
-    <!-- Struktur -->
-    <section class="admin-section" id="strukturSection">
+    <!-- STRUKTUR -->
+    <section class="admin-section">
       <h2>Struktur Organisasi</h2>
       <input type="file" id="strukturImage" accept="image/*" />
-      <img id="strukturPreview" class="preview" src="" alt="Struktur" />
-      <button class="btn-primary" id="saveStruktur">Simpan Struktur</button>
+      <img id="strukturPreview" class="preview" alt="Struktur Preview" />
+      <button id="saveStruktur" class="btn-primary">Simpan Struktur</button>
     </section>
 
-    <!-- Galeri -->
-    <section class="admin-section" id="gallerySection">
+    <!-- GALERI -->
+    <section class="admin-section">
       <h2>Galeri Foto</h2>
       <input type="file" id="galleryFiles" multiple accept="image/*" />
+      <input type="text" id="galleryCaption" placeholder="Caption foto" />
       <div id="galleryPreview" class="gallery-preview"></div>
-      <button class="btn-primary" id="uploadGallery">Upload Galeri</button>
+      <button id="uploadGallery" class="btn-primary">Upload Galeri</button>
     </section>
 
-    <!-- Agenda -->
-    <section class="admin-section" id="agendaSection">
-      <h2>Agenda Kegiatan</h2>
-      <input type="text" id="agendaTitle" placeholder="Judul kegiatan" />
-      <input type="text" id="agendaDate" placeholder="Tanggal & Lokasi" />
-      <button class="btn-primary" id="addAgenda">Tambah Agenda</button>
+    <!-- AGENDA -->
+    <section class="admin-section">
+      <h2>Agenda</h2>
+      <input id="agendaTitle" placeholder="Judul Agenda" />
+      <input id="agendaDate" placeholder="Tanggal" />
+      <input id="agendaLocation" placeholder="Lokasi" />
+      <button id="addAgenda" class="btn-primary">Tambah Agenda</button>
       <div id="agendaList"></div>
     </section>
 
-    <!-- Kontak -->
-    <section class="admin-section" id="contactSection">
+    <!-- KONTAK -->
+    <section class="admin-section">
       <h2>Kontak & Maps</h2>
-      <input type="text" id="alamat" placeholder="Alamat" />
-      <input type="text" id="email" placeholder="Email" />
-      <input type="text" id="whatsapp" placeholder="No. Whatsapp" />
-      <textarea id="mapEmbed" placeholder="Embed code Google Maps"></textarea>
-      <button class="btn-primary" id="saveContact">Simpan Kontak</button>
+      <input id="alamat" placeholder="Alamat" />
+      <input id="email" placeholder="Email" />
+      <input id="whatsapp" placeholder="No. Whatsapp" />
+      <textarea id="mapEmbed" placeholder="Link Google Maps Embed"></textarea>
+      <button id="saveContact" class="btn-primary">Simpan Kontak</button>
     </section>
+
   </main>
 
   <footer class="admin-footer">© 2025 Putra Delima</footer>
 
-<!-- Muat library Supabase dulu -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- Supabase konfigurasi -->
-<script src="assets/js/supabase.js"></script>
-
-<!-- Baru script lainnya yang butuh supabase -->
-<script src="assets/js/landing_admin.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/landing_admin.js"></script>
 </body>
 </html>
