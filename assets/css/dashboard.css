@@ -527,3 +527,36 @@ body {
   border: 1px solid #ccc;
   border-radius: 6px;
 }
+
+/* --- Tabel iuran --- */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+#iuranTable {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+#iuranTable th,
+#iuranTable td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #ddd;
+  white-space: nowrap;
+}
+
+#iuranTable tr:hover {
+  background-color: #f5f5f5;
+}
+
+#searchIuran {
+  width: 300px;
+  max-width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
