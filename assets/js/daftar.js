@@ -37,51 +37,68 @@ document.addEventListener("DOMContentLoaded", () => {
     daftarBtn.textContent = "Memproses...";
     showMsg("Mendaftarkan akun...", "gray");
 
-    try {
-      // === 1️⃣ Daftar akun ke Supabase Auth ===
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { nama } },
-      });
+    // === 1️⃣ Daftar akun ke Supabase Auth ===
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { nama } },
+    });
 
-      if (signUpError) throw signUpError;
-
-      const user = signUpData.user;
-      if (!user) throw new Error("Gagal membuat akun. Coba lagi nanti.");
-
-      // === 2️⃣ Masukkan profil ke tabel profiles via upsert ===
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .upsert([{
-          id: user.id,
-          nama,
-          jenis_kelamin,
-          tanggal_lahir,
-          agama,
-          status_hubungan,
-          blok,
-          rt,
-          rw,
-          status: "Pending",
-          role: "anggota",
-          email
-        }], { onConflict: "id" }); // Upsert berdasarkan id
-
-      if (profileError) throw profileError;
-
-      // === 3️⃣ Feedback sukses ===
-      showMsg("Pendaftaran berhasil! Tunggu persetujuan admin.", "green");
-      daftarBtn.textContent = "Selesai";
-
-      setTimeout(() => (window.location.href = "login.html"), 2500);
-
-    } catch (e) {
-      console.error(e);
-      showMsg(`Gagal daftar: ${e.message || e}`, "red");
+    if (signUpError) {
+      showMsg(`Gagal daftar: ${signUpError.message}`, "red");
       daftarBtn.disabled = false;
       daftarBtn.textContent = "Daftar";
+      console.error(signUpError);
+      return;
     }
+
+    const user = signUpData.user;
+    if (!user) {
+      showMsg("Gagal membuat akun. Coba lagi nanti.", "red");
+      daftarBtn.disabled = false;
+      daftarBtn.textContent = "Daftar";
+      return;
+    }
+
+    // === 2️⃣ Jika Confirm Email aktif (belum verifikasi) ===
+    if (!signUpData.session) {
+      showMsg("Akun berhasil dibuat! Silakan cek email untuk konfirmasi sebelum login.", "green");
+      daftarBtn.disabled = false;
+      daftarBtn.textContent = "Daftar";
+      return;
+    }
+
+    // === 3️⃣ Update profil (bukan insert) ===
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({
+        nama,
+        jenis_kelamin,
+        tanggal_lahir,
+        agama,
+        status_hubungan,
+        blok,
+        rt,
+        rw,
+        status: "Pending",
+        role: "anggota",
+        email,
+      })
+      .eq("id", user.id);
+
+    if (updateError) {
+      console.error(updateError);
+      showMsg(`Gagal memperbarui profil: ${updateError.message}`, "red");
+      daftarBtn.disabled = false;
+      daftarBtn.textContent = "Daftar";
+      return;
+    }
+
+    // === 4️⃣ Sukses daftar ===
+    showMsg("Pendaftaran berhasil! Tunggu persetujuan admin.", "green");
+    daftarBtn.textContent = "Selesai";
+
+    setTimeout(() => (window.location.href = "login.html"), 2500);
   });
 
   function showMsg(text, color) {
