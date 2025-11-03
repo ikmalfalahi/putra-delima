@@ -427,7 +427,16 @@ async function initIuranPage() {
   const addIuranBtn = document.getElementById("addIuranBtn");
   const iuranMsg = document.getElementById("iuranMsg");
   const iuranTableBody = document.querySelector("#iuranTable tbody");
-  const searchInput = document.getElementById("searchIuran");
+
+  // Pastikan searchInput selalu ada, tampil untuk semua user
+  let searchInput = document.getElementById("searchIuran");
+  if (!searchInput) {
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("search-wrapper");
+    wrapper.innerHTML = `<input type="text" id="searchIuran" placeholder="Cari iuran...">`;
+    iuranTableBody.parentElement.insertBefore(wrapper, iuranTableBody);
+    searchInput = document.getElementById("searchIuran");
+  }
 
   if (!iuranTableBody) return;
 
@@ -454,7 +463,6 @@ async function initIuranPage() {
         return;
       }
 
-      // gabungkan per user_id, ambil total jumlah Belum Lunas terbaru
       const userMap = {};
       const totals = {};
       const latestIuran = {};
@@ -466,7 +474,6 @@ async function initIuranPage() {
         }
       }
 
-      // ambil nama anggota
       const userIds = Object.keys(latestIuran).filter(Boolean);
       let users = [];
       if (userIds.length) {
@@ -514,7 +521,7 @@ async function initIuranPage() {
     `).join("");
   }
 
-  // search
+  // search: tampil untuk semua user
   searchInput?.addEventListener("input", ()=>{
     const q = (searchInput.value || "").toLowerCase();
     const filtered = allIurans.filter(u =>
@@ -536,7 +543,6 @@ async function initIuranPage() {
         return;
       }
       try {
-        // cek iuran terbaru anggota Belum Lunas
         const { data: existing, error: fetchError } = await supabase
           .from("iuran")
           .select("*")
@@ -816,5 +822,6 @@ async function initIuranPage() {
   });
 
 }); // end DOMContentLoaded
+
 
 
