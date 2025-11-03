@@ -50,8 +50,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const user = signUpData.user;
       if (!user) throw new Error("Gagal membuat akun. Coba lagi nanti.");
 
-      // === 2️⃣ Masukkan atau update profil secara otomatis ===
-      const { error: upsertError } = await supabase
+      // === 2️⃣ Masukkan profil ke tabel profiles via upsert ===
+      const { error: profileError } = await supabase
         .from("profiles")
         .upsert([{
           id: user.id,
@@ -66,17 +66,12 @@ document.addEventListener("DOMContentLoaded", () => {
           status: "Pending",
           role: "anggota",
           email
-        }], { onConflict: "id" }); // update jika id sudah ada
+        }], { onConflict: "id" }); // Upsert berdasarkan id
 
-      if (upsertError) throw upsertError;
+      if (profileError) throw profileError;
 
-      // === 3️⃣ Jika Confirm Email aktif ===
-      if (!signUpData.session) {
-        showMsg("Akun berhasil dibuat! Silakan cek email untuk konfirmasi sebelum login.", "green");
-      } else {
-        showMsg("Pendaftaran berhasil! Tunggu persetujuan admin.", "green");
-      }
-
+      // === 3️⃣ Feedback sukses ===
+      showMsg("Pendaftaran berhasil! Tunggu persetujuan admin.", "green");
       daftarBtn.textContent = "Selesai";
 
       setTimeout(() => (window.location.href = "login.html"), 2500);
