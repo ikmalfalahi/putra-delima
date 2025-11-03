@@ -459,3 +459,38 @@ body {
     width: 100%;
   }
 }
+
+.btn-edit,
+.btn-del {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: #fff;
+  transition: 0.3s ease;
+}
+
+.btn-edit {
+  background: rgba(0, 150, 255, 0.5);
+}
+
+.btn-del {
+  background: rgba(255, 50, 50, 0.5);
+  margin-left: 5px;
+}
+
+.btn-edit:hover {
+  background: rgba(0, 150, 255, 0.8);
+}
+
+.btn-del:hover {
+  background: rgba(255, 50, 50, 0.8);
+}
+
+.table-keuangan td:nth-child(2)[style*="color: #4caf50"] {
+  font-weight: 600;
+}
+
+.table-keuangan td:nth-child(2)[style*="color: #ff5252"] {
+  font-weight: 600;
+}
