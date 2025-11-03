@@ -1,16 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manajemen Anggota — Putra Delima</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Anggota — Putra Delima</title>
   <link rel="stylesheet" href="assets/css/dashboard.css" />
-  <link rel="stylesheet" href="assets/css/admin-theme.css" />
-  <link rel="stylesheet" href="assets/css/anggota.css" />
+  <link rel="stylesheet" href="assets/css/admin-theme.css">
 </head>
 <body>
   <div class="app">
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="brand">
         <img src="../assets/img/logo-putra-delima.png" alt="logo" />
@@ -22,62 +20,56 @@
         <a href="iuran.html" class="nav-item">📄 Iuran</a>
         <a href="keuangan.html" class="nav-item">💰 Keuangan</a>
         <a href="profil.html" class="nav-item">👤 Profil</a>
-        <a href="landing_admin.html" class="nav-item">🌐 Landing</a>
+        <a href="landing_admin.html" class="nav-item">🌐 Beranda</a>
         <button id="logoutBtn" class="nav-logout">🚪 Logout</button>
       </nav>
     </aside>
 
-    <!-- Main -->
     <main class="main">
       <header class="main-header">
         <button id="toggleSidebar" class="hamburger">☰</button>
         <div class="header-right">
           <button id="themeToggle" class="theme-toggle" title="Ganti tema">🌙</button>
-          <span id="userName">—</span>
         </div>
+        <div class="header-right"><span id="userName">—</span></div>
       </header>
 
       <section class="content">
         <h2>Manajemen Anggota</h2>
 
-        <div class="card">
-          <div class="card-head">
-            <span>Daftar Anggota</span>
-            <div class="actions">
-              <input type="text" id="searchAnggota" placeholder="Cari anggota..." />
-              <button id="refreshMembers">🔄 Refresh</button>
-              <button id="addMemberBtn" class="admin-only">➕ Tambah</button>
-            </div>
-          </div>
+        <!-- 🔍 Pencarian + Refresh -->
+        <div class="search-row">
+          <input type="text" id="searchMember" placeholder="Cari nama, blok, atau status...">
+          <button id="refreshMembers" class="btn-action btn-edit">⟳ Refresh</button>
+        </div>
 
-          <div class="card-body">
-            <div id="anggotaMsg" class="msg"></div>
-            <div class="table-wrapper">
-              <table class="table" id="membersTable">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Foto</th>
-                    <th>Nama</th>
-                    <th>Tanggal Lahir</th>
-                    <th>Blok</th>
-                    <th>RT/RW</th>
-                    <th>Status</th>
-                    <th class="admin-only">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr><td colspan="8" class="empty">Memuat data...</td></tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- 📋 Daftar Anggota -->
+        <div class="card">
+          <div class="card-head">Daftar Anggota</div>
+          <div class="card-body table-wrapper">
+            <table class="table-anggota" id="membersTable">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Foto</th>
+                  <th>Nama</th>
+                  <th>Tanggal Lahir</th>
+                  <th>Blok</th>
+                  <th>RT/RW</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="8" class="empty">Memuat...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/dashboard.js"></script>
