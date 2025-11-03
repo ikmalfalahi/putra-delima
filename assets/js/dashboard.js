@@ -156,12 +156,13 @@ async function initDashboard() {
 }
 
 
-/* ---------------- Members page (pakai tabel profiles) ---------------- */
+/* ---------------- Members page ---------------- */
 async function initMembersPage() {
   const membersTableBody = document.querySelector("#membersTable tbody");
   const refreshBtn = document.getElementById("refreshMembers");
+  const searchInput = document.getElementById("searchMember");
 
-  // === Ambil session user (untuk cek role admin) ===
+  // === Ambil session ===
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return (window.location.href = "../login.html");
 
@@ -173,148 +174,126 @@ async function initMembersPage() {
     .single();
   const isAdmin = currentUser?.role === "admin";
 
+  let allMembers = [];
+
+  // === Render tabel anggota ===
+  function renderMembers(list) {
+    if (!list || list.length === 0) {
+      membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Tidak ada data ditemukan</td></tr>`;
+      return;
+    }
+
+    membersTableBody.innerHTML = list
+      .map((m, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td class="avatar-cell" style="text-align:center;">
+            <img src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
+                 alt="${escapeHtml(m.nama || '-')}"
+                 onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')">
+          </td>
+          <td>${escapeHtml(m.nama || "-")}</td>
+          <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
+          <td>${escapeHtml(m.blok || "-")}</td>
+          <td>${escapeHtml(m.rt || "-")} / ${escapeHtml(m.rw || "-")}</td>
+          <td>${escapeHtml(m.status || "-")}</td>
+          <td>
+            ${
+              isAdmin
+                ? `
+                <button class="btn-action btn-edit" onclick="approveMember('${m.id}')">✔</button>
+                <button class="btn-action btn-del" onclick="rejectMember('${m.id}')">✖</button>
+                <button class="btn-action btn-del" onclick="deleteMember('${m.id}')">🗑</button>
+              `
+                : ""
+            }
+            <button class="btn-action btn-edit" onclick="openMemberDetail('${m.id}')">🔍</button>
+          </td>
+        </tr>`
+      )
+      .join("");
+  }
+
   // === Load daftar anggota ===
   async function loadMembers() {
     membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Memuat...</td></tr>`;
-    try {
-      const { data: members, error } = await supabase
-        .from("profiles")
-        .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role, status")
-        .order("inserted_at", { ascending: false });
+    const { data: members, error } = await supabase
+      .from("profiles")
+      .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role, status")
+      .order("inserted_at", { ascending: false });
 
-      if (error) throw error;
-
-      if (!members || members.length === 0) {
-        membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada data</td></tr>`;
-        return;
-      }
-
-      membersTableBody.innerHTML = members
-        .map(
-          (m, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td class="avatar-cell" style="text-align:center;">
-          <img 
-            src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
-            alt="${escapeHtml(m.nama || '-')}" 
-            style="width:36px;height:36px;object-fit:cover;border-radius:50%;cursor:pointer;transition:transform .2s ease;"
-            onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')"
-          />
-        </td>
-        <td>${escapeHtml(m.nama || "-")}</td>
-        <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
-        <td>${escapeHtml(m.blok || "-")}</td>
-        <td>${escapeHtml(m.rt || "-")} / ${escapeHtml(m.rw || "-")}</td>
-        <td>${escapeHtml(m.status || "-")}</td>
-        <td>
-          ${
-            isAdmin
-              ? `
-                <button onclick="approveMember('${m.id}')" style="background:#4CAF50;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-right:4px;">✔</button>
-                <button onclick="rejectMember('${m.id}')" style="background:#F44336;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-right:4px;">✖</button>
-                <button onclick="deleteMember('${m.id}')" style="background:#9E9E9E;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-right:4px;">🗑</button>
-              `
-              : "-"
-          }
-          <button onclick="openMemberDetail('${m.id}')" style="background:#2196F3;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🔍</button>
-        </td>
-      </tr>`
-        )
-        .join("");
-    } catch (e) {
-      console.error(e);
+    if (error) {
+      console.error(error);
       membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat data</td></tr>`;
+      return;
     }
+
+    allMembers = members;
+    renderMembers(allMembers);
   }
 
-  // === Aksi: Setuju ===
+  // === Filter pencarian ===
+  searchInput?.addEventListener("input", (e) => {
+    const term = e.target.value.toLowerCase();
+    const filtered = allMembers.filter((m) =>
+      (m.nama || "").toLowerCase().includes(term) ||
+      (m.blok || "").toLowerCase().includes(term) ||
+      (m.status || "").toLowerCase().includes(term)
+    );
+    renderMembers(filtered);
+  });
+
+  // === Tombol Refresh ===
+  refreshBtn?.addEventListener("click", loadMembers);
+
+  // === Aksi Anggota ===
   window.approveMember = async (id) => {
     if (!isAdmin) return showToast("error", "Hanya admin yang bisa menyetujui anggota.");
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ status: "Aktif", role: "anggota" })
-        .eq("id", id);
-
-      if (error) throw error;
-      showToast("success", "Anggota berhasil disetujui!");
-      await loadMembers();
-    } catch (e) {
-      console.error(e);
-      showToast("error", "Gagal menyetujui anggota.");
-    }
+    const { error } = await supabase.from("profiles").update({ status: "Aktif", role: "anggota" }).eq("id", id);
+    if (error) return showToast("error", "Gagal menyetujui anggota.");
+    showToast("success", "Anggota disetujui!");
+    await loadMembers();
   };
 
-  // === Aksi: Tolak ===
   window.rejectMember = async (id) => {
     if (!isAdmin) return showToast("error", "Hanya admin yang bisa menolak anggota.");
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ status: "Ditolak" })
-        .eq("id", id);
-
-      if (error) throw error;
-      showToast("success", "Anggota berhasil ditolak.");
-      await loadMembers();
-    } catch (e) {
-      console.error(e);
-      showToast("error", "Gagal menolak anggota.");
-    }
+    const { error } = await supabase.from("profiles").update({ status: "Ditolak" }).eq("id", id);
+    if (error) return showToast("error", "Gagal menolak anggota.");
+    showToast("success", "Anggota ditolak.");
+    await loadMembers();
   };
 
-  // === Aksi: Hapus ===
   window.deleteMember = async (id) => {
     if (!isAdmin) return showToast("error", "Hanya admin yang bisa menghapus anggota.");
     if (!confirm("Yakin ingin menghapus anggota ini?")) return;
-    try {
-      const { error } = await supabase.from("profiles").delete().eq("id", id);
-      if (error) throw error;
-      showToast("success", "Anggota berhasil dihapus.");
-      await loadMembers();
-    } catch (e) {
-      console.error(e);
-      showToast("error", "Gagal menghapus anggota.");
-    }
+    const { error } = await supabase.from("profiles").delete().eq("id", id);
+    if (error) return showToast("error", "Gagal menghapus anggota.");
+    showToast("success", "Anggota dihapus.");
+    await loadMembers();
   };
 
-  // === Detail Anggota ===
   window.openMemberDetail = async (id) => {
-    try {
-      const { data: member, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", id)
-        .single();
+    const { data: member, error } = await supabase.from("profiles").select("*").eq("id", id).single();
+    if (error) return showToast("error", "Gagal membuka detail anggota.");
 
-      if (error) throw error;
-
-      const html = `
-        <h3>Detail Anggota</h3>
-        <p><strong>Nama:</strong> ${escapeHtml(member.nama || "-")}</p>
-        <p><strong>Tanggal Lahir:</strong> ${
-          member.tanggal_lahir
-            ? new Date(member.tanggal_lahir).toLocaleDateString("id-ID")
-            : "-"
-        }</p>
-        <p><strong>Blok:</strong> ${escapeHtml(member.blok || "-")}</p>
-        <p><strong>RT/RW:</strong> ${escapeHtml(member.rt || "-")} / ${escapeHtml(member.rw || "-")}</p>
-        <p><strong>Status:</strong> ${escapeHtml(member.status || "-")}</p>
-        <p><strong>Role:</strong> ${escapeHtml(member.role || "-")}</p>
-        <div class="modal-actions"><button id="closeDetail">Tutup</button></div>`;
-
-      const modal = showModal(html);
-      modal.querySelector("#closeDetail").addEventListener("click", closeModal);
-    } catch (e) {
-      console.error(e);
-      showToast("error", "Gagal membuka detail anggota.");
-    }
+    const html = `
+      <h3>Detail Anggota</h3>
+      <p><strong>Nama:</strong> ${escapeHtml(member.nama || "-")}</p>
+      <p><strong>Tanggal Lahir:</strong> ${member.tanggal_lahir ? new Date(member.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</p>
+      <p><strong>Blok:</strong> ${escapeHtml(member.blok || "-")}</p>
+      <p><strong>RT/RW:</strong> ${escapeHtml(member.rt || "-")} / ${escapeHtml(member.rw || "-")}</p>
+      <p><strong>Status:</strong> ${escapeHtml(member.status || "-")}</p>
+      <p><strong>Role:</strong> ${escapeHtml(member.role || "-")}</p>
+      <div class="modal-actions"><button id="closeDetail">Tutup</button></div>`;
+    const modal = showModal(html);
+    modal.querySelector("#closeDetail").addEventListener("click", closeModal);
   };
 
-  refreshBtn && refreshBtn.addEventListener("click", loadMembers);
   await loadMembers();
 }
+
+document.addEventListener("DOMContentLoaded", initMembersPage);
+
 
 /* ---------------- Iuran Page (versi fix & sinkron dengan Keuangan) ---------------- */
 async function initIuranPage() {
@@ -1061,6 +1040,7 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
 
 
