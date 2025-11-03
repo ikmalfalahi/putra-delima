@@ -334,7 +334,7 @@ body {
   border-radius: 12px;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  color: var(--input-text);
+  color: #fff;
   font-size: 0.95rem;
   transition: 0.3s ease;
 }
@@ -661,5 +661,6 @@ body {
 .btn-del:hover {
   background: rgba(255, 50, 50, 0.8);
 }
+
 
 
