@@ -172,8 +172,8 @@ async function initMembersPage() {
     .select("role")
     .eq("id", userId)
     .single();
-  const isAdmin = currentUser?.role === "admin";
 
+  const isAdmin = currentUser?.role === "admin";
   let allMembers = [];
 
   // === Render tabel anggota ===
@@ -189,8 +189,7 @@ async function initMembersPage() {
           <td>${i + 1}</td>
           <td class="avatar-cell" style="text-align:center;">
             <img src="${m.avatar_url || 'https://ikmalfalahi.github.io/putra-delima/assets/img/default-avatar.png'}"
-                 alt="${escapeHtml(m.nama || '-')}"
-                 onclick="showAvatarModal('${m.avatar_url || ''}', '${escapeHtml(m.nama || '-')}')">
+                 alt="${escapeHtml(m.nama || '-')}">
           </td>
           <td>${escapeHtml(m.nama || "-")}</td>
           <td>${m.tanggal_lahir ? new Date(m.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
@@ -201,10 +200,10 @@ async function initMembersPage() {
             ${
               isAdmin
                 ? `
-                <button class="btn-action btn-edit" onclick="approveMember('${m.id}')">✔</button>
-                <button class="btn-action btn-del" onclick="rejectMember('${m.id}')">✖</button>
-                <button class="btn-action btn-del" onclick="deleteMember('${m.id}')">🗑</button>
-              `
+                  <button class="btn-action btn-edit" onclick="approveMember('${m.id}')">✔</button>
+                  <button class="btn-action btn-del" onclick="rejectMember('${m.id}')">✖</button>
+                  <button class="btn-action btn-del" onclick="deleteMember('${m.id}')">🗑</button>
+                `
                 : ""
             }
             <button class="btn-action btn-edit" onclick="openMemberDetail('${m.id}')">🔍</button>
@@ -217,10 +216,18 @@ async function initMembersPage() {
   // === Load daftar anggota ===
   async function loadMembers() {
     membersTableBody.innerHTML = `<tr><td colspan="8" class="empty">Memuat...</td></tr>`;
-    const { data: members, error } = await supabase
+
+    let query = supabase
       .from("profiles")
       .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role, status")
       .order("inserted_at", { ascending: false });
+
+    // 🔒 Jika bukan admin, tampilkan hanya anggota aktif
+    if (!isAdmin) {
+      query = query.eq("status", "Aktif");
+    }
+
+    const { data: members, error } = await query;
 
     if (error) {
       console.error(error);
@@ -246,10 +253,13 @@ async function initMembersPage() {
   // === Tombol Refresh ===
   refreshBtn?.addEventListener("click", loadMembers);
 
-  // === Aksi Anggota ===
+  // === Aksi hanya untuk admin ===
   window.approveMember = async (id) => {
     if (!isAdmin) return showToast("error", "Hanya admin yang bisa menyetujui anggota.");
-    const { error } = await supabase.from("profiles").update({ status: "Aktif", role: "anggota" }).eq("id", id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ status: "Aktif", role: "anggota" })
+      .eq("id", id);
     if (error) return showToast("error", "Gagal menyetujui anggota.");
     showToast("success", "Anggota disetujui!");
     await loadMembers();
@@ -272,6 +282,7 @@ async function initMembersPage() {
     await loadMembers();
   };
 
+  // === Detail Anggota ===
   window.openMemberDetail = async (id) => {
     const { data: member, error } = await supabase.from("profiles").select("*").eq("id", id).single();
     if (error) return showToast("error", "Gagal membuka detail anggota.");
@@ -279,7 +290,11 @@ async function initMembersPage() {
     const html = `
       <h3>Detail Anggota</h3>
       <p><strong>Nama:</strong> ${escapeHtml(member.nama || "-")}</p>
-      <p><strong>Tanggal Lahir:</strong> ${member.tanggal_lahir ? new Date(member.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</p>
+      <p><strong>Tanggal Lahir:</strong> ${
+        member.tanggal_lahir
+          ? new Date(member.tanggal_lahir).toLocaleDateString("id-ID")
+          : "-"
+      }</p>
       <p><strong>Blok:</strong> ${escapeHtml(member.blok || "-")}</p>
       <p><strong>RT/RW:</strong> ${escapeHtml(member.rt || "-")} / ${escapeHtml(member.rw || "-")}</p>
       <p><strong>Status:</strong> ${escapeHtml(member.status || "-")}</p>
@@ -293,7 +308,6 @@ async function initMembersPage() {
 }
 
 document.addEventListener("DOMContentLoaded", initMembersPage);
-
 
 /* ---------------- Iuran Page (versi fix & sinkron dengan Keuangan) ---------------- */
 async function initIuranPage() {
@@ -1040,6 +1054,7 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
 
 
