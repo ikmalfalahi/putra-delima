@@ -48,12 +48,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (signUpError) throw signUpError;
 
       const user = signUpData.user;
-      if (!user) throw new Error("Gagal membuat akun. Coba lagi nanti.");
+      if (!user) throw new Error("Gagal membuat akun.");
 
-      // === 2️⃣ Masukkan profil ke tabel profiles via upsert ===
-      const { error: profileError } = await supabase
+      // === 2️⃣ Insert profil baru ke tabel profiles ===
+      const { error: insertError } = await supabase
         .from("profiles")
-        .upsert([{
+        .insert([{
           id: user.id,
           nama,
           jenis_kelamin,
@@ -66,11 +66,11 @@ document.addEventListener("DOMContentLoaded", () => {
           status: "Pending",
           role: "anggota",
           email
-        }], { onConflict: "id" }); // Upsert berdasarkan id
+        }]);
 
-      if (profileError) throw profileError;
+      if (insertError) throw insertError;
 
-      // === 3️⃣ Feedback sukses ===
+      // === 3️⃣ Berhasil ===
       showMsg("Pendaftaran berhasil! Tunggu persetujuan admin.", "green");
       daftarBtn.textContent = "Selesai";
 
