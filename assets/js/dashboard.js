@@ -316,7 +316,7 @@ async function initMembersPage() {
   await loadMembers();
 }
 
-/* ---------------- Iuran page ---------------- */
+/* ---------------- Iuran Page (versi fix & sinkron dengan Keuangan) ---------------- */
 async function initIuranPage() {
   const iuranSelect = document.getElementById("iuran_user");
   const addIuranBtn = document.getElementById("addIuranBtn");
@@ -324,18 +324,17 @@ async function initIuranPage() {
   const iuranTableBody = document.querySelector("#iuranTable tbody");
   const searchInput = document.getElementById("searchIuran");
 
-  const bannerSection = document.querySelector(".content");
-  const themeToggleBtn = document.getElementById("themeToggle");
-
   // --- Ambil user login dan role ---
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return (window.location.href = "../login.html");
+
   const userId = session.user.id;
   const { data: profile } = await supabase
     .from("profiles")
     .select("role, nama")
     .eq("id", userId)
     .single();
+
   const role = profile?.role || "anggota";
 
   // --- Sembunyikan elemen admin-only jika bukan admin ---
@@ -343,29 +342,35 @@ async function initIuranPage() {
     document.querySelectorAll(".admin-only").forEach(el => (el.style.display = "none"));
   }
 
-  // --- Muat daftar anggota ---
-  const { data: members } = await supabase.from("profiles").select("id, nama, role");
-  if (members && members.length) {
-    iuranSelect.innerHTML =
-      `<option value="">Pilih Anggota</option>` +
-      members.map(m => `<option value="${m.id}">${m.nama} (${m.role})</option>`).join("");
-  }
-
-  // --- Simpan data global untuk pencarian ---
   let allIurans = [];
+
+  // --- Load daftar anggota ke dropdown (admin only) ---
+  if (iuranSelect && role === "admin") {
+    const { data: members } = await supabase.from("profiles").select("id, nama, role");
+    if (members && members.length) {
+      iuranSelect.innerHTML =
+        `<option value="">Pilih Anggota</option>` +
+        members.map(m => `<option value="${m.id}">${m.nama} (${m.role})</option>`).join("");
+    }
+  }
 
   // --- Fungsi Load Iuran ---
   async function loadIuran() {
     iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Memuat...</td></tr>`;
 
-    let { data: iurans, error } = await supabase
+    const { data: iurans, error } = await supabase
       .from("iuran")
       .select("*")
       .order("inserted_at", { ascending: false });
 
     if (error) {
       console.error(error);
-      iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat</td></tr>`;
+      iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat data</td></tr>`;
+      return;
+    }
+
+    if (!iurans || iurans.length === 0) {
+      iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada iuran</td></tr>`;
       return;
     }
 
@@ -383,28 +388,13 @@ async function initIuranPage() {
       ...u,
       nama_user: userMap[u.user_id] || "-",
       index: i + 1,
+      tanggal: u.tanggal ? new Date(u.tanggal).toLocaleDateString("id-ID") : "-",
     }));
 
     renderIuran(allIurans);
   }
 
-  // --- Fungsi Format Number ---
-  function formatNumber(num) {
-    return num.toLocaleString("id-ID");
-  }
-
-  // --- Fungsi Escape HTML ---
-  function escapeHtml(text) {
-    return text
-      ? text.replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;")
-      : "-";
-  }
-
-  // --- Fungsi Render Iuran ke Tabel ---
+  // --- Render Tabel Iuran ---
   function renderIuran(data) {
     if (!data || data.length === 0) {
       iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Tidak ada hasil.</td></tr>`;
@@ -412,32 +402,35 @@ async function initIuranPage() {
     }
 
     iuranTableBody.innerHTML = data
-      .map(u => `
+      .map(
+        (u) => `
         <tr>
           <td>${u.index}</td>
           <td>${escapeHtml(u.nama_user)}</td>
           <td>${escapeHtml(u.keterangan || "-")}</td>
-          <td>Rp ${formatNumber(u.jumlah)}</td>
-          <td>${u.tanggal ? new Date(u.tanggal).toLocaleDateString("id-ID") : "-"}</td>
-          <td class="status-${(u.status || "belum").toLowerCase()}">${u.status || "-"}</td>
-          <td>${u.bukti_url ? `<a href="${u.bukti_url}" target="_blank">📎</a>` : "-"}</td>
-          <td>
+          <td>Rp ${formatNumber(u.jumlah || 0)}</td>
+          <td>${u.tanggal}</td>
+          <td>${escapeHtml(u.status || "-")}</td>
+          <td>${u.bukti_url ? `<a href="${u.bukti_url}" target="_blank">📎 Lihat</a>` : "-"}</td>
+          <td class="admin-only">
             ${role === "admin"
-              ? `<button onclick="markIuranPaid('${u.id}')">✅ Lunas</button>
-                 <button onclick="deleteIuran('${u.id}')">🗑 Hapus</button>`
+              ? `<button onclick="markIuranPaid('${u.id}')">✔️ Lunas</button>
+                 <button onclick="deleteIuran('${u.id}')">🗑️ Hapus</button>`
               : ""}
           </td>
-        </tr>`).join("");
+        </tr>`
+      )
+      .join("");
   }
 
-  // --- Event: Kolom pencarian real-time ---
+  // --- Pencarian real-time ---
   if (searchInput) {
     searchInput.addEventListener("input", () => {
-      const query = searchInput.value.toLowerCase();
+      const q = searchInput.value.toLowerCase();
       const filtered = allIurans.filter(u =>
-        (u.nama_user?.toLowerCase().includes(query)) ||
-        (u.keterangan?.toLowerCase().includes(query)) ||
-        (u.status?.toLowerCase().includes(query))
+        (u.nama_user?.toLowerCase().includes(q)) ||
+        (u.keterangan?.toLowerCase().includes(q)) ||
+        (u.status?.toLowerCase().includes(q))
       );
       renderIuran(filtered);
     });
@@ -450,24 +443,33 @@ async function initIuranPage() {
       const jumlah = Number(document.getElementById("iuran_jumlah").value);
       const member = document.getElementById("iuran_user").value;
 
+      iuranMsg.textContent = "";
+
       if (!keterangan || !jumlah) {
         iuranMsg.textContent = "Keterangan dan jumlah wajib diisi.";
         return;
       }
 
       const targetUser = member || userId;
-      const { error } = await supabase.from("iuran").insert([{
-        user_id: targetUser,
-        jumlah,
-        tanggal: new Date().toISOString().split("T")[0],
-        status: "belum",
-        keterangan,
-      }]);
+      const { error } = await supabase.from("iuran").insert([
+        {
+          user_id: targetUser,
+          jumlah,
+          tanggal: new Date().toISOString().split("T")[0],
+          status: "belum",
+          keterangan,
+        },
+      ]);
 
       if (error) {
+        console.error(error);
+        showToast("error", `Gagal menambah iuran: ${error.message}`);
         iuranMsg.textContent = `Gagal: ${error.message}`;
       } else {
-        iuranMsg.textContent = "✅ Iuran berhasil ditambahkan.";
+        showToast("success", "✅ Iuran berhasil ditambahkan!");
+        iuranMsg.textContent = "Iuran berhasil ditambahkan.";
+        document.getElementById("iuran_keterangan").value = "";
+        document.getElementById("iuran_jumlah").value = "";
         await loadIuran();
       }
     });
@@ -477,6 +479,7 @@ async function initIuranPage() {
   window.markIuranPaid = async id => {
     if (role !== "admin") return;
     await supabase.from("iuran").update({ status: "lunas" }).eq("id", id);
+    showToast("success", "Iuran ditandai lunas.");
     await loadIuran();
   };
 
@@ -484,28 +487,9 @@ async function initIuranPage() {
     if (role !== "admin") return;
     if (!confirm("Yakin ingin menghapus iuran ini?")) return;
     await supabase.from("iuran").delete().eq("id", id);
+    showToast("success", "Iuran berhasil dihapus.");
     await loadIuran();
   };
-
-  // --- Mode Gelap / Terang ---
-  function applyTheme(dark) {
-    document.body.classList.toggle("dark", dark);
-    if (bannerSection) bannerSection.style.backgroundImage = dark ? 
-      "url('../img/banner-bg-dark.jpg')" : "url('../img/banner-bg.jpg')";
-    // ganti ikon di tabel atau tombol sesuai dark/light di sini
-  }
-
-  // --- Event Toggle Theme ---
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener("click", () => {
-      const isDark = document.body.classList.toggle("dark");
-      applyTheme(isDark);
-    });
-  }
-
-  // --- Inisialisasi ---
-  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  applyTheme(prefersDark);
 
   await loadIuran();
 }
@@ -1077,6 +1061,7 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
 
 
