@@ -436,63 +436,54 @@ async function initIuranPage() {
   // load members for dropdown only if admin
   if (iuranSelect && isAdmin) {
     try {
-      const { data: members } = await supabase
-        .from("profiles")
-        .select("id, nama")
-        .order("nama", { ascending: true });
+      const { data: members } = await supabase.from("profiles").select("id, nama").order("nama", { ascending: true });
       if (members) {
-        iuranSelect.innerHTML =
-          `<option value="">Pilih Anggota</option>` +
-          members
-            .map((m) => `<option value="${m.id}">${escapeHtml(m.nama)}</option>`)
-            .join("");
+        iuranSelect.innerHTML = `<option value="">Pilih Anggota</option>` + members.map(m=>`<option value="${m.id}">${escapeHtml(m.nama)}</option>`).join("");
       }
-    } catch (e) {
-      console.error("fail load members for iuran select", e);
-    }
-  } else if (iuranSelect) {
-    iuranSelect.style.display = "none"; // hide for anggota
+    } catch (e) { console.error("fail load members for iuran select", e); }
   }
 
-  // load iuran
   async function loadIuran() {
     iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Memuat...</td></tr>`;
     try {
-      // ambil semua iuran
-      const { data: iurans, error } = await supabase
-        .from("iuran")
-        .select("*")
-        .order("tanggal", { ascending: false });
+      const { data: iurans, error } = await supabase.from("iuran").select("*").order("inserted_at", { ascending: false });
       if (error) throw error;
-
       if (!iurans || iurans.length === 0) {
         iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada iuran</td></tr>`;
         allIurans = [];
         return;
       }
 
-      // ambil data user
-      const userIds = [...new Set(iurans.map((x) => x.user_id).filter(Boolean))];
+      // gabungkan per user_id, ambil total jumlah Belum Lunas terbaru
+      const userMap = {};
+      const totals = {};
+      const latestIuran = {};
+      for (const i of iurans) {
+        if (!totals[i.user_id]) totals[i.user_id] = 0;
+        if (i.status === "Belum Lunas") totals[i.user_id] += Number(i.jumlah || 0);
+        if (!latestIuran[i.user_id] || new Date(i.inserted_at) > new Date(latestIuran[i.user_id].inserted_at)) {
+          latestIuran[i.user_id] = i;
+        }
+      }
+
+      // ambil nama anggota
+      const userIds = Object.keys(latestIuran).filter(Boolean);
       let users = [];
       if (userIds.length) {
         const res = await supabase.from("profiles").select("id, nama").in("id", userIds);
         users = res.data || [];
       }
-      const userMap = {};
-      (users || []).forEach((u) => (userMap[u.id] = u.nama));
+      users.forEach(u => userMap[u.id] = u.nama);
 
-      // Gabungkan per user: ambil iuran terbaru
-      const latestIurans = {};
-      iurans.forEach((u) => {
-        if (!latestIurans[u.user_id] || new Date(u.tanggal) > new Date(latestIurans[u.user_id].tanggal)) {
-          latestIurans[u.user_id] = u;
-        }
-      });
-
-      allIurans = Object.entries(latestIurans).map(([userId, iuran], index) => ({
-        index: index + 1,
-        ...iuran,
-        nama_user: userMap[userId] || "-"
+      allIurans = userIds.map((uid, idx) => ({
+        index: idx + 1,
+        user_id: uid,
+        nama_user: userMap[uid] || "-",
+        jumlah: totals[uid],
+        tanggal: latestIuran[uid]?.tanggal || "-",
+        status: latestIuran[uid]?.status || "-",
+        keterangan: latestIuran[uid]?.keterangan || "-",
+        bukti_url: latestIuran[uid]?.bukti_url || null,
       }));
 
       renderIuran(allIurans);
@@ -502,15 +493,12 @@ async function initIuranPage() {
     }
   }
 
-  // render iuran
   function renderIuran(list) {
     if (!list || list.length === 0) {
       iuranTableBody.innerHTML = `<tr><td colspan="8" class="empty">Tidak ada hasil.</td></tr>`;
       return;
     }
-    iuranTableBody.innerHTML = list
-      .map(
-        (u) => `
+    iuranTableBody.innerHTML = list.map(u=>`
       <tr>
         <td>${u.index}</td>
         <td>${escapeHtml(u.nama_user)}</td>
@@ -520,58 +508,64 @@ async function initIuranPage() {
         <td>${escapeHtml(u.status || "-")}</td>
         <td>${u.bukti_url ? `<a href="${u.bukti_url}" target="_blank">📎 Lihat</a>` : "-"}</td>
         <td class="admin-only">
-          ${
-            isAdmin
-              ? `<button onclick="markIuranPaid('${u.id}')">✔️ Lunas</button> 
-                 <button onclick="deleteIuran('${u.id}')">🗑️ Hapus</button>`
-              : ""
-          }
+          ${isAdmin ? `<button onclick="markIuranPaid('${u.user_id}')">✔️ Lunas</button> <button onclick="deleteIuran('${u.user_id}')">🗑️ Hapus</button>` : ""}
         </td>
       </tr>
-    `
-      )
-      .join("");
+    `).join("");
   }
 
   // search
-  searchInput?.addEventListener("input", () => {
+  searchInput?.addEventListener("input", ()=>{
     const q = (searchInput.value || "").toLowerCase();
-    const filtered = allIurans.filter(
-      (u) =>
-        (u.nama_user || "").toLowerCase().includes(q) ||
-        (u.keterangan || "").toLowerCase().includes(q) ||
-        (u.status || "").toLowerCase().includes(q)
+    const filtered = allIurans.filter(u =>
+      (u.nama_user||"").toLowerCase().includes(q) ||
+      (u.keterangan||"").toLowerCase().includes(q) ||
+      (u.status||"").toLowerCase().includes(q)
     );
     renderIuran(filtered);
   });
 
   // add iuran (admin only)
   if (addIuranBtn && isAdmin) {
-    addIuranBtn.addEventListener("click", async () => {
+    addIuranBtn.addEventListener("click", async ()=>{
       const keterangan = (document.getElementById("iuran_keterangan")?.value || "").trim();
       const jumlah = Number(document.getElementById("iuran_jumlah")?.value || 0);
       const member = document.getElementById("iuran_user")?.value || null;
-
       if (!keterangan || !jumlah || isNaN(jumlah) || jumlah <= 0 || !member) {
         if (iuranMsg) iuranMsg.textContent = "Pilih anggota dan masukkan jumlah dengan benar.";
         return;
       }
-
       try {
-        // insert iuran baru
-        const { error } = await supabase.from("iuran").insert([
-          {
+        // cek iuran terbaru anggota Belum Lunas
+        const { data: existing, error: fetchError } = await supabase
+          .from("iuran")
+          .select("*")
+          .eq("user_id", member)
+          .eq("status", "Belum Lunas")
+          .order("inserted_at", { ascending: false })
+          .limit(1);
+        if (fetchError) throw fetchError;
+
+        if (existing && existing.length > 0) {
+          const oldIuran = existing[0];
+          const { error: updateError } = await supabase
+            .from("iuran")
+            .update({ jumlah: oldIuran.jumlah + jumlah, keterangan })
+            .eq("id", oldIuran.id);
+          if (updateError) throw updateError;
+        } else {
+          const { error: insertError } = await supabase.from("iuran").insert([{
             user_id: member,
             jumlah,
             tanggal: new Date().toISOString().split("T")[0],
             status: "Belum Lunas",
             keterangan
-          }
-        ]);
-        if (error) throw error;
+          }]);
+          if (insertError) throw insertError;
+        }
+
         showToast("success", "Iuran berhasil ditambahkan.");
         if (iuranMsg) iuranMsg.textContent = "";
-        // reset form
         document.getElementById("iuran_keterangan").value = "";
         document.getElementById("iuran_jumlah").value = "";
         await loadIuran();
@@ -581,36 +575,30 @@ async function initIuranPage() {
         if (iuranMsg) iuranMsg.textContent = `Gagal: ${e.message || e}`;
       }
     });
-  } else if (addIuranBtn) {
-    addIuranBtn.style.display = "none"; // hide for anggota
+  } else {
+    if (addIuranBtn && !isAdmin) addIuranBtn.style.display = "none";
   }
 
   // admin actions
-  window.markIuranPaid = async (id) => {
-    if (!isAdmin) return showToast("error", "Hanya admin yang bisa melakukan ini.");
+  window.markIuranPaid = async (user_id) => {
+    if (!isAdmin) return showToast("error","Hanya admin yang bisa melakukan ini.");
     try {
-      const { error } = await supabase.from("iuran").update({ status: "Lunas" }).eq("id", id);
+      const { error } = await supabase.from("iuran").update({ status: "Lunas" }).eq("user_id", user_id).eq("status","Belum Lunas");
       if (error) throw error;
-      showToast("success", "Iuran ditandai lunas.");
+      showToast("success","Iuran ditandai lunas.");
       await loadIuran();
-    } catch (e) {
-      console.error(e);
-      showToast("error", "Gagal update");
-    }
+    } catch (e) { console.error(e); showToast("error","Gagal update"); }
   };
 
-  window.deleteIuran = async (id) => {
-    if (!isAdmin) return showToast("error", "Hanya admin yang bisa melakukan ini.");
+  window.deleteIuran = async (user_id) => {
+    if (!isAdmin) return showToast("error","Hanya admin yang bisa melakukan ini.");
     if (!confirm("Yakin ingin menghapus iuran ini?")) return;
     try {
-      const { error } = await supabase.from("iuran").delete().eq("id", id);
+      const { error } = await supabase.from("iuran").delete().eq("user_id", user_id);
       if (error) throw error;
-      showToast("success", "Iuran dihapus.");
+      showToast("success","Iuran dihapus.");
       await loadIuran();
-    } catch (e) {
-      console.error(e);
-      showToast("error", "Gagal hapus");
-    }
+    } catch (e) { console.error(e); showToast("error","Gagal hapus"); }
   };
 
   await loadIuran();
@@ -828,4 +816,5 @@ async function initIuranPage() {
   });
 
 }); // end DOMContentLoaded
+
 
