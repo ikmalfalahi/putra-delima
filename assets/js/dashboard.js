@@ -510,11 +510,22 @@ async function initIuranPage() {
   await loadIuran();
 }
 
-/* ---------------- Keuangan page (versi fix) ---------------- */
+/* ---------------- Keuangan page (versi fix & enhanced) ---------------- */
 async function initKeuanganPage() {
   const addBtn = document.getElementById("addTransactionBtn");
   const transMsg = document.getElementById("transMsg");
   const transTableBody = document.querySelector("#transTable tbody");
+
+  // === Helper Functions ===
+  const formatNumber = num => Number(num || 0).toLocaleString("id-ID");
+  const escapeHtml = text =>
+    text
+      ? text.replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;")
+      : "-";
 
   // --- Ambil user login dan role ---
   const { data: { session } } = await supabase.auth.getSession();
@@ -543,7 +554,7 @@ async function initKeuanganPage() {
 
     if (error) {
       console.error(error);
-      transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat data</td></tr>`;
+      transTableBody.innerHTML = `<tr><td colspan="6" class="empty">❌ Gagal memuat data</td></tr>`;
       return;
     }
 
@@ -552,36 +563,33 @@ async function initKeuanganPage() {
       return;
     }
 
-    transTableBody.innerHTML = trans.map((t, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${escapeHtml(t.jenis || "-")}</td>
-        <td>Rp ${formatNumber(t.jumlah || 0)}</td>
-        <td>${escapeHtml(t.keterangan || "-")}</td>
-        <td>${t.inserted_at ? new Date(t.inserted_at).toLocaleString("id-ID") : "-"}</td>
-        <td class="admin-only">
-          ${role === "admin"
-            ? `<button onclick="editTrans('${t.id}')">Edit</button>
-               <button onclick="deleteTrans('${t.id}')">Hapus</button>`
-            : ""}
-        </td>
-      </tr>
-    `).join("");
+    transTableBody.innerHTML = trans.map((t, i) => {
+      const warna = t.jenis === "pemasukan" ? "color: #4caf50;" : "color: #ff5252;";
+      const tanggal = t.inserted_at
+        ? new Date(t.inserted_at).toLocaleDateString("id-ID", {
+            day: "2-digit", month: "2-digit", year: "numeric"
+          })
+        : "-";
+      return `
+        <tr>
+          <td>${i + 1}</td>
+          <td style="${warna}">${escapeHtml(t.jenis || "-")}</td>
+          <td>Rp ${formatNumber(t.jumlah || 0)}</td>
+          <td>${escapeHtml(t.keterangan || "-")}</td>
+          <td>${tanggal}</td>
+          <td class="admin-only" style="text-align:center;">
+            ${
+              role === "admin"
+                ? `
+                <button class="btn-edit" onclick="editTrans('${t.id}')">✏️ Edit</button>
+                <button class="btn-del" onclick="deleteTrans('${t.id}')">🗑️ Hapus</button>`
+                : ""
+            }
+          </td>
+        </tr>`;
+    }).join("");
   }
 
-    // --- Event: Kolom pencarian real-time ---
-  if (searchInput) {
-    searchInput.addEventListener("input", () => {
-      const query = searchInput.value.toLowerCase();
-      const filtered = allIurans.filter(u =>
-        (u.nama_user?.toLowerCase().includes(query)) ||
-        (u.keterangan?.toLowerCase().includes(query)) ||
-        (u.status?.toLowerCase().includes(query))
-      );
-      renderIuran(filtered);
-    });
-  }
-  
   // --- Tambah transaksi (admin only) ---
   if (role === "admin" && addBtn) {
     addBtn.addEventListener("click", async () => {
@@ -593,14 +601,15 @@ async function initKeuanganPage() {
 
       // validasi dasar
       if (jenis !== "pemasukan" && jenis !== "pengeluaran") {
-        transMsg.textContent = "Jenis harus 'pemasukan' atau 'pengeluaran'.";
+        transMsg.textContent = "⚠️ Jenis harus 'pemasukan' atau 'pengeluaran'.";
         return;
       }
       if (!jumlah || jumlah <= 0 || isNaN(jumlah)) {
-        transMsg.textContent = "Jumlah harus angka lebih dari 0.";
+        transMsg.textContent = "⚠️ Jumlah harus angka lebih dari 0.";
         return;
       }
 
+      addBtn.disabled = true;
       const { error } = await supabase.from("keuangan").insert([
         {
           jenis,
@@ -610,14 +619,15 @@ async function initKeuanganPage() {
           inserted_at: new Date().toISOString(),
         },
       ]);
+      addBtn.disabled = false;
 
       if (error) {
         console.error(error);
-        showToast("error", `Gagal menambah transaksi: ${error.message}`);
-        transMsg.textContent = `Gagal: ${error.message}`;
+        showToast?.("error", `Gagal menambah transaksi: ${error.message}`);
+        transMsg.textContent = `❌ ${error.message}`;
       } else {
-        showToast("success", "Transaksi berhasil ditambahkan!");
-        transMsg.textContent = "Transaksi berhasil ditambahkan.";
+        showToast?.("success", "✅ Transaksi berhasil ditambahkan!");
+        transMsg.textContent = "✅ Transaksi berhasil ditambahkan.";
         document.getElementById("trans_jenis").value = "";
         document.getElementById("trans_jumlah").value = "";
         document.getElementById("trans_keterangan").value = "";
@@ -628,21 +638,21 @@ async function initKeuanganPage() {
 
   // --- Edit transaksi (admin only) ---
   window.editTrans = async (id) => {
-    if (role !== "admin") return showToast("error", "Hanya admin yang bisa mengedit transaksi.");
+    if (role !== "admin") return showToast?.("error", "Hanya admin yang bisa mengedit transaksi.");
 
     const { data: t } = await supabase.from("keuangan").select("*").eq("id", id).single();
-    if (!t) return alert("Data tidak ditemukan");
+    if (!t) return alert("Data tidak ditemukan.");
 
     const jenis = prompt("Ubah jenis (pemasukan/pengeluaran):", t.jenis);
     const jumlah = prompt("Ubah jumlah:", t.jumlah);
     const ket = prompt("Ubah keterangan:", t.keterangan || "");
 
     if (!jenis || (jenis !== "pemasukan" && jenis !== "pengeluaran")) {
-      showToast("error", "Jenis tidak valid.");
+      showToast?.("error", "Jenis tidak valid.");
       return;
     }
     if (!jumlah || jumlah <= 0 || isNaN(jumlah)) {
-      showToast("error", "Jumlah harus angka > 0.");
+      showToast?.("error", "Jumlah harus angka > 0.");
       return;
     }
 
@@ -651,26 +661,27 @@ async function initKeuanganPage() {
       .update({ jenis, jumlah: Number(jumlah), keterangan: ket })
       .eq("id", id);
 
-    if (error) showToast("error", error.message);
+    if (error) showToast?.("error", error.message);
     else {
-      showToast("success", "Transaksi berhasil diperbarui.");
+      showToast?.("success", "✅ Transaksi berhasil diperbarui.");
       await loadTrans();
     }
   };
 
   // --- Hapus transaksi (admin only) ---
   window.deleteTrans = async (id) => {
-    if (role !== "admin") return showToast("error", "Hanya admin yang bisa menghapus transaksi.");
+    if (role !== "admin") return showToast?.("error", "Hanya admin yang bisa menghapus transaksi.");
     if (!confirm("Yakin ingin menghapus transaksi ini?")) return;
 
     const { error } = await supabase.from("keuangan").delete().eq("id", id);
-    if (error) showToast("error", error.message);
+    if (error) showToast?.("error", error.message);
     else {
-      showToast("success", "Transaksi berhasil dihapus.");
+      showToast?.("success", "🗑️ Transaksi berhasil dihapus.");
       await loadTrans();
     }
   };
 
+  // --- Load pertama kali ---
   await loadTrans();
 }
 
@@ -1059,6 +1070,7 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
 
 
