@@ -494,186 +494,87 @@ async function initIuranPage() {
   await loadIuran();
 }
 
-/* ---------------- Keuangan Page (versi fix & clean) ---------------- */
+/* ---------------- Keuangan Page (versi fix pencarian + lebar tabel) ---------------- */
 async function initKeuanganPage() {
-  const addBtn = document.getElementById("addTransactionBtn");
-  const transMsg = document.getElementById("transMsg");
-  const transTableBody = document.querySelector("#transTable tbody");
-  const searchInput = document.getElementById("searchTrans");
+  const keuanganTableBody = document.querySelector("#keuanganTable tbody");
+  const searchInput = document.getElementById("searchKeuangan");
+  let allKeuangan = [];
 
-  // --- Ambil user login dan role ---
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return (window.location.href = "../login.html");
+  keuanganTableBody.innerHTML = `<tr><td colspan="8" class="empty">Memuat data...</td></tr>`;
 
-  const userId = session.user.id;
-  const { data: profile } = await supabase
+  const { data: keuangans, error } = await supabase
+    .from("keuangan")
+    .select("*")
+    .order("inserted_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    keuanganTableBody.innerHTML = `<tr><td colspan="8" class="empty">Gagal memuat data</td></tr>`;
+    return;
+  }
+
+  if (!keuangans || keuangans.length === 0) {
+    keuanganTableBody.innerHTML = `<tr><td colspan="8" class="empty">Belum ada data keuangan</td></tr>`;
+    return;
+  }
+
+  // Ambil nama user
+  const userIds = [...new Set(keuangans.map(k => k.user_id).filter(Boolean))];
+  const { data: users } = await supabase
     .from("profiles")
-    .select("role, nama")
-    .eq("id", userId)
-    .single();
+    .select("id, nama, role")
+    .in("id", userIds);
 
-  const role = profile?.role || "anggota";
+  const userMap = {};
+  (users || []).forEach(u => (userMap[u.id] = `${u.nama} (${u.role})`));
 
-  // --- Sembunyikan elemen admin-only jika bukan admin ---
-  if (role !== "admin") {
-    document.querySelectorAll(".admin-only").forEach(el => (el.style.display = "none"));
+  allKeuangan = keuangans.map((k, i) => ({
+    ...k,
+    nama_user: userMap[k.user_id] || "-",
+    index: i + 1,
+    tanggal: k.tanggal ? new Date(k.tanggal).toLocaleDateString("id-ID") : "-",
+    tipe: k.tipe ? k.tipe.toUpperCase() : "-",
+  }));
+
+  renderKeuangan(allKeuangan);
+
+  // === Fitur Pencarian ===
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.toLowerCase();
+      const filtered = allKeuangan.filter(k =>
+        (k.nama_user?.toLowerCase().includes(q)) ||
+        (k.keterangan?.toLowerCase().includes(q)) ||
+        (k.tipe?.toLowerCase().includes(q)) ||
+        (String(k.jumlah)?.includes(q))
+      );
+      renderKeuangan(filtered);
+    });
   }
 
-  let allTrans = [];
-
-  // --- Fungsi Load Transaksi ---
-  async function loadTrans() {
-    transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Memuat...</td></tr>`;
-
-    const { data: trans, error } = await supabase
-      .from("keuangan")
-      .select("*")
-      .order("inserted_at", { ascending: false });
-
-    if (error) {
-      console.error(error);
-      transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Gagal memuat data</td></tr>`;
-      return;
-    }
-
-    if (!trans || trans.length === 0) {
-      transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Belum ada transaksi</td></tr>`;
-      return;
-    }
-
-    allTrans = trans.map((t, i) => ({
-      ...t,
-      index: i + 1,
-      tanggal: t.inserted_at ? new Date(t.inserted_at).toLocaleString("id-ID") : "-",
-    }));
-
-    renderTrans(allTrans);
-  }
-
-  // --- Fungsi Render Tabel Transaksi ---
-  function renderTrans(data) {
+  // === Render Tabel ===
+  function renderKeuangan(data) {
     if (!data || data.length === 0) {
-      transTableBody.innerHTML = `<tr><td colspan="6" class="empty">Tidak ada hasil.</td></tr>`;
+      keuanganTableBody.innerHTML = `<tr><td colspan="8" class="empty">Tidak ada hasil.</td></tr>`;
       return;
     }
 
-    transTableBody.innerHTML = data
+    keuanganTableBody.innerHTML = data
       .map(
-        (t) => `
+        k => `
         <tr>
-          <td>${t.index}</td>
-          <td>${escapeHtml(t.jenis || "-")}</td>
-          <td>Rp ${formatNumber(t.jumlah || 0)}</td>
-          <td>${escapeHtml(t.keterangan || "-")}</td>
-          <td>${t.tanggal}</td>
-          <td class="admin-only">
-            ${role === "admin"
-              ? `<button onclick="editTrans('${t.id}')">✏️ Edit</button>
-                 <button onclick="deleteTrans('${t.id}')">🗑️ Hapus</button>`
-              : ""}
-          </td>
+          <td>${k.index}</td>
+          <td>${escapeHtml(k.nama_user)}</td>
+          <td>${escapeHtml(k.keterangan || "-")}</td>
+          <td>${k.tipe}</td>
+          <td>Rp ${formatNumber(k.jumlah || 0)}</td>
+          <td>${k.tanggal}</td>
+          <td>${escapeHtml(k.sumber || "-")}</td>
+          <td>${escapeHtml(k.catatan || "-")}</td>
         </tr>`
       )
       .join("");
   }
-
-  // --- Pencarian Real-time ---
-  if (searchInput) {
-    searchInput.addEventListener("input", () => {
-      const query = searchInput.value.toLowerCase();
-      const filtered = allTrans.filter(t =>
-        (t.jenis?.toLowerCase().includes(query)) ||
-        (t.keterangan?.toLowerCase().includes(query)) ||
-        (String(t.jumlah).includes(query)) ||
-        (t.tanggal?.toLowerCase().includes(query))
-      );
-      renderTrans(filtered);
-    });
-  }
-
-  // --- Tambah Transaksi (Admin Only) ---
-  if (role === "admin" && addBtn) {
-    addBtn.addEventListener("click", async () => {
-      const jenis = document.getElementById("trans_jenis").value.trim();
-      const jumlah = Number(document.getElementById("trans_jumlah").value);
-      const keterangan = document.getElementById("trans_keterangan").value.trim();
-
-      transMsg.textContent = ""; // reset pesan
-
-      if (!["pemasukan", "pengeluaran"].includes(jenis)) {
-        transMsg.textContent = "Jenis harus 'pemasukan' atau 'pengeluaran'.";
-        return;
-      }
-      if (!jumlah || jumlah <= 0 || isNaN(jumlah)) {
-        transMsg.textContent = "Jumlah harus angka lebih dari 0.";
-        return;
-      }
-
-      const { error } = await supabase.from("keuangan").insert([
-        {
-          jenis,
-          jumlah,
-          keterangan,
-          dibuat_oleh: userId,
-          inserted_at: new Date().toISOString(),
-        },
-      ]);
-
-      if (error) {
-        console.error(error);
-        showToast("error", `Gagal menambah transaksi: ${error.message}`);
-        transMsg.textContent = `Gagal: ${error.message}`;
-      } else {
-        showToast("success", "✅ Transaksi berhasil ditambahkan!");
-        transMsg.textContent = "Transaksi berhasil ditambahkan.";
-        document.getElementById("trans_jenis").value = "";
-        document.getElementById("trans_jumlah").value = "";
-        document.getElementById("trans_keterangan").value = "";
-        await loadTrans();
-      }
-    });
-  }
-
-  // --- Edit Transaksi (Admin Only) ---
-  window.editTrans = async (id) => {
-    if (role !== "admin") return showToast("error", "Hanya admin yang bisa mengedit transaksi.");
-
-    const { data: t } = await supabase.from("keuangan").select("*").eq("id", id).single();
-    if (!t) return alert("Data tidak ditemukan");
-
-    const jenis = prompt("Ubah jenis (pemasukan/pengeluaran):", t.jenis);
-    const jumlah = prompt("Ubah jumlah:", t.jumlah);
-    const ket = prompt("Ubah keterangan:", t.keterangan || "");
-
-    if (!["pemasukan", "pengeluaran"].includes(jenis)) return showToast("error", "Jenis tidak valid.");
-    if (!jumlah || jumlah <= 0 || isNaN(jumlah)) return showToast("error", "Jumlah harus angka > 0.");
-
-    const { error } = await supabase
-      .from("keuangan")
-      .update({ jenis, jumlah: Number(jumlah), keterangan: ket })
-      .eq("id", id);
-
-    if (error) showToast("error", error.message);
-    else {
-      showToast("success", "Transaksi berhasil diperbarui.");
-      await loadTrans();
-    }
-  };
-
-  // --- Hapus Transaksi (Admin Only) ---
-  window.deleteTrans = async (id) => {
-    if (role !== "admin") return showToast("error", "Hanya admin yang bisa menghapus transaksi.");
-    if (!confirm("Yakin ingin menghapus transaksi ini?")) return;
-
-    const { error } = await supabase.from("keuangan").delete().eq("id", id);
-    if (error) showToast("error", error.message);
-    else {
-      showToast("success", "Transaksi berhasil dihapus.");
-      await loadTrans();
-    }
-  };
-
-  await loadTrans();
 }
 
   /* ---------------- Modal/Edit helpers ---------------- */
@@ -1061,6 +962,7 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
 
 
