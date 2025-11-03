@@ -567,7 +567,7 @@ body {
   min-width: 1000px; /* lebih lebar agar foto dan kolom jelas */
   border-collapse: separate;
   border-spacing: 0 12px;
-  color: var(--text-color);
+  color: #fff;
   font-size: 0.95rem;
   text-align: left;
 }
@@ -661,3 +661,4 @@ body {
 .btn-del:hover {
   background: rgba(255, 50, 50, 0.8);
 }
+
