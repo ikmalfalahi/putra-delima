@@ -222,9 +222,11 @@ async function initMembersPage() {
       .select("id, nama, tanggal_lahir, blok, rt, rw, avatar_url, role, status")
       .order("inserted_at", { ascending: false });
 
-    // 🔒 Jika bukan admin, tampilkan hanya anggota aktif
     if (!isAdmin) {
-      query = query.eq("status", "Aktif");
+      // 🔒 Untuk anggota biasa → hanya anggota aktif & bukan admin
+      query = query
+        .eq("status", "Aktif")
+        .neq("role", "admin");
     }
 
     const { data: members, error } = await query;
@@ -253,7 +255,7 @@ async function initMembersPage() {
   // === Tombol Refresh ===
   refreshBtn?.addEventListener("click", loadMembers);
 
-  // === Aksi hanya untuk admin ===
+  // === Fungsi aksi untuk admin ===
   window.approveMember = async (id) => {
     if (!isAdmin) return showToast("error", "Hanya admin yang bisa menyetujui anggota.");
     const { error } = await supabase
@@ -282,7 +284,7 @@ async function initMembersPage() {
     await loadMembers();
   };
 
-  // === Detail Anggota ===
+  // === Detail anggota ===
   window.openMemberDetail = async (id) => {
     const { data: member, error } = await supabase.from("profiles").select("*").eq("id", id).single();
     if (error) return showToast("error", "Gagal membuka detail anggota.");
@@ -1054,6 +1056,7 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
 
 
