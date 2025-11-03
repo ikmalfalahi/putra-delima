@@ -569,6 +569,19 @@ async function initKeuanganPage() {
     `).join("");
   }
 
+    // --- Event: Kolom pencarian real-time ---
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value.toLowerCase();
+      const filtered = allIurans.filter(u =>
+        (u.nama_user?.toLowerCase().includes(query)) ||
+        (u.keterangan?.toLowerCase().includes(query)) ||
+        (u.status?.toLowerCase().includes(query))
+      );
+      renderIuran(filtered);
+    });
+  }
+  
   // --- Tambah transaksi (admin only) ---
   if (role === "admin" && addBtn) {
     addBtn.addEventListener("click", async () => {
@@ -1046,6 +1059,7 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
 
 
