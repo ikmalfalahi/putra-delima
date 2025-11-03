@@ -7,9 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // Theme toggle
-  const currentTheme = localStorage.getItem("theme");
-  if (currentTheme === "dark") {
+  // === THEME TOGGLE ===
+  if (localStorage.getItem("theme") === "dark") {
     document.body.classList.add("dark");
     themeToggle.textContent = "☀️";
   }
@@ -21,28 +20,23 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("theme", dark ? "dark" : "light");
   });
 
-  // Header shrink
+  // === HEADER SHRINK ===
   window.addEventListener("scroll", () => {
     header.classList.toggle("shrink", window.scrollY > 50);
   });
 
-  // Mobile nav toggle
-  hamburger.addEventListener("click", () => {
-    mobileNav.classList.toggle("open");
-  });
+  // === MOBILE NAV TOGGLE ===
+  hamburger.addEventListener("click", () => mobileNav.classList.toggle("open"));
+  document.querySelectorAll("#mobileNav a").forEach(a => a.addEventListener("click", () => mobileNav.classList.remove("open")));
 
-  document.querySelectorAll("#mobileNav a").forEach(a =>
-    a.addEventListener("click", () => mobileNav.classList.remove("open"))
-  );
-
-  // AOS animation observer
+  // === AOS ANIMATION ===
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) entry.target.classList.add("aos-animate");
     });
   }, { threshold: 0.12 });
   document.querySelectorAll("[data-aos]").forEach(el => observer.observe(el));
-
-  // ======= LOAD DYNAMIC CONTENT FROM landing_data.js =======
+  
+  // === LOAD DATA FROM landing_data.js ===
   if (typeof loadLandingData === "function") loadLandingData();
 });
