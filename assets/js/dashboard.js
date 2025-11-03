@@ -316,13 +316,16 @@ async function initMembersPage() {
   await loadMembers();
 }
 
- /* ---------------- Iuran page ---------------- */
+/* ---------------- Iuran page ---------------- */
 async function initIuranPage() {
   const iuranSelect = document.getElementById("iuran_user");
   const addIuranBtn = document.getElementById("addIuranBtn");
   const iuranMsg = document.getElementById("iuranMsg");
   const iuranTableBody = document.querySelector("#iuranTable tbody");
   const searchInput = document.getElementById("searchIuran");
+
+  const bannerSection = document.querySelector(".content");
+  const themeToggleBtn = document.getElementById("themeToggle");
 
   // --- Ambil user login dan role ---
   const { data: { session } } = await supabase.auth.getSession();
@@ -340,7 +343,7 @@ async function initIuranPage() {
     document.querySelectorAll(".admin-only").forEach(el => (el.style.display = "none"));
   }
 
-  // --- Muat daftar anggota (termasuk admin) ke dropdown tambah iuran ---
+  // --- Muat daftar anggota ---
   const { data: members } = await supabase.from("profiles").select("id, nama, role");
   if (members && members.length) {
     iuranSelect.innerHTML =
@@ -385,6 +388,22 @@ async function initIuranPage() {
     renderIuran(allIurans);
   }
 
+  // --- Fungsi Format Number ---
+  function formatNumber(num) {
+    return num.toLocaleString("id-ID");
+  }
+
+  // --- Fungsi Escape HTML ---
+  function escapeHtml(text) {
+    return text
+      ? text.replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;")
+      : "-";
+  }
+
   // --- Fungsi Render Iuran ke Tabel ---
   function renderIuran(data) {
     if (!data || data.length === 0) {
@@ -393,25 +412,22 @@ async function initIuranPage() {
     }
 
     iuranTableBody.innerHTML = data
-      .map(
-        (u) => `
+      .map(u => `
         <tr>
           <td>${u.index}</td>
           <td>${escapeHtml(u.nama_user)}</td>
           <td>${escapeHtml(u.keterangan || "-")}</td>
           <td>Rp ${formatNumber(u.jumlah)}</td>
           <td>${u.tanggal ? new Date(u.tanggal).toLocaleDateString("id-ID") : "-"}</td>
-          <td>${u.status || "-"}</td>
-          <td>${u.bukti_url ? `<a href="${u.bukti_url}" target="_blank">📎 Lihat</a>` : "-"}</td>
+          <td class="status-${(u.status || "belum").toLowerCase()}">${u.status || "-"}</td>
+          <td>${u.bukti_url ? `<a href="${u.bukti_url}" target="_blank">📎</a>` : "-"}</td>
           <td>
             ${role === "admin"
-              ? `<button onclick="markIuranPaid('${u.id}')">Lunas</button>
-                 <button onclick="deleteIuran('${u.id}')">Hapus</button>`
+              ? `<button onclick="markIuranPaid('${u.id}')">✅ Lunas</button>
+                 <button onclick="deleteIuran('${u.id}')">🗑 Hapus</button>`
               : ""}
           </td>
-        </tr>`
-      )
-      .join("");
+        </tr>`).join("");
   }
 
   // --- Event: Kolom pencarian real-time ---
@@ -427,7 +443,7 @@ async function initIuranPage() {
     });
   }
 
-  // --- Tambah Iuran (Admin bisa menambah atas nama siapa pun, termasuk dirinya sendiri) ---
+  // --- Tambah Iuran (Admin) ---
   if (role === "admin" && addIuranBtn) {
     addIuranBtn.addEventListener("click", async () => {
       const keterangan = document.getElementById("iuran_keterangan").value.trim();
@@ -439,16 +455,14 @@ async function initIuranPage() {
         return;
       }
 
-      const targetUser = member || userId; // admin bisa memilih dirinya sendiri
-      const { error } = await supabase.from("iuran").insert([
-        {
-          user_id: targetUser,
-          jumlah,
-          tanggal: new Date().toISOString().split("T")[0],
-          status: "belum",
-          keterangan,
-        },
-      ]);
+      const targetUser = member || userId;
+      const { error } = await supabase.from("iuran").insert([{
+        user_id: targetUser,
+        jumlah,
+        tanggal: new Date().toISOString().split("T")[0],
+        status: "belum",
+        keterangan,
+      }]);
 
       if (error) {
         iuranMsg.textContent = `Gagal: ${error.message}`;
@@ -472,6 +486,26 @@ async function initIuranPage() {
     await supabase.from("iuran").delete().eq("id", id);
     await loadIuran();
   };
+
+  // --- Mode Gelap / Terang ---
+  function applyTheme(dark) {
+    document.body.classList.toggle("dark", dark);
+    if (bannerSection) bannerSection.style.backgroundImage = dark ? 
+      "url('../img/banner-bg-dark.jpg')" : "url('../img/banner-bg.jpg')";
+    // ganti ikon di tabel atau tombol sesuai dark/light di sini
+  }
+
+  // --- Event Toggle Theme ---
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener("click", () => {
+      const isDark = document.body.classList.toggle("dark");
+      applyTheme(isDark);
+    });
+  }
+
+  // --- Inisialisasi ---
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(prefersDark);
 
   await loadIuran();
 }
@@ -1012,5 +1046,6 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggle.textContent = isLight ? "☀️" : "🌙";
   });
 });
+
 
 
