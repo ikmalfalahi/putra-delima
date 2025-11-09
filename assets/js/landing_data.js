@@ -88,39 +88,38 @@ try {
   // === LOAD DATA DARI SUPABASE ===
 async function loadLandingData() {
   // === GALERI ===
-  try {
-    const { data: galeri, error } = await supabase
-      .from("landing_galeri")
-      .select("image_url, caption")
-      .order("uploaded_at", { ascending: false });
+try {
+  console.log("loadLandingData: Mulai ambil data galeri...");
 
-    if (error) {
-      console.warn("Galeri error:", error.message);
-      return;
-    }
+  const { data: galeri, error } = await supabase
+    .from("landing_galeri")
+    .select("image_url, caption")
+    .order("uploaded_at", { ascending: false });
 
-    const container =
-      document.getElementById("galleryContainer") ||
-      document.querySelector("#galeri .gallery");
+  console.log("Data galeri:", galeri);
+  console.log("Error galeri:", error);
 
-    if (!container) {
-      console.warn("Elemen galeri tidak ditemukan di halaman.");
-    } else if (galeri?.length) {
-      container.innerHTML = galeri
-        .map(
-          (g) => `
-          <div class="galeri-item" data-aos="zoom-in">
-            <img src="${g.image_url}" alt="${g.caption || ""}" />
-            ${g.caption ? `<p class="caption">${g.caption}</p>` : ""}
-          </div>`
-        )
-        .join("");
-    } else {
-      container.innerHTML = `<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>`;
-    }
-  } catch (err) {
-    console.error("Gagal load galeri:", err);
+  const container =
+    document.getElementById("galleryContainer") ||
+    document.querySelector("#galeri .gallery");
+
+  if (!container) {
+    console.warn("Elemen galeri tidak ditemukan di halaman.");
+  } else if (galeri?.length) {
+    container.innerHTML = galeri
+      .map(
+        (g) => `
+        <div class="galeri-item" data-aos="zoom-in">
+          <img src="${g.image_url}" alt="${g.caption || ""}" />
+          ${g.caption ? `<p class="caption">${g.caption}</p>` : ""}
+        </div>`
+      )
+      .join("");
+  } else {
+    container.innerHTML = `<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>`;
   }
+} catch (err) {
+  console.error("Gagal load galeri:", err);
 }
 
   // === AGENDA ===
