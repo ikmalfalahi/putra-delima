@@ -4,37 +4,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  const safeText = (el, text) => { if (el) el.textContent = text || ""; };
-  const safeHTML = (el, html) => { if (el) el.innerHTML = html || ""; };
+  const safeText = (el, text) => {
+    if (el) el.textContent = text || "";
+  };
+  const safeHTML = (el, html) => {
+    if (el) el.innerHTML = html || "";
+  };
 
-// === HERO ===
-try {
-  const { data: hero, error } = await supabase
-    .from("landing_hero")
-    .select("title, description, image_url")
-    .limit(1);
+  // === HERO ===
+  try {
+    const { data: hero, error } = await supabase
+      .from("landing_hero")
+      .select("title, description, image_url")
+      .limit(1);
 
-  if (error) console.warn("Hero error:", error.message);
+    if (error) console.warn("Hero error:", error.message);
 
-  if (hero?.length) {
-    const h = hero[0];
-    safeText(document.getElementById("heroTitle"), h.title);
-    safeText(document.getElementById("heroDesc"), h.description);
+    if (hero?.length) {
+      const h = hero[0];
+      safeText(document.getElementById("heroTitle"), h.title);
+      safeText(document.getElementById("heroDesc"), h.description);
 
-    const heroImg = document.getElementById("heroImage");
-    if (heroImg && h.image_url) {
-      heroImg.src = h.image_url;
-      heroImg.style.display = "block";
-
-      // AOS animation
-      heroImg.setAttribute("data-aos", "zoom-in");
-      heroImg.setAttribute("data-aos-delay", "200");
-      heroImg.classList.add("aos-animate");
+      const heroImg = document.getElementById("heroImage");
+      if (heroImg && h.image_url) {
+        heroImg.src = h.image_url;
+        heroImg.style.display = "block";
+        heroImg.setAttribute("data-aos", "zoom-in");
+        heroImg.setAttribute("data-aos-delay", "200");
+        heroImg.classList.add("aos-animate");
+      }
     }
+  } catch (err) {
+    console.error("Gagal load hero:", err);
   }
-} catch (err) {
-  console.error("Gagal load hero:", err);
-}
 
   // === TENTANG ===
   try {
@@ -45,7 +47,9 @@ try {
 
     if (tentang?.length)
       safeText(document.getElementById("aboutText"), tentang[0].content);
-  } catch (err) { console.error("Gagal load tentang:", err); }
+  } catch (err) {
+    console.error("Gagal load tentang:", err);
+  }
 
   // === VISI & MISI ===
   try {
@@ -64,7 +68,9 @@ try {
         .join("");
       safeHTML(document.getElementById("misiText"), misiHTML);
     }
-  } catch (err) { console.error("Gagal load visi & misi:", err); }
+  } catch (err) {
+    console.error("Gagal load visi & misi:", err);
+  }
 
   // === STRUKTUR ===
   try {
@@ -81,150 +87,148 @@ try {
       strukturImg.alt = "Struktur Organisasi";
       strukturImg.style.display = "block";
     } else {
-      strukturImg.src = "assets/img/struktur.jpg"; // fallback lokal
+      strukturImg.src = "assets/img/struktur.jpg";
     }
-  } catch (err) { console.error("Gagal load struktur:", err); }
-
- // === GALERI (DEBUG MODE + FIXED TEMPLATE) ===
-try {
-  console.log("🟡 [DEBUG] Mulai ambil data galeri...");
-
-  const { data: galeri, error } = await supabase
-    .from("landing_galeri")
-    .select("image_url, caption, uploaded_at")
-    .order("uploaded_at", { ascending: false });
-
-  console.log("🟢 [DEBUG] Data galeri:", galeri);
-  console.log("🔴 [DEBUG] Error galeri:", error);
-
-  const container =
-    document.getElementById("galleryContainer") ||
-    document.querySelector("#galeri .gallery");
-
-  // Tambahkan debug box di bawah galeri
-  const debugBox = document.createElement("div");
-  debugBox.style = `
-    background:#111;
-    color:#0f0;
-    font-size:13px;
-    margin-top:10px;
-    padding:6px;
-    border-radius:6px;
-    line-height:1.4;
-  `;
-  debugBox.innerHTML = `<strong>🧩 DEBUG GALERI:</strong><br>`;
-  container?.parentNode?.insertBefore(debugBox, container.nextSibling);
-
-  if (!container) {
-    const msg = "❌ Elemen galeri tidak ditemukan di halaman.";
-    console.warn(msg);
-    debugBox.innerHTML += msg;
-  } else if (error) {
-    const msg = `❌ Error Supabase: ${error.message}`;
-    console.error(msg);
-    debugBox.innerHTML += msg;
-  } else if (galeri && galeri.length > 0) {
-    // Bangun HTML galeri secara aman (tanpa template literal dalam map)
-    let html = "";
-    galeri.forEach((g, i) => {
-      const captionHTML = g.caption
-        ? '<p class="caption">' + g.caption + '</p>'
-        : "";
-      html +=
-        '<div class="galeri-item" data-aos="zoom-in">' +
-        '<img src="' +
-        g.image_url +
-        '" alt="' +
-        (g.caption || "Gambar " + (i + 1)) +
-        '" />' +
-        captionHTML +
-        "</div>";
-    });
-
-    container.innerHTML = html;
-    debugBox.innerHTML += "✅ " + galeri.length + " gambar dimuat dari Supabase.";
-  } else {
-    container.innerHTML =
-      '<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>';
-    debugBox.innerHTML += "⚠️ Tidak ada data galeri ditemukan.";
-  }
-} catch (err) {
-  console.error("Gagal load galeri:", err);
-}
-
-    // === AGENDA ===
-    try {
-      const { data: agenda, error } = await supabase
-        .from("landing_agenda")
-        .select("title, tanggal, lokasi")
-        .order("created_at", { ascending: false });
-
-      if (error) console.warn("Agenda error:", error.message);
-
-      const list =
-        document.getElementById("agendaList") ||
-        document.querySelector("#agenda .agenda-list");
-
-      if (!list) {
-        console.warn("Elemen agenda tidak ditemukan di halaman.");
-      } else if (agenda?.length) {
-        list.innerHTML = agenda
-          .map(
-            (a) => `
-            <article class="agenda-item" data-aos="fade-up">
-              <h4>${a.title || "-"}</h4>
-              <p>${a.tanggal || ""} ${a.lokasi ? "— " + a.lokasi : ""}</p>
-            </article>`
-          )
-          .join("");
-      } else {
-        list.innerHTML = `<p style="color:#aaa;text-align:center;">Belum ada agenda kegiatan.</p>`;
-      }
-    } catch (err) {
-      console.error("Gagal load agenda:", err);
-    }
-
-    // === KONTAK ===
-    try {
-      const { data: kontak, error } = await supabase
-        .from("landing_kontak")
-        .select("alamat, email, whatsapp, map_embed")
-        .limit(1);
-
-      if (error) console.warn("Kontak error:", error.message);
-
-      if (kontak?.length) {
-        const k = kontak[0];
-        safeText(document.getElementById("alamatText"), `📍 ${k.alamat || ""}`);
-        safeText(document.getElementById("emailText"), `✉️ ${k.email || ""}`);
-
-        const wa = document.querySelector("#whatsappText a");
-        if (wa && k.whatsapp) {
-          wa.href = `https://wa.me/${k.whatsapp.replace(/\D/g, "")}`;
-          wa.textContent = k.whatsapp;
-        }
-
-        const mapContainer = document.querySelector(".map-container");
-        if (mapContainer && k.map_embed) {
-          if (k.map_embed.includes("<iframe")) {
-            mapContainer.innerHTML = k.map_embed;
-          } else {
-            mapContainer.innerHTML = `
-              <iframe src="${k.map_embed}"
-                width="100%" height="280" style="border:0;"
-                allowfullscreen="" loading="lazy"></iframe>`;
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Gagal load kontak:", err);
-    }
-
-    // === FOOTER YEAR ===
-    const yearEl = document.getElementById("year");
-    if (yearEl) yearEl.textContent = new Date().getFullYear();
+  } catch (err) {
+    console.error("Gagal load struktur:", err);
   }
 
-  // ✅ Jalankan setelah semua elemen siap
-  window.addEventListener("load", loadLandingData);
+  // === GALERI (DEBUG MODE + FIXED) ===
+  try {
+    console.log("🟡 [DEBUG] Mulai ambil data galeri...");
+
+    const { data: galeri, error } = await supabase
+      .from("landing_galeri")
+      .select("image_url, caption, uploaded_at")
+      .order("uploaded_at", { ascending: false });
+
+    console.log("🟢 [DEBUG] Data galeri:", galeri);
+    console.log("🔴 [DEBUG] Error galeri:", error);
+
+    const container =
+      document.getElementById("galleryContainer") ||
+      document.querySelector("#galeri .gallery");
+
+    // Tambahkan debug box di bawah galeri
+    const debugBox = document.createElement("div");
+    debugBox.style = `
+      background:#111;
+      color:#0f0;
+      font-size:13px;
+      margin-top:10px;
+      padding:6px;
+      border-radius:6px;
+      line-height:1.4;
+    `;
+    debugBox.innerHTML = `<strong>🧩 DEBUG GALERI:</strong><br>`;
+    container?.parentNode?.insertBefore(debugBox, container.nextSibling);
+
+    if (!container) {
+      const msg = "❌ Elemen galeri tidak ditemukan di halaman.";
+      console.warn(msg);
+      debugBox.innerHTML += msg;
+    } else if (error) {
+      const msg = `❌ Error Supabase: ${error.message}`;
+      console.error(msg);
+      debugBox.innerHTML += msg;
+    } else if (galeri && galeri.length > 0) {
+      let html = "";
+      galeri.forEach((g, i) => {
+        const captionHTML = g.caption
+          ? '<p class="caption">' + g.caption + '</p>'
+          : "";
+        html +=
+          '<div class="galeri-item" data-aos="zoom-in">' +
+          '<img src="' +
+          g.image_url +
+          '" alt="' +
+          (g.caption || "Gambar " + (i + 1)) +
+          '" />' +
+          captionHTML +
+          "</div>";
+      });
+
+      container.innerHTML = html;
+      debugBox.innerHTML += "✅ " + galeri.length + " gambar dimuat dari Supabase.";
+    } else {
+      container.innerHTML =
+        '<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>';
+      debugBox.innerHTML += "⚠️ Tidak ada data galeri ditemukan.";
+    }
+  } catch (err) {
+    console.error("Gagal load galeri:", err);
+  }
+
+  // === AGENDA ===
+  try {
+    const { data: agenda, error } = await supabase
+      .from("landing_agenda")
+      .select("title, tanggal, lokasi")
+      .order("created_at", { ascending: false });
+
+    if (error) console.warn("Agenda error:", error.message);
+
+    const list =
+      document.getElementById("agendaList") ||
+      document.querySelector("#agenda .agenda-list");
+
+    if (!list) {
+      console.warn("Elemen agenda tidak ditemukan di halaman.");
+    } else if (agenda?.length) {
+      list.innerHTML = agenda
+        .map(
+          (a) => `
+          <article class="agenda-item" data-aos="fade-up">
+            <h4>${a.title || "-"}</h4>
+            <p>${a.tanggal || ""} ${a.lokasi ? "— " + a.lokasi : ""}</p>
+          </article>`
+        )
+        .join("");
+    } else {
+      list.innerHTML =
+        '<p style="color:#aaa;text-align:center;">Belum ada agenda kegiatan.</p>';
+    }
+  } catch (err) {
+    console.error("Gagal load agenda:", err);
+  }
+
+  // === KONTAK ===
+  try {
+    const { data: kontak, error } = await supabase
+      .from("landing_kontak")
+      .select("alamat, email, whatsapp, map_embed")
+      .limit(1);
+
+    if (error) console.warn("Kontak error:", error.message);
+
+    if (kontak?.length) {
+      const k = kontak[0];
+      safeText(document.getElementById("alamatText"), `📍 ${k.alamat || ""}`);
+      safeText(document.getElementById("emailText"), `✉️ ${k.email || ""}`);
+
+      const wa = document.querySelector("#whatsappText a");
+      if (wa && k.whatsapp) {
+        wa.href = `https://wa.me/${k.whatsapp.replace(/\D/g, "")}`;
+        wa.textContent = k.whatsapp;
+      }
+
+      const mapContainer = document.querySelector(".map-container");
+      if (mapContainer && k.map_embed) {
+        if (k.map_embed.includes("<iframe")) {
+          mapContainer.innerHTML = k.map_embed;
+        } else {
+          mapContainer.innerHTML = `
+            <iframe src="${k.map_embed}"
+              width="100%" height="280" style="border:0;"
+              allowfullscreen="" loading="lazy"></iframe>`;
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Gagal load kontak:", err);
+  }
+
+  // === FOOTER YEAR ===
+  const yearEl = document.getElementById("year");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
 });
