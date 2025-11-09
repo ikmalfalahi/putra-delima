@@ -85,52 +85,40 @@ try {
     }
   } catch (err) { console.error("Gagal load struktur:", err); }
 
-   // === LOAD DATA DARI SUPABASE ===
-  async function loadLandingData() {
-    // === GALERI ===
-    try {
-      console.log("loadLandingData: Mulai ambil data galeri...");
+  // === GALERI (DEBUG MODE) ===
+try {
+  console.log("🟡 [DEBUG] Mulai ambil data galeri...");
 
-      const { data: galeri, error } = await supabase
-        .from("landing_galeri")
-        .select("image_url, caption")
-        .order("uploaded_at", { ascending: false });
+  const { data: galeri, error } = await supabase
+    .from("landing_galeri")
+    .select("image_url, caption, uploaded_at")
+    .order("uploaded_at", { ascending: false });
 
-      console.log("Data galeri:", galeri);
-      console.log("Error galeri:", error);
+  console.log("🟢 [DEBUG] Data galeri:", galeri);
+  console.log("🔴 [DEBUG] Error galeri:", error);
 
-      const container =
-        document.getElementById("galleryContainer") ||
-        document.querySelector("#galeri .gallery");
+  const container =
+    document.getElementById("galleryContainer") ||
+    document.querySelector("#galeri .gallery");
 
-      if (!container) {
-        console.warn("Elemen galeri tidak ditemukan di halaman.");
-        return;
-      }
+  // Tambahkan debug info ke halaman langsung
+  const debugBox = document.createElement("div");
+  debugBox.style = `
+    background:#222;color:#0f0;
+    font-size:13px;margin-top:10px;
+    padding:6px;border-radius:6px;
+  `;
+  debugBox.innerHTML = `<strong>🧩 DEBUG GALERI:</strong><br>`;
+  container?.parentNode?.insertBefore(debugBox, container.nextSibling);
 
-      if (error) {
-        container.innerHTML = `<p style="color:#f77;text-align:center;">Gagal memuat galeri.</p>`;
-        console.error(error);
-        return;
-      }
+  if (!container) {
+    const msg = "❌ Elemen galeri tidak ditemukan di halaman.";
+    console.warn(msg);
+    debugBox.innerHTML += msg;
+  } 
+  else if (error) {
+    const msg = `❌ Error Supabase: ${error.mes
 
-      if (galeri && galeri.length > 0) {
-        container.innerHTML = galeri
-          .map(
-            (g) => `
-            <div class="galeri-item" data-aos="zoom-in">
-              <img src="${g.image_url}" alt="${g.caption || ""}" loading="lazy" />
-              ${g.caption ? `<p class="caption">${g.caption}</p>` : ""}
-            </div>
-          `
-          )
-          .join("");
-      } else {
-        container.innerHTML = `<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>`;
-      }
-    } catch (err) {
-      console.error("Gagal load galeri:", err);
-    }
 
     // === AGENDA ===
     try {
