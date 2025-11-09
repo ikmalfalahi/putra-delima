@@ -107,13 +107,12 @@ try {
     console.warn("Elemen galeri tidak ditemukan di halaman.");
   } else if (galeri?.length) {
     container.innerHTML = galeri
-      .map(
-        (g) => `
+      .map((g) => `
         <div class="galeri-item" data-aos="zoom-in">
           <img src="${g.image_url}" alt="${g.caption || ""}" />
           ${g.caption ? `<p class="caption">${g.caption}</p>` : ""}
-        </div>`
-      )
+        </div>
+      `)
       .join("");
   } else {
     container.innerHTML = `<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>`;
