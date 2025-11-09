@@ -85,6 +85,8 @@ try {
     }
   } catch (err) { console.error("Gagal load struktur:", err); }
 
+  // === LOAD DATA DARI SUPABASE ===
+async function loadLandingData() {
   // === GALERI ===
   try {
     const { data: galeri, error } = await supabase
@@ -92,7 +94,10 @@ try {
       .select("image_url, caption")
       .order("uploaded_at", { ascending: false });
 
-    if (error) console.warn("Galeri error:", error.message);
+    if (error) {
+      console.warn("Galeri error:", error.message);
+      return;
+    }
 
     const container =
       document.getElementById("galleryContainer") ||
@@ -113,7 +118,10 @@ try {
     } else {
       container.innerHTML = `<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>`;
     }
-  } catch (err) { console.error("Gagal load galeri:", err); }
+  } catch (err) {
+    console.error("Gagal load galeri:", err);
+  }
+}
 
   // === AGENDA ===
   try {
