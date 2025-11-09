@@ -131,3 +131,29 @@ body.dark .btn-outline { border-color: #f1c40f; color: #f1c40f; }
 #themeToggle { background: none; border: none; color: #b38e00; font-size: 1.4em; cursor: pointer; transition: transform 0.2s; }
 #themeToggle:hover { transform: rotate(20deg); }
 
+/* ===== STRUKTUR ORGANISASI ===== */
+#struktur {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.struktur-img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Responsif untuk HP */
+@media (max-width: 768px) {
+  #struktur h2 {
+    font-size: 1.6rem;
+  }
+  .struktur-img {
+    width: 100%;
+    max-width: 400px;
+  }
+}
+
