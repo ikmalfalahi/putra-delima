@@ -188,4 +188,9 @@ try {
   // === FOOTER YEAR ===
   const yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
-});
+} // ✅ tutup fungsi loadLandingData
+
+// Jalankan loadLandingData setelah semua elemen siap
+loadLandingData();
+
+}); // ✅ tutup event listener DOMContentLoaded
