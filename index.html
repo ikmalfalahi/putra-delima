@@ -85,22 +85,22 @@
     <img id="strukturImage" src="assets/img/struktur.jpg" alt="Struktur Organisasi" class="struktur-img" />
   </section>
 
-  <!-- GALERI -->
-  <section id="galeri" class="section dark" data-aos="fade-up">
+ <!-- GALERI -->
+<section id="galeri" class="section dark" data-aos="fade-up">
   <h2>Galeri Kegiatan</h2>
 
-  <!-- KOSONGKAN SAJA — JS akan isi otomatis -->
   <div class="gallery" id="galleryContainer"></div>
-  <div id="lightbox">
-  <img id="lightboxImage" src="" alt="Preview"></div>
 </section>
 
-  <!-- AGENDA -->
-  <section id="agenda" class="section" data-aos="fade-up">
-    <h2>Agenda Kegiatan</h2>
-    <div id="agendaList">
-      <p style="color:#aaa;text-align:center;">Belum ada agenda kegiatan.</p>
-    </div>
+<!-- MODAL LIGHTBOX -->
+<div id="lightboxModal" class="lightbox">
+  <span class="close">&times;</span>
+  <img class="lightbox-content" id="lightboxImage">
+
+  <!-- tombol prev / next -->
+  <a class="prev">&#10094;</a>
+  <a class="next">&#10095;</a>
+</div>
   </section>
 
   <!-- KONTAK -->
@@ -128,6 +128,7 @@
   <script> AOS.init({ once: true }); </script>
 </body>
 </html>
+
 
 
 
