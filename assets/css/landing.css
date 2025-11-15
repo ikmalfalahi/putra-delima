@@ -173,31 +173,6 @@ a { color: #f5c542; text-decoration: none; }
 }
 
 /* === GALERI === */
-.galeri-item {
-  border-radius: 10px;
-  overflow: hidden;
-  position: relative;
-}
-
-.galeri-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: 0.3s ease;
-}
-
-.galeri-item img:hover {
-  transform: scale(1.08);
-}
-
-.galeri-item .caption {
-  text-align: center;
-  font-size: 14px;
-  padding-top: 5px;
-  color: #ddd;
-}
-
 #galleryContainer {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -205,12 +180,34 @@ a { color: #f5c542; text-decoration: none; }
   margin-top: 20px;
 }
 
+/* single item */
+.galeri-item {
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  transition: transform 0.25s ease;
+}
+.galeri-item:hover { transform: translateY(-6px); }
+
+/* image: fixed sensible height so grid is consistent */
 .galeri-item img {
   width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 8px;
+  height: 180px;       /* consistent card height */
   object-fit: cover;
+  display: block;
+  border-radius: 8px 8px 0 0;
+  transition: transform 0.3s ease;
+}
+.galeri-item img:hover { transform: scale(1.06); }
+
+.galeri-item .caption {
+  padding: 10px;
+  font-size: 0.95rem;
+  color: #333;
+  text-align: center;
+  background: #fff;
 }
 
 /* === MAP === */
@@ -237,17 +234,19 @@ a { color: #f5c542; text-decoration: none; }
   border-top: 1px solid #222;
 }
 
-/* === ANIMATIONS === */
-[data-aos] {
+/* === AOS ANIMATION — SAFE FALLBACK === */
+/* If AOS initializes it will add .aos-init, then .aos-animate to trigger animation.
+   If AOS is NOT loaded, elements will not have .aos-init and thus remain visible. */
+.aos-init {
   opacity: 0;
   transform: translateY(40px);
   transition: all 0.8s ease-out;
 }
-[data-aos].aos-animate {
-  opacity: 1;
-  transform: translateY(0);
+.aos-animate {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
 }
-[data-aos="zoom-in"] { transform: scale(0.85); }
+[data-aos="zoom-in"].aos-animate { transform: scale(1) !important; }
 
 /* === DARK MODE === */
 body.dark { background: #111; color: #f1f1f1; }
@@ -283,6 +282,3 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 @media (max-width: 600px) {
   .galeri-item img { height: 130px; }
 }
-
-
-
