@@ -173,13 +173,46 @@ a { color: #f5c542; text-decoration: none; }
 }
 
 /* ================================
-   GALERI GRID
+   GALERI GRID (UPDATED)
 ================================ */
 .gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 15px;
   margin-top: 20px;
+}
+
+/* HP tetap 2 kolom */
+@media (max-width: 480px) {
+  .gallery {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .galeri-item img {
+    height: 140px;
+  }
+}
+
+/* Tablet */
+@media (min-width: 481px) and (max-width: 768px) {
+  .gallery {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .galeri-item img {
+    height: 160px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 769px) {
+  .gallery {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .galeri-item img {
+    height: 170px;
+  }
 }
 
 /* Item wrapper */
@@ -391,6 +424,7 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 @media (max-width: 600px) {
   .galeri-item img { height: 130px; }
 }
+
 
 
 
