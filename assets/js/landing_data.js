@@ -136,11 +136,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   strukturImg.src = "assets/img/struktur.jpg";
 }
 
-  // =====================================
-  //              VIDEO
-  // =====================================
+ // =====================================
+//              VIDEO
+// =====================================
 
- async function loadLandingVideos() {
+async function loadLandingVideos() {
   const { data: videos, error } = await supabase
     .from("landing_videos")
     .select("*")
@@ -161,42 +161,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Set video utama
   const firstVideoID = extractYoutubeID(videos[0].video_link);
+  console.log("Main Video ID:", firstVideoID);
   mainVideo.src = `https://www.youtube.com/embed/${firstVideoID}`;
 
   // Buat thumbnails
   videos.forEach(v => {
     const videoID = extractYoutubeID(v.video_link);
-    const iframe = document.createElement("iframe");
-    iframe.src = `https://www.youtube.com/embed/${videoID}?controls=0&mute=1`;
-    iframe.allowFullscreen = true;
+    if (!videoID) return;
 
-    iframe.addEventListener("click", () => {
+    const thumbImg = document.createElement("img");
+    thumbImg.src = `https://img.youtube.com/vi/${videoID}/mqdefault.jpg`;
+    thumbImg.alt = "Video thumbnail";
+    thumbImg.className = "video-thumb";
+    thumbImg.addEventListener("click", () => {
       mainVideo.src = `https://www.youtube.com/embed/${videoID}`;
     });
 
-    thumbs.appendChild(iframe);
+    thumbs.appendChild(thumbImg);
   });
 }
 
-// Fungsi ekstrak YouTube ID (mendukung youtube.com/watch?v=ID dan youtu.be/ID)
-function extractYoutubeID(url) {
-  try {
-    const u = new URL(url);
-    if (u.hostname.includes("youtu.be")) {
-      return u.pathname.slice(1);
-    } else if (u.hostname.includes("youtube.com")) {
-      return u.searchParams.get("v");
-    } else {
-      console.warn("Link bukan YouTube:", url);
-      return "";
-    }
-  } catch (err) {
-    console.warn("URL tidak valid:", url);
-    return "";
-  }
-}
-
-document.addEventListener("DOMContentLoaded", loadLandingVideos);
+// Panggil langsung di listener utama
+await loadLandingVideos();
 
   // =====================================
   //              GALERI
