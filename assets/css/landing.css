@@ -425,9 +425,16 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
   .galeri-item img { height: 130px; }
 }
 
+/* Footer */
+.footer {
+  background-color: #222;       /* warna footer gelap */
+  color: #fff;                  /* warna tulisan putih */
+  text-align: center;
+  padding: 10px 0;              /* lebih tipis dari default */
+  font-size: 12px;              /* ukuran font kecil */
+  font-family: Arial, sans-serif;
+}
 
-
-
-
-
-
+.footer p {
+  margin: 0;                    /* hapus margin default p */
+}
