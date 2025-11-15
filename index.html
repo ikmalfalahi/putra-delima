@@ -88,18 +88,18 @@
  <!-- GALERI -->
 <section id="galeri" class="section dark" data-aos="fade-up">
   <h2>Galeri Kegiatan</h2>
-
   <div class="gallery" id="galleryContainer"></div>
 </section>
 
-<!-- MODAL LIGHTBOX -->
-<div id="lightboxModal" class="lightbox">
+<!-- Modal -->
+<div id="imageModal" class="modal">
   <span class="close">&times;</span>
-  <img class="lightbox-content" id="lightboxImage">
 
-  <!-- tombol prev / next -->
-  <a class="prev">&#10094;</a>
-  <a class="next">&#10095;</a>
+  <img class="modal-content" id="modalImage" />
+  <div id="modalCaption"></div>
+
+  <button class="nav prev">❮</button>
+  <button class="nav next">❯</button>
 </div>
   </section>
 
@@ -128,6 +128,7 @@
   <script> AOS.init({ once: true }); </script>
 </body>
 </html>
+
 
 
 
