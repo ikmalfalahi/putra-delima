@@ -143,6 +143,23 @@ try {
 } catch (err) {
   console.error("Gagal load galeri:", err);
 }
+
+  // === LIGHTBOX ===
+setTimeout(() => {
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImage = document.getElementById("lightboxImage");
+
+  document.querySelectorAll(".galeri-item img").forEach(img => {
+    img.addEventListener("click", () => {
+      lightboxImage.src = img.src;
+      lightbox.style.display = "flex";
+    });
+  });
+
+  lightbox.addEventListener("click", () => {
+    lightbox.style.display = "none";
+  });
+}, 500);
   
   // === AGENDA ===
   try {
