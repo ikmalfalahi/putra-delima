@@ -176,20 +176,21 @@ a { color: #f5c542; text-decoration: none; }
    VIDEO SECTION — RESPONSIVE
 ================================ */
 #videoSection {
-  text-align: center;
-  padding: 60px 20px;      /* sama dengan section lain */
+  text-align: center;       /* memastikan semua konten center */
+  padding: 60px 20px;       /* sama dengan section lain */
 }
 
 #videoSection h2 {
   color: #f5c542;
-  font-size: 1.6rem;       /* sama seperti section h2 lain */
+  font-size: 1.6rem;        /* sama seperti section h2 lain */
   margin-bottom: 20px;
   font-weight: 600;
+  text-align: center;       /* pastikan tulisan center */
 }
 
 .main-video iframe {
   width: 100%;
-  max-width: 600px;        /* batas maksimum desktop */
+  max-width: 600px;         /* desktop */
   height: auto;
   aspect-ratio: 16/9;
   border-radius: 12px;
@@ -509,6 +510,7 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 .footer p {
   margin: 0;                    /* hapus margin default p */
 }
+
 
 
 
