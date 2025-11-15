@@ -178,75 +178,99 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadLandingVideos();
 
-  // ===========================
-  // GALERI
-  // ===========================
-  let images = [];
-  let currentIndex = 0;
-  const container = document.getElementById("galleryContainer");
+ // ===========================
+// GALERI
+// ===========================
+let images = [];
+let currentIndex = 0;
+const container = document.getElementById("galleryContainer");
 
-  if (container) {
-    container.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
-    try {
-      const { data: galeri, error } = await supabase
-        .from("landing_galeri")
-        .select("image_url, caption, uploaded_at")
-        .order("uploaded_at", { ascending: false });
+async function loadGaleri() {
+  if (!container) return;
 
-      if (error) throw error;
-      images = galeri || [];
-      container.innerHTML = "";
-      if (!images.length) container.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
+  container.innerHTML = `
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+  `;
 
-      images.forEach((g, i) => {
-        const div = document.createElement("div");
-        div.className = "galeri-item";
+  try {
+    const { data: galeri, error } = await supabase
+      .from("landing_galeri")
+      .select("image_url, caption, uploaded_at")
+      .order("uploaded_at", { ascending: false });
 
-        const img = document.createElement("img");
-        img.src = g.image_url;
-        img.dataset.index = i;
-        img.loading = "lazy";
-        img.onclick = () => openModal(i);
+    if (error) throw error;
 
-        div.appendChild(img);
-        container.appendChild(div);
-      });
-    } catch (err) {
-      console.error("Gagal load galeri:", err);
-      container.innerHTML = `<p style="text-align:center;color:#aaa;">Terjadi kesalahan.</p>`;
+    images = galeri || [];
+    container.innerHTML = "";
+
+    if (!images.length) {
+      container.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
+      return;
     }
+
+    images.forEach((g, i) => {
+      const div = document.createElement("div");
+      div.className = "galeri-item";
+
+      const img = document.createElement("img");
+      img.src = g.image_url; // pastikan public URL
+      img.dataset.index = i;
+      img.loading = "lazy";
+      img.onclick = () => openModal(i);
+
+      div.appendChild(img);
+      container.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error("Gagal load galeri:", err);
+    container.innerHTML = `<p style="text-align:center;color:#aaa;">Terjadi kesalahan.</p>`;
   }
+}
 
-  // ===========================
-  // MODAL GALERI
-  // ===========================
-  function initModal() {
-    const modal = document.getElementById("lightboxModal");
-    const modalImg = document.getElementById("lightboxImage");
-    const closeBtn = document.getElementById("closeBtn");
-    const prevBtn = document.getElementById("prevBtn");
-    const nextBtn = document.getElementById("nextBtn");
+// ===========================
+// MODAL GALERI
+// ===========================
+function initModal() {
+  const modal = document.getElementById("lightboxModal");
+  const modalImg = document.getElementById("lightboxImage");
+  const closeBtn = document.getElementById("closeBtn");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
 
-    if (!modal || !modalImg) return;
+  if (!modal || !modalImg) return;
 
-    window.openModal = index => {
-      currentIndex = index;
-      modal.style.display = "flex";
-      modalImg.src = images[currentIndex].image_url;
-    };
+  window.openModal = index => {
+    currentIndex = index;
+    modal.style.display = "flex";
+    modalImg.src = images[currentIndex].image_url;
+  };
 
-    closeBtn.onclick = () => (modal.style.display = "none");
-    nextBtn.onclick = () => {
-      currentIndex = (currentIndex + 1) % images.length;
-      modalImg.src = images[currentIndex].image_url;
-    };
-    prevBtn.onclick = () => {
-      currentIndex = (currentIndex - 1 + images.length) % images.length;
-      modalImg.src = images[currentIndex].image_url;
-    };
-    modal.onclick = e => { if (e.target === modal) modal.style.display = "none"; };
-  }
-  initModal();
+  closeBtn.onclick = () => (modal.style.display = "none");
+
+  nextBtn.onclick = () => {
+    if (!images.length) return;
+    currentIndex = (currentIndex + 1) % images.length;
+    modalImg.src = images[currentIndex].image_url;
+  };
+
+  prevBtn.onclick = () => {
+    if (!images.length) return;
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    modalImg.src = images[currentIndex].image_url;
+  };
+
+  modal.onclick = e => {
+    if (e.target === modal) modal.style.display = "none";
+  };
+}
+
+// Panggil async
+await loadGaleri();
+initModal();
 
   // ===========================
   // AGENDA
