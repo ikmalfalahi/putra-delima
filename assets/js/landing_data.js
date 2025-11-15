@@ -104,125 +104,128 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ----------------------------------------
-  // 1. AMBIL DATA GALERI DARI SUPABASE
-  // ----------------------------------------
-  async function loadGallery() {
-    try {
-      galleryContainer.innerHTML = generateSkeletons(6);
+  // ================================
+//         LOAD GALERI
+// ================================
+let images = [];
+let currentIndex = 0;
 
-      const { data, error } = await supabase
-        .from("galeri")
-        .select("*")
-        .order("created_at", { ascending: false });
+document.addEventListener("DOMContentLoaded", async () => {
+  const container = document.getElementById("galleryContainer");
 
-      if (error) throw error;
+  if (!container) return;
 
-      await sleep(300);
+  // Skeleton sementara
+  container.innerHTML = `
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+  `;
 
-      renderGallery(data);
-    } catch (err) {
-      console.error("❌ Gagal memuat galeri:", err);
-    }
+  const { data: galeri, error } = await supabase
+    .from("landing_galeri")
+    .select("image_url, caption, uploaded_at")
+    .order("uploaded_at", { ascending: false });
+
+  if (error) {
+    container.innerHTML = `<p style="text-align:center;color:#aaa;">Gagal memuat galeri.</p>`;
+    return;
   }
 
-  const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+  images = galeri || [];
+  container.innerHTML = "";
 
-  // ----------------------------------------
-  // 2. SKELETON LOADING
-  // ----------------------------------------
-  function generateSkeletons(count) {
-    let html = "";
-    for (let i = 0; i < count; i++) {
-      html += `
-        <div class="gallery-item skeleton"></div>
-      `;
-    }
-    return html;
+  if (images.length === 0) {
+    container.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
+    return;
   }
 
-  // ----------------------------------------
-  // 3. TAMPILKAN FOTO
-  // ----------------------------------------
-  let currentIndex = 0;
-  let galleryData = [];
+  // Render foto
+  images.forEach((g, i) => {
+    const div = document.createElement("div");
+    div.className = "galeri-item";
 
-  function renderGallery(data) {
-    galleryData = data;
+    const img = document.createElement("img");
+    img.src = g.image_url;
+    img.alt = g.caption || "";
+    img.dataset.index = i;
+    img.loading = "lazy";
 
-    galleryContainer.innerHTML = "";
+    img.onload = () => div.classList.add("loaded");
+    img.onclick = () => openModal(i);
 
-    data.forEach((item, index) => {
-      const imgDiv = document.createElement("div");
-      imgDiv.className = "gallery-item";
+    div.appendChild(img);
+    container.appendChild(div);
+  });
 
-      const img = document.createElement("img");
-      img.src = item.url;
-      img.alt = "Foto kegiatan";
+  initModal();
+});
 
-      img.onload = () => imgDiv.classList.remove("skeleton");
-      img.onerror = () => imgDiv.classList.remove("skeleton");
+// ================================
+//           MODAL
+// ================================
+function initModal() {
+  const modal = document.getElementById("lightboxModal");
+  const modalImg = document.getElementById("lightboxImage");
+  const closeBtn = document.getElementById("closeBtn");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
 
-      img.onclick = () => openModal(index);
-
-      imgDiv.appendChild(img);
-      galleryContainer.appendChild(imgDiv);
-    });
+  if (!modal || !modalImg || !closeBtn || !prevBtn || !nextBtn) {
+    console.error("❌ Elemen modal tidak lengkap");
+    return;
   }
 
-  // ----------------------------------------
-  // 4. MODAL / LIGHTBOX
-  // ----------------------------------------
-  function openModal(index) {
+  window.openModal = (index) => {
     currentIndex = index;
     modal.style.display = "flex";
-    modalImg.style.opacity = "0";
+    updateModal();
+  };
 
-    setTimeout(() => {
-      modalImg.src = galleryData[index].url;
-      modalImg.style.opacity = "1";
-    }, 50);
+  function updateModal() {
+    modalImg.src = images[currentIndex].image_url;
   }
 
-  window.closeLightbox = () => {
-    modal.style.display = "none";
-  };
+  // Close
+  closeBtn.addEventListener("click", () => (modal.style.display = "none"));
 
-  window.showPrev = () => {
-    currentIndex = (currentIndex - 1 + galleryData.length) % galleryData.length;
-    openModal(currentIndex);
-  };
-
-  window.showNext = () => {
-    currentIndex = (currentIndex + 1) % galleryData.length;
-    openModal(currentIndex);
-  };
-
-  // ----------------------------------------
-  // 5. SWIPE HANDLER (lebih halus)
-  // ----------------------------------------
-  let touchStartX = 0;
-
-  modal.addEventListener("touchstart", e => {
-    touchStartX = e.changedTouches[0].screenX;
+  // Next
+  nextBtn.addEventListener("click", () => {
+    currentIndex = (currentIndex + 1) % images.length;
+    updateModal();
   });
 
-  modal.addEventListener("touchend", e => {
-    let diff = e.changedTouches[0].screenX - touchStartX;
+  // Prev
+  prevBtn.addEventListener("click", () => {
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    updateModal();
+  });
+
+  // Click di luar gambar → close
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.style.display = "none";
+  });
+
+  // ============================
+  //          SWIPE MOBILE
+  // ============================
+  let startX = 0;
+
+  modal.addEventListener("touchstart", (e) => {
+    startX = e.changedTouches[0].clientX;
+  });
+
+  modal.addEventListener("touchend", (e) => {
+    let diff = e.changedTouches[0].clientX - startX;
 
     if (Math.abs(diff) > 60) {
-      if (diff > 0) showPrev();
-      else showNext();
+      if (diff > 0) prevBtn.click();
+      else nextBtn.click();
     }
   });
+}
 
-  // ----------------------------------------
-  // LOAD GALERI
-  // ----------------------------------------
-  loadGallery();
-
-});
-  
   // === AGENDA ===
   try {
     const { data: agenda, error } = await supabase
