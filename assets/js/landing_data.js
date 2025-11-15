@@ -83,23 +83,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   //             STRUKTUR
   // =====================================
   try {
-    const { data: struktur } = await supabase
-      .from("landing_struktur")
-      .select("image_url")
-      .limit(1);
+  const { data: struktur } = await supabase
+    .from("landing_struktur")
+    .select("image_url")
+    .limit(1);
 
-    const strukturImg = document.getElementById("strukturImage");
+  const strukturImg = document.getElementById("strukturImage");
 
-    if (struktur?.length && struktur[0].image_url) {
-      strukturImg.src = struktur[0].image_url;
-      strukturImg.style.display = "block";
-    } else {
-      strukturImg.src = "assets/img/struktur.jpg";
-    }
+  if (struktur?.length && struktur[0].image_url) {
+    // generate public URL
+    const { data: publicURL } = supabase
+      .storage
+      .from("struktur")
+      .getPublicUrl(struktur[0].image_url);
 
-  } catch (err) {
-    console.error("Gagal load struktur:", err);
+    strukturImg.src = publicURL.publicUrl;
+    strukturImg.style.display = "block";
+  } else {
+    strukturImg.src = "assets/img/struktur.jpg";
   }
+
+} catch (err) {
+  console.error("Gagal load struktur:", err);
+}
 
   // =====================================
   //              GALERI
