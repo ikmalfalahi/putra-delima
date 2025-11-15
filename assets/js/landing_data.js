@@ -175,8 +175,6 @@ try {
   console.error("Galeri gagal dimuat:", err);
 }
 
-
-
 // ==========================
 //     MODAL LOGIC
 // ==========================
@@ -251,16 +249,24 @@ document.querySelectorAll(".gallery-item img").forEach(img => {
 // === SWIPE HANDLER ===
 let touchStartX = 0;
 
-document.getElementById("lightboxModal").addEventListener("touchstart", e => {
-  touchStartX = e.changedTouches[0].screenX;
-});
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("lightboxModal");
+  if (!modal) return; // safety guard
 
-document.getElementById("lightboxModal").addEventListener("touchend", e => {
-  let diff = e.changedTouches[0].screenX - touchStartX;
+  let touchStartX = 0;
 
-  if (Math.abs(diff) > 60) {
-    if (diff > 0) showPrev(); else showNext();
-  }
+  modal.addEventListener("touchstart", e => {
+    touchStartX = e.changedTouches[0].screenX;
+  });
+
+  modal.addEventListener("touchend", e => {
+    let diff = e.changedTouches[0].screenX - touchStartX;
+
+    if (Math.abs(diff) > 60) {
+      if (diff > 0) showPrev(); 
+      else showNext();
+    }
+  });
 });
   
   // === AGENDA ===
