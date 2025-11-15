@@ -207,6 +207,24 @@ a { color: #f5c542; text-decoration: none; }
   }
 }
 
+.video-thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.video-thumb {
+  width: 120px;
+  height: 90px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: transform 0.2s;
+}
+
+.video-thumb:hover {
+  transform: scale(1.1);
+}
 
 /* ================================
    GALERI GRID (UPDATED)
@@ -474,4 +492,5 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 .footer p {
   margin: 0;                    /* hapus margin default p */
 }
+
 
