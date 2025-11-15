@@ -5,6 +5,7 @@ body {
   overflow-x: hidden;
   background: #f4f6f8;
   color: #111;
+  text-align: center;
   transition: all 0.4s ease;
 }
 a { color: #f5c542; text-decoration: none; }
@@ -510,6 +511,7 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 .footer p {
   margin: 0;                    /* hapus margin default p */
 }
+
 
 
 
