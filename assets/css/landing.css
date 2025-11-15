@@ -173,6 +173,42 @@ a { color: #f5c542; text-decoration: none; }
 }
 
 /* ================================
+   VIDEO
+================================ */
+.main-video iframe {
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 16/9;
+  border: 0;
+  margin-bottom: 1rem;
+}
+
+.video-thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.video-thumbnails iframe {
+  width: 180px;
+  aspect-ratio: 16/9;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.video-thumbnails iframe:hover {
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .video-thumbnails iframe {
+    width: 45%;
+  }
+}
+
+
+/* ================================
    GALERI GRID (UPDATED)
 ================================ */
 .gallery {
@@ -438,3 +474,4 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 .footer p {
   margin: 0;                    /* hapus margin default p */
 }
+
