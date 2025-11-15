@@ -176,81 +176,86 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadLandingVideos();
 
-  // =====================
-  // GALERI FOTO
-  // =====================
-  let images = [];
-  let currentIndex = 0;
-  const galleryContainer = document.getElementById("galleryContainer");
+// =====================
+// GALERI FOTO
+// =====================
+let images = [];
+let currentIndex = 0;
+const galleryContainer = document.getElementById("galleryContainer");
 
-  if (galleryContainer) {
-    galleryContainer.innerHTML = `
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-    `;
-    try {
-      const { data: galeri, error } = await supabase
-        .from("landing_galeri")
-        .select("image_url, caption, uploaded_at")
-        .order("uploaded_at", { ascending: false });
+if (galleryContainer) {
+  galleryContainer.innerHTML = `
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+  `;
+  try {
+    const { data: galeri, error } = await supabase
+      .from("landing_galeri")
+      .select("image_url, caption, uploaded_at")
+      .order("uploaded_at", { ascending: false });
 
-      if (error) throw error;
-      images = galeri || [];
-      galleryContainer.innerHTML = "";
-      if (!images.length) galleryContainer.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
-
-      images.forEach((g, i) => {
-        const div = document.createElement("div");
-        div.className = "galeri-item";
-
-        const img = document.createElement("img");
-        img.src = g.image_url;
-        img.dataset.index = i;
-        img.loading = "lazy";
-        img.onclick = () => openModal(i);
-
-        div.appendChild(img);
-        galleryContainer.appendChild(div);
-      });
-    } catch (err) {
-      console.error("Gagal load galeri:", err);
-      galleryContainer.innerHTML = `<p style="text-align:center;color:#aaa;">Terjadi kesalahan.</p>`;
+    if (error) throw error;
+    images = galeri || [];
+    galleryContainer.innerHTML = "";
+    if (!images.length) {
+      galleryContainer.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
     }
+
+    images.forEach((g, i) => {
+      const div = document.createElement("div");
+      div.className = "galeri-item";
+
+      const img = document.createElement("img");
+      img.src = g.image_url;
+      img.dataset.index = i;
+      img.loading = "lazy";
+      img.onclick = () => openModal(i);
+
+      // Tambahkan fade-in setelah gambar selesai dimuat
+      img.onload = () => div.classList.add("loaded");
+
+      div.appendChild(img);
+      galleryContainer.appendChild(div);
+    });
+  } catch (err) {
+    console.error("Gagal load galeri:", err);
+    galleryContainer.innerHTML = `<p style="text-align:center;color:#aaa;">Terjadi kesalahan.</p>`;
   }
+}
 
-  // =====================
-  // MODAL GALERI
-  // =====================
-  function initModal() {
-    const modal = document.getElementById("lightboxModal");
-    const modalImg = document.getElementById("lightboxImage");
-    const closeBtn = document.getElementById("closeBtn");
-    const prevBtn = document.getElementById("prevBtn");
-    const nextBtn = document.getElementById("nextBtn");
+// =====================
+// MODAL GALERI
+// =====================
+function initModal() {
+  const modal = document.getElementById("lightboxModal");
+  const modalImg = document.getElementById("lightboxImage");
+  const closeBtn = document.getElementById("closeBtn");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
 
-    if (!modal || !modalImg) return;
+  if (!modal || !modalImg) return;
 
-    window.openModal = index => {
-      currentIndex = index;
-      modal.style.display = "flex";
-      modalImg.src = images[currentIndex].image_url;
-    };
+  window.openModal = index => {
+    currentIndex = index;
+    modal.style.display = "flex";
+    modalImg.src = images[currentIndex].image_url;
+  };
 
-    closeBtn.onclick = () => (modal.style.display = "none");
-    nextBtn.onclick = () => {
-      currentIndex = (currentIndex + 1) % images.length;
-      modalImg.src = images[currentIndex].image_url;
-    };
-    prevBtn.onclick = () => {
-      currentIndex = (currentIndex - 1 + images.length) % images.length;
-      modalImg.src = images[currentIndex].image_url;
-    };
-    modal.onclick = e => { if (e.target === modal) modal.style.display = "none"; };
-  }
+  closeBtn.onclick = () => (modal.style.display = "none");
+  nextBtn.onclick = () => {
+    currentIndex = (currentIndex + 1) % images.length;
+    modalImg.src = images[currentIndex].image_url;
+  };
+  prevBtn.onclick = () => {
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    modalImg.src = images[currentIndex].image_url;
+  };
+  modal.onclick = e => { if (e.target === modal) modal.style.display = "none"; };
+}
 
-  initModal();
+initModal();
 
   // =====================
   // AGENDA
