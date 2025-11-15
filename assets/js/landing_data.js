@@ -144,22 +144,101 @@ try {
   console.error("Gagal load galeri:", err);
 }
 
-  // === LIGHTBOX ===
-setTimeout(() => {
-  const lightbox = document.getElementById("lightbox");
-  const lightboxImage = document.getElementById("lightboxImage");
+ // ==========================
+//     LOAD GALERI
+// ==========================
+let currentIndex = 0;
+let images = [];
 
-  document.querySelectorAll(".galeri-item img").forEach(img => {
-    img.addEventListener("click", () => {
-      lightboxImage.src = img.src;
-      lightbox.style.display = "flex";
-    });
+try {
+  const { data: galeri } = await supabase
+    .from("landing_galeri")
+    .select("image_url, caption")
+    .order("uploaded_at", { ascending: false });
+
+  const container = document.getElementById("galleryContainer");
+
+  container.innerHTML = "";
+
+  images = galeri || [];
+
+  images.forEach((g, i) => {
+    const img = document.createElement("img");
+    img.src = g.image_url;
+    img.alt = g.caption || "";
+    img.dataset.index = i;
+    img.onclick = () => openModal(i);
+    container.appendChild(img);
   });
 
-  lightbox.addEventListener("click", () => {
-    lightbox.style.display = "none";
-  });
-}, 500);
+} catch (err) {
+  console.error("Galeri gagal dimuat:", err);
+}
+
+
+
+// ==========================
+//     MODAL LOGIC
+// ==========================
+const modal = document.getElementById("imageModal");
+const modalImg = document.getElementById("modalImage");
+const modalCaption = document.getElementById("modalCaption");
+
+function openModal(index) {
+  currentIndex = index;
+  modal.style.display = "block";
+  updateModal();
+}
+
+function updateModal() {
+  modalImg.src = images[currentIndex].image_url;
+  modalCaption.innerText = images[currentIndex].caption || "";
+}
+
+document.querySelector(".close").onclick = () => {
+  modal.style.display = "none";
+};
+
+// NEXT / PREVIOUS
+document.querySelector(".next").onclick = () => {
+  currentIndex = (currentIndex + 1) % images.length;
+  updateModal();
+};
+
+document.querySelector(".prev").onclick = () => {
+  currentIndex = (currentIndex - 1 + images.length) % images.length;
+  updateModal();
+};
+
+// Klik di luar gambar → close
+modal.onclick = (e) => {
+  if (e.target === modal) modal.style.display = "none";
+};
+
+// ==========================
+//     SWIPE (MOBILE)
+// ==========================
+let startX = 0;
+
+modal.addEventListener("touchstart", (e) => {
+  startX = e.touches[0].clientX;
+});
+
+modal.addEventListener("touchend", (e) => {
+  let endX = e.changedTouches[0].clientX;
+
+  if (endX < startX - 40) {
+    // swipe kiri
+    currentIndex = (currentIndex + 1) % images.length;
+    updateModal();
+  }
+
+  if (endX > startX + 40) {
+    // swipe kanan
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    updateModal();
+  }
+});
   
   // === AGENDA ===
   try {
