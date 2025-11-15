@@ -160,7 +160,7 @@ a { color: #f5c542; text-decoration: none; }
 .card h3 { color: #f5c542; margin-bottom: 8px; }
 
 /* ================================
-   VISI & MISI SECTION
+   VISI & MISI SECTION — RESPONSIVE
 ================================ */
 #visiMisi {
   text-align: center;
@@ -187,7 +187,7 @@ a { color: #f5c542; text-decoration: none; }
   background: #fff;
   border-radius: 12px;
   padding: 20px;
-  width: 280px;
+  width: 280px;               /* default HP */
   box-shadow: 0 6px 15px rgba(0,0,0,0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -216,13 +216,34 @@ a { color: #f5c542; text-decoration: none; }
   list-style: disc;
 }
 
-/* RESPONSIVE */
-@media (max-width: 768px) {
+/* RESPONSIVE LAPTOP / DESKTOP */
+@media (min-width: 769px) {
+  .visi-misi-cards {
+    flex-wrap: nowrap;      /* biar card berdampingan */
+    gap: 40px;
+  }
+  .visi-card, .misi-card {
+    width: 350px;           /* lebih besar di laptop/desktop */
+  }
+}
+
+/* TABLET */
+@media (min-width: 481px) and (max-width: 768px) {
+  .visi-misi-cards {
+    flex-wrap: wrap;
+    gap: 30px;
+  }
+  .visi-card, .misi-card {
+    width: 45%;
+  }
+}
+
+/* HP */
+@media (max-width: 480px) {
   .visi-misi-cards {
     flex-direction: column;
     align-items: center;
   }
-
   .visi-card, .misi-card {
     width: 90%;
   }
@@ -580,6 +601,7 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 .footer p {
   margin: 0;                    /* hapus margin default p */
 }
+
 
 
 
