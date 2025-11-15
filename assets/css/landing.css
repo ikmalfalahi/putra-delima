@@ -159,6 +159,75 @@ a { color: #f5c542; text-decoration: none; }
 }
 .card h3 { color: #f5c542; margin-bottom: 8px; }
 
+/* ================================
+   VISI & MISI SECTION
+================================ */
+#visiMisi {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+#visiMisi h2 {
+  color: #f5c542;
+  font-size: 1.6rem;
+  margin-bottom: 30px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.visi-misi-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.visi-card, .misi-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  width: 280px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.visi-card:hover, .misi-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.2);
+}
+
+.visi-card h3, .misi-card h3 {
+  color: #f5c542;
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.visi-card p, .misi-card li {
+  color: #333;
+  font-size: 1rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.misi-card ul {
+  padding-left: 20px;
+  margin: 0;
+  list-style: disc;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .visi-misi-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .visi-card, .misi-card {
+    width: 90%;
+  }
+}
+
 /* === STRUKTUR ORGANISASI === */
 #struktur {
   text-align: center;
@@ -511,6 +580,7 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 .footer p {
   margin: 0;                    /* hapus margin default p */
 }
+
 
 
 
