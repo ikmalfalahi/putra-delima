@@ -93,7 +93,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("Gagal load struktur:", err);
   }
 
-// === GALERI (FINAL + CLEAN + FIXED) ===
+// === GALERI (DEBUG HARD FIX) ===
 try {
   console.log("🟡 [DEBUG] Mulai ambil data galeri...");
 
@@ -105,10 +105,8 @@ try {
   console.log("🟢 [DEBUG] Data galeri:", galeri);
   console.log("🔴 [DEBUG] Error galeri:", error);
 
-  // Ambil elemen galeri (sesuai HTML kamu)
   const container = document.getElementById("galleryContainer");
 
-  // Buat debug box setelah galeri
   const debugBox = document.createElement("div");
   debugBox.style = `
     background:#111;
@@ -129,8 +127,12 @@ try {
     return;
   }
 
-  // --- FIX: Reset container sebelum generate ulang ---
+  // RESET CONTAINER
   container.innerHTML = "";
+
+  // FORCES GRID TO SHOW
+  container.style.border = "3px solid red";
+  container.style.minHeight = "200px";
 
   if (error) {
     const msg = `❌ Error Supabase: ${error.message}`;
@@ -141,31 +143,44 @@ try {
 
   if (galeri && galeri.length > 0) {
     galeri.forEach((g, i) => {
-
-      // 🟩 Tambahkan DEBUG URL di sini
-      debugBox.innerHTML += `URL ${i + 1}: ${g.image_url}<br>`;
-
       const div = document.createElement("div");
       div.className = "galeri-item";
-      div.setAttribute("data-aos", "zoom-in");
+      div.style.border = "2px dashed yellow"; // DEBUG
+      div.style.padding = "10px";
 
-      div.innerHTML = `
-        <img src="${g.image_url}" alt="${g.caption || `Gambar ${i + 1}`}" />
-        ${g.caption ? `<p class="caption">${g.caption}</p>` : ""}
-      `;
+      const img = document.createElement("img");
+      img.src = g.image_url;
+      img.alt = g.caption || `Gambar ${i + 1}`;
+      img.style.width = "100%";  // PAKSA TAMPIL
+      img.style.height = "auto"; // PAKSA TAMPIL
+      img.style.display = "block";
+
+      img.onload = () => {
+        console.log(`🖼️ Gambar ${i + 1} dimuat:`, img.naturalWidth, img.naturalHeight);
+      };
+      img.onerror = () => {
+        console.error(`❌ Gambar GAGAL dimuat: ${img.src}`);
+      };
+
+      const caption = document.createElement("p");
+      caption.className = "caption";
+      caption.innerText = g.caption || "";
+
+      div.appendChild(img);
+      div.appendChild(caption);
 
       container.appendChild(div);
+
+      debugBox.innerHTML += `URL ${i + 1}: ${g.image_url}<br>`;
     });
 
     debugBox.innerHTML += `✅ ${galeri.length} gambar dimuat dari Supabase.`;
   } else {
-    container.innerHTML =
-      '<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>';
+    container.innerHTML = '<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>';
     debugBox.innerHTML += "⚠️ Tidak ada data galeri ditemukan.";
   }
 } catch (err) {
   console.error("Gagal load galeri:", err);
-  debugBox.innerHTML += "❌ Terjadi error tak terduga.";
 }
   
   // === AGENDA ===
