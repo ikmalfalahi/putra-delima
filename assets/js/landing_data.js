@@ -140,33 +140,60 @@ document.addEventListener("DOMContentLoaded", async () => {
   //              VIDEO
   // =====================================
 
-  async function loadLandingVideos() {
-  const { data: videos } = await supabase
+ async function loadLandingVideos() {
+  const { data: videos, error } = await supabase
     .from("landing_videos")
     .select("*")
     .order("order_index", { ascending: true });
 
-  if (!videos || videos.length === 0) return;
+  if (error) {
+    console.error("Gagal load video:", error.message);
+    return;
+  }
+  if (!videos || videos.length === 0) {
+    console.warn("Tidak ada video di database");
+    return;
+  }
 
   const mainVideo = document.getElementById("mainVideo");
   const thumbs = document.getElementById("videoThumbnails");
   thumbs.innerHTML = "";
 
   // Set video utama
-  const firstVideoID = videos[0].video_link.split("v=")[1];
+  const firstVideoID = extractYoutubeID(videos[0].video_link);
   mainVideo.src = `https://www.youtube.com/embed/${firstVideoID}`;
 
-  // Buat thumbnails interaktif
+  // Buat thumbnails
   videos.forEach(v => {
-    const videoID = v.video_link.split("v=")[1];
+    const videoID = extractYoutubeID(v.video_link);
     const iframe = document.createElement("iframe");
     iframe.src = `https://www.youtube.com/embed/${videoID}?controls=0&mute=1`;
     iframe.allowFullscreen = true;
+
     iframe.addEventListener("click", () => {
       mainVideo.src = `https://www.youtube.com/embed/${videoID}`;
     });
+
     thumbs.appendChild(iframe);
   });
+}
+
+// Fungsi ekstrak YouTube ID (mendukung youtube.com/watch?v=ID dan youtu.be/ID)
+function extractYoutubeID(url) {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtu.be")) {
+      return u.pathname.slice(1);
+    } else if (u.hostname.includes("youtube.com")) {
+      return u.searchParams.get("v");
+    } else {
+      console.warn("Link bukan YouTube:", url);
+      return "";
+    }
+  } catch (err) {
+    console.warn("URL tidak valid:", url);
+    return "";
+  }
 }
 
 document.addEventListener("DOMContentLoaded", loadLandingVideos);
