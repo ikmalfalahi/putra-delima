@@ -172,110 +172,144 @@ a { color: #f5c542; text-decoration: none; }
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* === GALERI GRID === */
+/* =====================================================
+   GALERI GRID
+===================================================== */
 .gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 14px;
-  margin-top: 20px;
+  margin-top: 25px;
 }
 
-.gallery img {
-  width: 100%;
+/* Card Container */
+.gallery-item {
+  position: relative;
+  overflow: hidden;
   border-radius: 12px;
-  object-fit: cover;
+  background: #111;
   cursor: pointer;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.gallery img:hover {
-  transform: scale(1.03);
-  opacity: 0.9;
+/* Hover shadow halus */
+.gallery-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
 
-/* MOBILE → 2 kolom */
+/* Skeleton */
+.gallery-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, #333 20%, #444 40%, #333 60%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.2s infinite linear;
+  z-index: 1;
+  border-radius: 12px;
+}
+
+/* Hilangkan skeleton jika gambar sudah load */
+.gallery-item.loaded::before {
+  display: none;
+}
+
+/* Gambar */
+.gallery-item img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+/* Responsive mobile: 2 kolom */
 @media (max-width: 600px) {
   .gallery {
     grid-template-columns: repeat(2, 1fr);
   }
+  .gallery-item img {
+    height: 130px;
+  }
 }
 
-/* === MODAL === */
+/* Skeleton Animation */
+@keyframes skeleton-loading {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+
+/* =====================================================
+   LIGHTBOX / MODAL (Swipe + Nav)
+===================================================== */
 .modal {
   display: none;
   position: fixed;
-  z-index: 99999;
-  padding-top: 40px;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(10, 10, 10, 0.85);
+  inset: 0;
+  background: rgba(0,0,0,0.85);
   backdrop-filter: blur(4px);
-  text-align: center;
-  animation: fadeIn 0.3s ease;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+}
+
+.modal.show {
+  display: flex;
 }
 
 .modal-content {
-  max-width: 90%;
-  max-height: 80vh;
+  max-width: 92%;
+  max-height: 88%;
   border-radius: 14px;
-  box-shadow: 0 0 22px rgba(0, 0, 0, 0.5);
-  animation: zoomIn 0.3s ease;
+  box-shadow: 0 0 25px rgba(255,255,255,0.2);
+  animation: fadeZoom 0.35s ease;
 }
 
-#modalCaption {
-  color: #ddd;
-  margin-top: 10px;
-  font-size: 14px;
+/* Fade + Zoom in */
+@keyframes fadeZoom {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
 }
+
+/* Nav buttons */
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 2.4rem;
+  color: #fff;
+  padding: 4px 12px;
+  cursor: pointer;
+  user-select: none;
+  opacity: 0.7;
+  transition: 0.25s ease;
+}
+
+.nav-btn:hover {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.15);
+}
+
+.prev { left: 15px; }
+.next { right: 15px; }
 
 /* Close button */
 .close {
   position: absolute;
   top: 15px;
   right: 20px;
+  font-size: 2.4rem;
   color: white;
-  font-size: 35px;
   cursor: pointer;
+  opacity: 0.8;
+  transition: 0.25s ease;
 }
-
-/* NEXT/PREV */
-.nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.12);
-  border: none;
-  font-size: 32px;
-  padding: 8px 14px;
-  cursor: pointer;
-  border-radius: 10px;
-  color: #fff;
-  transition: 0.2s;
-}
-
-.nav:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.prev {
-  left: 20px;
-}
-
-.next {
-  right: 20px;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes zoomIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+.close:hover {
+  opacity: 1;
+  transform: scale(1.2);
 }
 
 /* === MAP === */
@@ -350,5 +384,6 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 @media (max-width: 600px) {
   .galeri-item img { height: 130px; }
 }
+
 
 
