@@ -93,8 +93,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("Gagal load struktur:", err);
   }
 
-  // === GALERI (DEBUG MODE + FIXED) ===
- // === GALERI (FINAL + CLEAN + FIXED) ===
+// === GALERI (FINAL + CLEAN + FIXED) ===
 try {
   console.log("🟡 [DEBUG] Mulai ambil data galeri...");
 
@@ -142,6 +141,10 @@ try {
 
   if (galeri && galeri.length > 0) {
     galeri.forEach((g, i) => {
+
+      // 🟩 Tambahkan DEBUG URL di sini
+      debugBox.innerHTML += `URL ${i + 1}: ${g.image_url}<br>`;
+
       const div = document.createElement("div");
       div.className = "galeri-item";
       div.setAttribute("data-aos", "zoom-in");
