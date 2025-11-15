@@ -137,6 +137,41 @@ document.addEventListener("DOMContentLoaded", async () => {
 }
 
   // =====================================
+  //              VIDEO
+  // =====================================
+
+  async function loadLandingVideos() {
+  const { data: videos } = await supabase
+    .from("landing_videos")
+    .select("*")
+    .order("order_index", { ascending: true });
+
+  if (!videos || videos.length === 0) return;
+
+  const mainVideo = document.getElementById("mainVideo");
+  const thumbs = document.getElementById("videoThumbnails");
+  thumbs.innerHTML = "";
+
+  // Set video utama
+  const firstVideoID = videos[0].video_link.split("v=")[1];
+  mainVideo.src = `https://www.youtube.com/embed/${firstVideoID}`;
+
+  // Buat thumbnails interaktif
+  videos.forEach(v => {
+    const videoID = v.video_link.split("v=")[1];
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://www.youtube.com/embed/${videoID}?controls=0&mute=1`;
+    iframe.allowFullscreen = true;
+    iframe.addEventListener("click", () => {
+      mainVideo.src = `https://www.youtube.com/embed/${videoID}`;
+    });
+    thumbs.appendChild(iframe);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", loadLandingVideos);
+
+  // =====================================
   //              GALERI
   // =====================================
 
