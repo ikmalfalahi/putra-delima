@@ -173,68 +173,67 @@ a { color: #f5c542; text-decoration: none; }
 }
 
 /* ================================
-   VIDEO SECTION — SESUAI SECTION LAIN
+   VIDEO SECTION — RESPONSIVE
 ================================ */
-#video {
-  padding: 70px 20px;       /* sama seperti .section */
+#videoSection {
   text-align: center;
-  background: #f4f6f8;      /* default background section */
+  padding: 60px 20px;
 }
 
-#video h2 {
-  color: #f5c542;           /* sama seperti section h2 */
+#videoSection h2 {
+  color: #f5c542;
   margin-bottom: 20px;
   font-size: 1.6rem;
 }
 
-.main-video-wrapper {
+.main-video iframe {
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto 20px;      /* center + margin bawah */
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* mirip card / galeri */
-}
-
-.main-video-wrapper iframe {
-  width: 100%;
-  aspect-ratio: 16/9;
-  border: 0;
+  max-width: 600px;       /* sama seperti struktur-img */
+  height: auto;
+  aspect-ratio: 16/9;     /* menjaga proporsi */
+  border-radius: 12px;    /* mirip struktur-img */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  margin: 0 auto 20px auto;
   display: block;
 }
 
+/* Thumbnails video */
 .video-thumbnails {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 15px;
-  justify-items: center;
-  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .video-thumb {
   width: 120px;
   height: 90px;
-  border-radius: 12px;
   cursor: pointer;
-  object-fit: cover;
-  transition: transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  border-radius: 8px;
+  transition: transform 0.2s;
 }
 
 .video-thumb:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  transform: scale(1.05);
 }
 
-/* RESPONSIVE */
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .main-video-wrapper { max-width: 100%; }
-  .video-thumbnails { grid-template-columns: repeat(3, 1fr); }
+  .main-video iframe {
+    max-width: 100%;
+  }
+
+  .video-thumb {
+    width: 45%;
+    height: auto;
+  }
 }
 
 @media (max-width: 480px) {
-  .video-thumbnails { grid-template-columns: repeat(2, 1fr); }
-  .video-thumb { width: 100%; height: auto; }
+  .video-thumb {
+    width: 48%;
+  }
 }
 
 /* ================================
@@ -503,6 +502,7 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 .footer p {
   margin: 0;                    /* hapus margin default p */
 }
+
 
 
 
