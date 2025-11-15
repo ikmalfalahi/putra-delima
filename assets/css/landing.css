@@ -183,7 +183,7 @@ a { color: #f5c542; text-decoration: none; }
 }
 
 /* Card Container */
-.gallery-item {
+.galeri-item {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
@@ -193,13 +193,13 @@ a { color: #f5c542; text-decoration: none; }
 }
 
 /* Hover shadow halus */
-.gallery-item:hover {
+.galeri-item:hover {
   transform: translateY(-5px);
   box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
 
 /* Skeleton */
-.gallery-item::before {
+.galeri-item::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -211,12 +211,12 @@ a { color: #f5c542; text-decoration: none; }
 }
 
 /* Hilangkan skeleton jika gambar sudah load */
-.gallery-item.loaded::before {
+.galeri-item.loaded::before {
   display: none;
 }
 
 /* Gambar */
-.gallery-item img {
+.galeri-item img {
   width: 100%;
   height: 180px;
   object-fit: cover;
@@ -225,12 +225,17 @@ a { color: #f5c542; text-decoration: none; }
   transition: opacity 0.4s ease;
 }
 
+/* Fade-in ketika loaded */
+.galeri-item.loaded img {
+  opacity: 1;
+}
+
 /* Responsive mobile: 2 kolom */
 @media (max-width: 600px) {
   .gallery {
     grid-template-columns: repeat(2, 1fr);
   }
-  .gallery-item img {
+  .galeri-item img {
     height: 130px;
   }
 }
@@ -384,6 +389,7 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 @media (max-width: 600px) {
   .galeri-item img { height: 130px; }
 }
+
 
 
 
