@@ -239,6 +239,29 @@ modal.addEventListener("touchend", (e) => {
     updateModal();
   }
 });
+
+  // === APPLY SKELETON LOAD ===
+document.querySelectorAll(".gallery-item img").forEach(img => {
+  img.onload = () => {
+    img.style.opacity = "1";
+    img.parentElement.classList.add("loaded");
+  };
+});
+
+// === SWIPE HANDLER ===
+let touchStartX = 0;
+
+document.getElementById("lightboxModal").addEventListener("touchstart", e => {
+  touchStartX = e.changedTouches[0].screenX;
+});
+
+document.getElementById("lightboxModal").addEventListener("touchend", e => {
+  let diff = e.changedTouches[0].screenX - touchStartX;
+
+  if (Math.abs(diff) > 60) {
+    if (diff > 0) showPrev(); else showNext();
+  }
+});
   
   // === AGENDA ===
   try {
