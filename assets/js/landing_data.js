@@ -93,159 +93,135 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("Gagal load struktur:", err);
   }
 
-// ================================
-//         LOAD GALERI
-// ================================
-let images = [];
-let currentIndex = 0;
-
 document.addEventListener("DOMContentLoaded", async () => {
-  const container = document.getElementById("galleryContainer");
 
-  if (!container) {
-    console.warn("❌ #galleryContainer tidak ditemukan.");
-    return;
-  }
-
-  // --- SKELETON LOADING ---
-  container.innerHTML = `
-    <div class="gallery-item skeleton-box"></div>
-    <div class="gallery-item skeleton-box"></div>
-    <div class="gallery-item skeleton-box"></div>
-    <div class="gallery-item skeleton-box"></div>
-  `;
-
-  try {
-    const { data: galeri, error } = await supabase
-      .from("landing_galeri")
-      .select("image_url, caption, uploaded_at")
-      .order("uploaded_at", { ascending: false });
-
-    if (error) {
-      console.error("❌ Error Supabase:", error.message);
-      container.innerHTML = `<p style="text-align:center;color:#aaa;">Gagal memuat galeri.</p>`;
-      return;
-    }
-
-    images = galeri || [];
-    container.innerHTML = "";
-
-    if (images.length === 0) {
-      container.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
-      return;
-    }
-
-    // --- TAMPILKAN FOTO ---
-    images.forEach((g, i) => {
-      const div = document.createElement("div");
-      div.className = "gallery-item"; // FIX: cocok dengan CSS
-
-      const img = document.createElement("img");
-      img.src = g.image_url;
-      img.alt = g.caption || "";
-      img.dataset.index = i;
-      img.loading = "lazy";
-
-      // skeleton hilang setelah load
-      img.onload = () => {
-        div.classList.add("loaded");
-        img.style.opacity = "1";
-      };
-
-      img.onclick = () => openModal(i);
-
-      div.appendChild(img);
-      container.appendChild(div);
-    });
-
-  } catch (err) {
-    console.error("❌ Gagal load galeri:", err);
-    container.innerHTML = `<p style="text-align:center;color:#aaa;">Terjadi kesalahan saat memuat galeri.</p>`;
-  }
-
-  initModal();
-});
-
-// ======================================
-//               MODAL
-// ======================================
-function initModal() {
+  const galleryContainer = document.getElementById("galleryContainer");
   const modal = document.getElementById("lightboxModal");
   const modalImg = document.getElementById("lightboxImage");
-  const closeBtn = document.getElementById("closeBtn");
-  const prevBtn = document.getElementById("prevBtn");
-  const nextBtn = document.getElementById("nextBtn");
 
-  if (!modal) {
-    console.error("❌ Modal (#lightboxModal) tidak ditemukan");
+  if (!galleryContainer || !modal || !modalImg) {
+    console.error("❌ Elemen galeri/modal tidak ditemukan di HTML");
     return;
   }
 
-  // --- OPEN MODAL ---
-  window.openModal = (index) => {
-    currentIndex = index;
-    modal.classList.add("show");
-    updateModal();
-  };
+  // ----------------------------------------
+  // 1. AMBIL DATA GALERI DARI SUPABASE
+  // ----------------------------------------
+  async function loadGallery() {
+    try {
+      galleryContainer.innerHTML = generateSkeletons(6);
 
-  // --- UPDATE IMAGE ---
-  function updateModal() {
-    if (!images[currentIndex]) return;
+      const { data, error } = await supabase
+        .from("galeri")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    modalImg.style.opacity = "0";
-    setTimeout(() => {
-      modalImg.src = images[currentIndex].image_url;
-      modalImg.style.opacity = "1";
-    }, 150); // animasi fade halus
+      if (error) throw error;
+
+      await sleep(300);
+
+      renderGallery(data);
+    } catch (err) {
+      console.error("❌ Gagal memuat galeri:", err);
+    }
   }
 
-  // --- CLOSE BUTTON ---
-  closeBtn.onclick = () => modal.classList.remove("show");
+  const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
-  // --- NEXT ---
-  nextBtn.onclick = () => {
-    currentIndex = (currentIndex + 1) % images.length;
-    updateModal();
+  // ----------------------------------------
+  // 2. SKELETON LOADING
+  // ----------------------------------------
+  function generateSkeletons(count) {
+    let html = "";
+    for (let i = 0; i < count; i++) {
+      html += `
+        <div class="gallery-item skeleton"></div>
+      `;
+    }
+    return html;
+  }
+
+  // ----------------------------------------
+  // 3. TAMPILKAN FOTO
+  // ----------------------------------------
+  let currentIndex = 0;
+  let galleryData = [];
+
+  function renderGallery(data) {
+    galleryData = data;
+
+    galleryContainer.innerHTML = "";
+
+    data.forEach((item, index) => {
+      const imgDiv = document.createElement("div");
+      imgDiv.className = "gallery-item";
+
+      const img = document.createElement("img");
+      img.src = item.url;
+      img.alt = "Foto kegiatan";
+
+      img.onload = () => imgDiv.classList.remove("skeleton");
+      img.onerror = () => imgDiv.classList.remove("skeleton");
+
+      img.onclick = () => openModal(index);
+
+      imgDiv.appendChild(img);
+      galleryContainer.appendChild(imgDiv);
+    });
+  }
+
+  // ----------------------------------------
+  // 4. MODAL / LIGHTBOX
+  // ----------------------------------------
+  function openModal(index) {
+    currentIndex = index;
+    modal.style.display = "flex";
+    modalImg.style.opacity = "0";
+
+    setTimeout(() => {
+      modalImg.src = galleryData[index].url;
+      modalImg.style.opacity = "1";
+    }, 50);
+  }
+
+  window.closeLightbox = () => {
+    modal.style.display = "none";
   };
 
-  // --- PREVIOUS ---
-  prevBtn.onclick = () => {
-    currentIndex = (currentIndex - 1 + images.length) % images.length;
-    updateModal();
+  window.showPrev = () => {
+    currentIndex = (currentIndex - 1 + galleryData.length) % galleryData.length;
+    openModal(currentIndex);
   };
 
-  // --- CLOSE WHEN CLICK BACKDROP ---
-  modal.onclick = (e) => {
-    if (e.target === modal) modal.classList.remove("show");
+  window.showNext = () => {
+    currentIndex = (currentIndex + 1) % galleryData.length;
+    openModal(currentIndex);
   };
 
-  // ============================
-  //         SWIPE MOBILE
-  // ============================
+  // ----------------------------------------
+  // 5. SWIPE HANDLER (lebih halus)
+  // ----------------------------------------
   let touchStartX = 0;
 
-  modal.addEventListener("touchstart", (e) => {
-    touchStartX = e.changedTouches[0].clientX;
+  modal.addEventListener("touchstart", e => {
+    touchStartX = e.changedTouches[0].screenX;
   });
 
-  modal.addEventListener("touchend", (e) => {
-    let diff = e.changedTouches[0].clientX - touchStartX;
+  modal.addEventListener("touchend", e => {
+    let diff = e.changedTouches[0].screenX - touchStartX;
 
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) prevBtn.click();
-      else nextBtn.click();
+    if (Math.abs(diff) > 60) {
+      if (diff > 0) showPrev();
+      else showNext();
     }
   });
-}
 
-// ======================================
-//      SKELETON OPTIONAL (tidak wajib)
-// ======================================
-function applyFadeIn() {
-  document.querySelectorAll(".gallery-item img").forEach((img) => {
-    img.onload = () => img.parentElement.classList.add("loaded");
-  });
-}
+  // ----------------------------------------
+  // LOAD GALERI
+  // ----------------------------------------
+  loadGallery();
+
+});
   
   // === AGENDA ===
   try {
