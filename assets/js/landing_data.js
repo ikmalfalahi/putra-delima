@@ -94,70 +94,77 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // === GALERI (DEBUG MODE + FIXED) ===
-  try {
-    console.log("🟡 [DEBUG] Mulai ambil data galeri...");
+  // === GALERI (DEBUG MODE + FIXED) ===
+try {
+  console.log("🟡 [DEBUG] Mulai ambil data galeri...");
 
-    const { data: galeri, error } = await supabase
-      .from("landing_galeri")
-      .select("image_url, caption, uploaded_at")
-      .order("uploaded_at", { ascending: false });
+  const { data: galeri, error } = await supabase
+    .from("landing_galeri")
+    .select("image_url, caption, uploaded_at")
+    .order("uploaded_at", { ascending: false });
 
-    console.log("🟢 [DEBUG] Data galeri:", galeri);
-    console.log("🔴 [DEBUG] Error galeri:", error);
+  console.log("🟢 [DEBUG] Data galeri:", galeri);
+  console.log("🔴 [DEBUG] Error galeri:", error);
 
-    const container =
-      document.getElementById("galleryContainer") ||
-      document.querySelector("#galeri .gallery");
+  const container =
+    document.getElementById("galleryContainer") ||
+    document.querySelector("#galeri .gallery");
 
-    // Tambahkan debug box di bawah galeri
-    const debugBox = document.createElement("div");
-    debugBox.style = `
-      background:#111;
-      color:#0f0;
-      font-size:13px;
-      margin-top:10px;
-      padding:6px;
-      border-radius:6px;
-      line-height:1.4;
-    `;
-    debugBox.innerHTML = `<strong>🧩 DEBUG GALERI:</strong><br>`;
-    container?.parentNode?.insertBefore(debugBox, container.nextSibling);
+  // Tambahkan debug box
+  const debugBox = document.createElement("div");
+  debugBox.style = `
+    background:#111;
+    color:#0f0;
+    font-size:13px;
+    margin-top:10px;
+    padding:6px;
+    border-radius:6px;
+    line-height:1.4;
+  `;
+  debugBox.innerHTML = `<strong>🧩 DEBUG GALERI:</strong><br>`;
+  container?.parentNode?.insertBefore(debugBox, container.nextSibling);
 
-    if (!container) {
-      const msg = "❌ Elemen galeri tidak ditemukan di halaman.";
-      console.warn(msg);
-      debugBox.innerHTML += msg;
-    } else if (error) {
-      const msg = `❌ Error Supabase: ${error.message}`;
-      console.error(msg);
-      debugBox.innerHTML += msg;
-    } else if (galeri && galeri.length > 0) {
-      let html = "";
-      galeri.forEach((g, i) => {
-        const captionHTML = g.caption
-          ? '<p class="caption">' + g.caption + '</p>'
-          : "";
-        html +=
-          '<div class="galeri-item" data-aos="zoom-in">' +
-          '<img src="' +
-          g.image_url +
-          '" alt="' +
-          (g.caption || "Gambar " + (i + 1)) +
-          '" />' +
-          captionHTML +
-          "</div>";
-      });
-
-      container.innerHTML = html;
-      debugBox.innerHTML += "✅ " + galeri.length + " gambar dimuat dari Supabase.";
-    } else {
-      container.innerHTML =
-        '<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>';
-      debugBox.innerHTML += "⚠️ Tidak ada data galeri ditemukan.";
-    }
-  } catch (err) {
-    console.error("Gagal load galeri:", err);
+  if (!container) {
+    const msg = "❌ Elemen galeri tidak ditemukan di halaman.";
+    console.warn(msg);
+    debugBox.innerHTML += msg;
+    return;
   }
+
+  // ⬇⬇⬇ FIX UTAMA — Reset kontainer sebelum isi ulang
+  container.innerHTML = "";
+  // ⬆⬆⬆
+
+  if (error) {
+    const msg = `❌ Error Supabase: ${error.message}`;
+    console.error(msg);
+    debugBox.innerHTML += msg;
+    return;
+  }
+
+  if (galeri && galeri.length > 0) {
+    galeri.forEach((g, i) => {
+      const div = document.createElement("div");
+      div.className = "galeri-item";
+      div.setAttribute("data-aos", "zoom-in");
+
+      div.innerHTML = `
+        <img src="${g.image_url}" alt="${g.caption || `Gambar ${i + 1}`}">
+        ${g.caption ? `<p class="caption">${g.caption}</p>` : ""}
+      `;
+
+      container.appendChild(div);
+    });
+
+    debugBox.innerHTML += `✅ ${galeri.length} gambar dimuat dari Supabase.`;
+  } else {
+    container.innerHTML =
+      '<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>';
+    debugBox.innerHTML += "⚠️ Tidak ada data galeri ditemukan.";
+  }
+} catch (err) {
+  console.error("Gagal load galeri:", err);
+}
 
   // === AGENDA ===
   try {
