@@ -91,20 +91,49 @@ document.addEventListener("DOMContentLoaded", async () => {
   const strukturImg = document.getElementById("strukturImage");
 
   if (struktur?.length && struktur[0].image_url) {
-    // generate public URL
+    const fileName = struktur[0].image_url; // nama file di storage
+    const bucketName = "struktur"; // sesuaikan dengan nama bucket kamu
+
+    // 1️⃣ Cek public URL
     const { data: publicURL } = supabase
       .storage
-      .from("struktur")
-      .getPublicUrl(struktur[0].image_url);
+      .from(bucketName)
+      .getPublicUrl(fileName);
 
-    strukturImg.src = publicURL.publicUrl;
+    // 2️⃣ Gunakan signed URL jika bucket private
+    let imgSrc = publicURL.publicUrl;
+
+    // Contoh generate signed URL (valid 60 detik)
+    const { data: signedURL, error } = await supabase
+      .storage
+      .from(bucketName)
+      .createSignedUrl(fileName, 60);
+
+    if (error) {
+      console.warn("Gagal generate signed URL, pakai public URL:", error);
+    } else if (signedURL?.signedUrl) {
+      imgSrc = signedURL.signedUrl;
+    }
+
+    // Set src & tampilkan
+    strukturImg.src = imgSrc;
     strukturImg.style.display = "block";
+
+    // 3️⃣ Fallback jika gambar gagal dimuat
+    strukturImg.onerror = () => {
+      console.warn("Gambar struktur gagal dimuat, pakai default.");
+      strukturImg.src = "assets/img/struktur.jpg";
+    };
+
   } else {
+    // fallback default
     strukturImg.src = "assets/img/struktur.jpg";
   }
 
 } catch (err) {
   console.error("Gagal load struktur:", err);
+  const strukturImg = document.getElementById("strukturImage");
+  strukturImg.src = "assets/img/struktur.jpg";
 }
 
   // =====================================
