@@ -1,5 +1,5 @@
 // =====================================
-//   LANDING PAGE DATA LOADER — FIXED
+// LANDING PAGE DATA LOADER — FINAL
 // =====================================
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const h = hero[0];
       safeText(document.getElementById("heroTitle"), h.title);
       safeText(document.getElementById("heroDesc"), h.description);
+
       const heroImg = document.getElementById("heroImage");
       if (heroImg && h.image_url) {
         heroImg.src = h.image_url;
@@ -46,8 +47,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       .from("landing_tentang")
       .select("content")
       .limit(1);
+
     if (tentang?.length)
       safeText(document.getElementById("aboutText"), tentang[0].content);
+
   } catch (err) {
     console.error("Gagal load tentang:", err);
   }
@@ -64,11 +67,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (visi?.length) {
       const v = visi[0];
       safeText(document.getElementById("visiText"), v.visi);
+
       const misiHTML = (v.misi || "")
         .split(/\n|·|;|-/)
         .filter(Boolean)
         .map(m => `<li>${m.trim()}</li>`)
         .join("");
+
       safeHTML(document.getElementById("misiText"), misiHTML);
     }
   } catch (err) {
@@ -76,7 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // =====================
-  // STRUKTUR
+  // STRUKTUR ORGANISASI
   // =====================
   try {
     const { data: struktur } = await supabase
@@ -85,14 +90,40 @@ document.addEventListener("DOMContentLoaded", async () => {
       .limit(1);
 
     const strukturImg = document.getElementById("strukturImage");
+
     if (struktur?.length && struktur[0].image_url) {
-      strukturImg.src = struktur[0].image_url;
+      const fileName = struktur[0].image_url;
+      const bucketName = "struktur";
+
+      const { data: publicURL } = supabase
+        .storage
+        .from(bucketName)
+        .getPublicUrl(fileName);
+
+      let imgSrc = publicURL.publicUrl;
+
+      const { data: signedURL, error } = await supabase
+        .storage
+        .from(bucketName)
+        .createSignedUrl(fileName, 60);
+
+      if (!error && signedURL?.signedUrl) imgSrc = signedURL.signedUrl;
+
+      strukturImg.src = imgSrc;
       strukturImg.style.display = "block";
+
+      strukturImg.onerror = () => {
+        strukturImg.src = "assets/img/struktur.jpg";
+      };
+
     } else {
       strukturImg.src = "assets/img/struktur.jpg";
     }
+
   } catch (err) {
     console.error("Gagal load struktur:", err);
+    const strukturImg = document.getElementById("strukturImage");
+    strukturImg.src = "assets/img/struktur.jpg";
   }
 
   // =====================
@@ -122,10 +153,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const thumbs = document.getElementById("videoThumbnails");
     thumbs.innerHTML = "";
 
-    // Set video utama
+    // Set video pertama
     const firstID = extractYoutubeID(videos[0].video_link);
     mainVideo.src = `https://www.youtube.com/embed/${firstID}`;
 
+    // Thumbnails
     videos.forEach(v => {
       const videoID = extractYoutubeID(v.video_link);
       if (!videoID) return;
@@ -137,6 +169,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       thumbImg.addEventListener("click", () => {
         mainVideo.src = `https://www.youtube.com/embed/${videoID}`;
       });
+
       thumbs.appendChild(thumbImg);
     });
   }
@@ -144,14 +177,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadLandingVideos();
 
   // =====================
-  // GALERI
+  // GALERI FOTO
   // =====================
   let images = [];
   let currentIndex = 0;
-  const container = document.getElementById("galleryContainer");
+  const galleryContainer = document.getElementById("galleryContainer");
 
-  if (container) {
-    container.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
+  if (galleryContainer) {
+    galleryContainer.innerHTML = `
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    `;
     try {
       const { data: galeri, error } = await supabase
         .from("landing_galeri")
@@ -160,8 +198,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (error) throw error;
       images = galeri || [];
-      container.innerHTML = "";
-      if (!images.length) container.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
+      galleryContainer.innerHTML = "";
+      if (!images.length) galleryContainer.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
 
       images.forEach((g, i) => {
         const div = document.createElement("div");
@@ -174,11 +212,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         img.onclick = () => openModal(i);
 
         div.appendChild(img);
-        container.appendChild(div);
+        galleryContainer.appendChild(div);
       });
     } catch (err) {
       console.error("Gagal load galeri:", err);
-      container.innerHTML = `<p style="text-align:center;color:#aaa;">Terjadi kesalahan.</p>`;
+      galleryContainer.innerHTML = `<p style="text-align:center;color:#aaa;">Terjadi kesalahan.</p>`;
     }
   }
 
@@ -211,6 +249,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
     modal.onclick = e => { if (e.target === modal) modal.style.display = "none"; };
   }
+
   initModal();
 
   // =====================
@@ -222,11 +261,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       .select("title, tanggal, lokasi")
       .order("created_at", { ascending: false });
 
-    const list = document.getElementById("agendaList");
+    const list = document.getElementById("agendaList") || document.querySelector("#agenda .agenda-list");
+
     if (list) {
-      list.innerHTML = agenda?.length
-        ? agenda.map(a => `<article class="agenda-item" data-aos="fade-up"><h4>${a.title}</h4><p>${a.tanggal} — ${a.lokasi}</p></article>`).join("")
-        : `<p style="text-align:center;color:#aaa;">Belum ada agenda.</p>`;
+      if (agenda?.length) {
+        list.innerHTML = agenda.map(a => `
+          <article class="agenda-item" data-aos="fade-up">
+            <h4>${a.title}</h4>
+            <p>${a.tanggal} — ${a.lokasi}</p>
+          </article>
+        `).join("");
+      } else {
+        list.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada agenda.</p>`;
+      }
     }
   } catch (err) {
     console.error("Gagal load agenda:", err);
@@ -244,16 +291,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (kontak?.length) {
       const k = kontak[0];
       safeText(document.getElementById("alamatText"), `📍 ${k.alamat}`);
+
       const wa = document.querySelector("#whatsappText a");
       if (wa && k.whatsapp) {
         wa.href = "https://wa.me/" + k.whatsapp.replace(/\D/g, "");
         wa.textContent = k.whatsapp;
       }
+
       const mapContainer = document.querySelector(".map-container");
       if (mapContainer) {
-        mapContainer.innerHTML = k.map_embed.includes("<iframe")
-          ? k.map_embed
-          : `<iframe src="${k.map_embed}" width="100%" height="280"></iframe>`;
+        if (k.map_embed.includes("<iframe")) {
+          mapContainer.innerHTML = k.map_embed;
+        } else {
+          mapContainer.innerHTML = `<iframe src="${k.map_embed}" width="100%" height="280"></iframe>`;
+        }
       }
     }
   } catch (err) {
