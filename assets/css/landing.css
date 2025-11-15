@@ -177,27 +177,28 @@ a { color: #f5c542; text-decoration: none; }
 ================================ */
 #videoSection {
   text-align: center;
-  padding: 60px 20px;
+  padding: 60px 20px;      /* sama dengan section lain */
 }
 
 #videoSection h2 {
   color: #f5c542;
+  font-size: 1.6rem;       /* sama seperti section h2 lain */
   margin-bottom: 20px;
-  font-size: 1.6rem;
+  font-weight: 600;
 }
 
 .main-video iframe {
   width: 100%;
-  max-width: 600px;       /* sama seperti struktur-img */
+  max-width: 600px;        /* batas maksimum desktop */
   height: auto;
-  aspect-ratio: 16/9;     /* menjaga proporsi */
-  border-radius: 12px;    /* mirip struktur-img */
+  aspect-ratio: 16/9;
+  border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   margin: 0 auto 20px auto;
   display: block;
 }
 
-/* Thumbnails video */
+/* Video thumbnails */
 .video-thumbnails {
   display: flex;
   flex-wrap: wrap;
@@ -218,10 +219,16 @@ a { color: #f5c542; text-decoration: none; }
   transform: scale(1.05);
 }
 
-/* Responsive adjustments */
+/* === RESPONSIVE ADJUSTMENTS === */
+@media (max-width: 1024px) {
+  .main-video iframe {
+    max-width: 500px;      /* laptop/tablet */
+  }
+}
+
 @media (max-width: 768px) {
   .main-video iframe {
-    max-width: 100%;
+    max-width: 100%;       /* HP */
   }
 
   .video-thumb {
@@ -502,6 +509,7 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 .footer p {
   margin: 0;                    /* hapus margin default p */
 }
+
 
 
 
