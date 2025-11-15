@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // === GALERI (DEBUG MODE + FIXED) ===
-  // === GALERI (DEBUG MODE + FIXED) ===
+ // === GALERI (FINAL + CLEAN + FIXED) ===
 try {
   console.log("🟡 [DEBUG] Mulai ambil data galeri...");
 
@@ -106,11 +106,10 @@ try {
   console.log("🟢 [DEBUG] Data galeri:", galeri);
   console.log("🔴 [DEBUG] Error galeri:", error);
 
-  const container =
-    document.getElementById("galleryContainer") ||
-    document.querySelector("#galeri .gallery");
+  // Ambil elemen galeri (sesuai HTML kamu)
+  const container = document.getElementById("galleryContainer");
 
-  // Tambahkan debug box
+  // Buat debug box setelah galeri
   const debugBox = document.createElement("div");
   debugBox.style = `
     background:#111;
@@ -122,18 +121,17 @@ try {
     line-height:1.4;
   `;
   debugBox.innerHTML = `<strong>🧩 DEBUG GALERI:</strong><br>`;
-  container?.parentNode?.insertBefore(debugBox, container.nextSibling);
+  container?.parentNode?.appendChild(debugBox);
 
   if (!container) {
-    const msg = "❌ Elemen galeri tidak ditemukan di halaman.";
+    const msg = "❌ Elemen #galleryContainer tidak ditemukan.";
     console.warn(msg);
     debugBox.innerHTML += msg;
     return;
   }
 
-  // ⬇⬇⬇ FIX UTAMA — Reset kontainer sebelum isi ulang
+  // --- FIX: Reset container sebelum generate ulang ---
   container.innerHTML = "";
-  // ⬆⬆⬆
 
   if (error) {
     const msg = `❌ Error Supabase: ${error.message}`;
@@ -149,7 +147,7 @@ try {
       div.setAttribute("data-aos", "zoom-in");
 
       div.innerHTML = `
-        <img src="${g.image_url}" alt="${g.caption || `Gambar ${i + 1}`}">
+        <img src="${g.image_url}" alt="${g.caption || `Gambar ${i + 1}`}" />
         ${g.caption ? `<p class="caption">${g.caption}</p>` : ""}
       `;
 
@@ -164,8 +162,9 @@ try {
   }
 } catch (err) {
   console.error("Gagal load galeri:", err);
+  debugBox.innerHTML += "❌ Terjadi error tak terduga.";
 }
-
+  
   // === AGENDA ===
   try {
     const { data: agenda, error } = await supabase
