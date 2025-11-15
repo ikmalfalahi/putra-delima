@@ -91,15 +91,14 @@
   <div class="gallery" id="galleryContainer"></div>
 </section>
 
-<!-- Modal -->
-<div id="imageModal" class="modal">
-  <span class="close">&times;</span>
+<!-- LIGHTBOX MODAL -->
+<div id="lightboxModal" class="modal">
+  <span class="close" onclick="closeLightbox()">&times;</span>
+  <img class="modal-content" id="lightboxImage">
 
-  <img class="modal-content" id="modalImage" />
-  <div id="modalCaption"></div>
-
-  <button class="nav prev">❮</button>
-  <button class="nav next">❯</button>
+  <!-- Navigation -->
+  <span class="nav-btn prev" onclick="showPrev()">&#10094;</span>
+  <span class="nav-btn next" onclick="showNext()">&#10095;</span>
 </div>
   </section>
 
@@ -128,6 +127,7 @@
   <script> AOS.init({ once: true }); </script>
 </body>
 </html>
+
 
 
 
