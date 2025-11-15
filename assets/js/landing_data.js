@@ -1,12 +1,12 @@
 // =====================================
-// LANDING PAGE DATA LOADER — FIXED & VIDEO READY
+//   LANDING PAGE DATA LOADER — FIXED
 // =====================================
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // ===========================
-  // Helpers
-  // ===========================
+  // =====================
+  // HELPERS
+  // =====================
   const safeText = (el, text) => el && (el.textContent = text || "");
   const safeHTML = (el, html) => el && (el.innerHTML = html || "");
 
@@ -15,9 +15,89 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ===========================
-  // YouTube ID extractor
-  // ===========================
+  // =====================
+  // HERO
+  // =====================
+  try {
+    const { data: hero } = await supabase
+      .from("landing_hero")
+      .select("title, description, image_url")
+      .limit(1);
+
+    if (hero?.length) {
+      const h = hero[0];
+      safeText(document.getElementById("heroTitle"), h.title);
+      safeText(document.getElementById("heroDesc"), h.description);
+      const heroImg = document.getElementById("heroImage");
+      if (heroImg && h.image_url) {
+        heroImg.src = h.image_url;
+        heroImg.style.display = "block";
+      }
+    }
+  } catch (err) {
+    console.error("Gagal load hero:", err);
+  }
+
+  // =====================
+  // TENTANG
+  // =====================
+  try {
+    const { data: tentang } = await supabase
+      .from("landing_tentang")
+      .select("content")
+      .limit(1);
+    if (tentang?.length)
+      safeText(document.getElementById("aboutText"), tentang[0].content);
+  } catch (err) {
+    console.error("Gagal load tentang:", err);
+  }
+
+  // =====================
+  // VISI & MISI
+  // =====================
+  try {
+    const { data: visi } = await supabase
+      .from("landing_visi_misi")
+      .select("visi, misi")
+      .limit(1);
+
+    if (visi?.length) {
+      const v = visi[0];
+      safeText(document.getElementById("visiText"), v.visi);
+      const misiHTML = (v.misi || "")
+        .split(/\n|·|;|-/)
+        .filter(Boolean)
+        .map(m => `<li>${m.trim()}</li>`)
+        .join("");
+      safeHTML(document.getElementById("misiText"), misiHTML);
+    }
+  } catch (err) {
+    console.error("Gagal load visi & misi:", err);
+  }
+
+  // =====================
+  // STRUKTUR
+  // =====================
+  try {
+    const { data: struktur } = await supabase
+      .from("landing_struktur")
+      .select("image_url")
+      .limit(1);
+
+    const strukturImg = document.getElementById("strukturImage");
+    if (struktur?.length && struktur[0].image_url) {
+      strukturImg.src = struktur[0].image_url;
+      strukturImg.style.display = "block";
+    } else {
+      strukturImg.src = "assets/img/struktur.jpg";
+    }
+  } catch (err) {
+    console.error("Gagal load struktur:", err);
+  }
+
+  // =====================
+  // VIDEO
+  // =====================
   function extractYoutubeID(url) {
     try {
       const u = new URL(url);
@@ -29,277 +109,132 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ===========================
-  // HERO
-  // ===========================
-  try {
-    const { data: hero } = await supabase
-      .from("landing_hero")
-      .select("title, description, image_url")
-      .limit(1);
-
-    if (hero?.length) {
-      const h = hero[0];
-      safeText(document.getElementById("heroTitle"), h.title);
-      safeText(document.getElementById("heroDesc"), h.description);
-
-      const heroImg = document.getElementById("heroImage");
-      if (heroImg && h.image_url) {
-        heroImg.src = h.image_url;
-        heroImg.style.display = "block";
-      }
-    }
-  } catch (err) {
-    console.error("Gagal load hero:", err);
-  }
-
-  // ===========================
-  // TENTANG
-  // ===========================
-  try {
-    const { data: tentang } = await supabase
-      .from("landing_tentang")
-      .select("content")
-      .limit(1);
-
-    if (tentang?.length)
-      safeText(document.getElementById("aboutText"), tentang[0].content);
-
-  } catch (err) {
-    console.error("Gagal load tentang:", err);
-  }
-
-  // ===========================
-  // VISI & MISI
-  // ===========================
-  try {
-    const { data: visi } = await supabase
-      .from("landing_visi_misi")
-      .select("visi, misi")
-      .limit(1);
-
-    if (visi?.length) {
-      const v = visi[0];
-      safeText(document.getElementById("visiText"), v.visi);
-
-      const misiHTML = (v.misi || "")
-        .split(/\n|·|;|-/)
-        .filter(Boolean)
-        .map(m => `<li>${m.trim()}</li>`)
-        .join("");
-
-      safeHTML(document.getElementById("misiText"), misiHTML);
-    }
-  } catch (err) {
-    console.error("Gagal load visi & misi:", err);
-  }
-
-  // ===========================
-  // STRUKTUR
-  // ===========================
-  try {
-    const { data: struktur } = await supabase
-      .from("landing_struktur")
-      .select("image_url")
-      .limit(1);
-
-    const strukturImg = document.getElementById("strukturImage");
-
-    if (struktur?.length && struktur[0].image_url) {
-      const fileName = struktur[0].image_url;
-      const bucketName = "struktur";
-
-      const { data: signedURL, error } = await supabase
-        .storage
-        .from(bucketName)
-        .createSignedUrl(fileName, 60);
-
-      if (error) {
-        console.warn("Gagal generate signed URL, pakai public URL:", error);
-        strukturImg.src = `https://sosjorfcrsktcitaawyi.supabase.co/storage/v1/object/public/${bucketName}/${fileName}`;
-      } else {
-        strukturImg.src = signedURL.signedUrl;
-      }
-
-      strukturImg.style.display = "block";
-      strukturImg.onerror = () => {
-        strukturImg.src = "assets/img/struktur.jpg";
-      };
-    } else {
-      strukturImg.src = "assets/img/struktur.jpg";
-    }
-  } catch (err) {
-    console.error("Gagal load struktur:", err);
-    const strukturImg = document.getElementById("strukturImage");
-    strukturImg.src = "assets/img/struktur.jpg";
-  }
-
-  // ===========================
-  // VIDEO
-  // ===========================
   async function loadLandingVideos() {
-    try {
-      const { data: videos, error } = await supabase
-        .from("landing_videos")
-        .select("*")
-        .order("order_index", { ascending: true });
+    const { data: videos, error } = await supabase
+      .from("landing_videos")
+      .select("*")
+      .order("order_index", { ascending: true });
 
-      if (error) throw error;
-      if (!videos || videos.length === 0) return;
+    if (error) return console.error("Gagal load video:", error.message);
+    if (!videos || !videos.length) return;
 
-      const mainVideo = document.getElementById("mainVideo");
-      const thumbs = document.getElementById("videoThumbnails");
-      thumbs.innerHTML = "";
+    const mainVideo = document.getElementById("mainVideo");
+    const thumbs = document.getElementById("videoThumbnails");
+    thumbs.innerHTML = "";
 
-      // Video utama
-      const firstVideoID = extractYoutubeID(videos[0].video_link);
-      mainVideo.src = `https://www.youtube.com/embed/${firstVideoID}`;
+    // Set video utama
+    const firstID = extractYoutubeID(videos[0].video_link);
+    mainVideo.src = `https://www.youtube.com/embed/${firstID}`;
 
-      // Thumbnails
-      videos.forEach(v => {
-        const videoID = extractYoutubeID(v.video_link);
-        if (!videoID) return;
+    videos.forEach(v => {
+      const videoID = extractYoutubeID(v.video_link);
+      if (!videoID) return;
 
-        const thumbImg = document.createElement("img");
-        thumbImg.src = `https://img.youtube.com/vi/${videoID}/mqdefault.jpg`;
-        thumbImg.alt = "Video thumbnail";
-        thumbImg.className = "video-thumb";
-        thumbImg.addEventListener("click", () => {
-          mainVideo.src = `https://www.youtube.com/embed/${videoID}`;
-        });
-
-        thumbs.appendChild(thumbImg);
+      const thumbImg = document.createElement("img");
+      thumbImg.src = `https://img.youtube.com/vi/${videoID}/mqdefault.jpg`;
+      thumbImg.alt = "Video thumbnail";
+      thumbImg.className = "video-thumb";
+      thumbImg.addEventListener("click", () => {
+        mainVideo.src = `https://www.youtube.com/embed/${videoID}`;
       });
-
-    } catch (err) {
-      console.error("Gagal load video:", err);
-    }
+      thumbs.appendChild(thumbImg);
+    });
   }
 
   await loadLandingVideos();
 
- // ===========================
-// GALERI
-// ===========================
-let images = [];
-let currentIndex = 0;
-const container = document.getElementById("galleryContainer");
+  // =====================
+  // GALERI
+  // =====================
+  let images = [];
+  let currentIndex = 0;
+  const container = document.getElementById("galleryContainer");
 
-async function loadGaleri() {
-  if (!container) return;
+  if (container) {
+    container.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
+    try {
+      const { data: galeri, error } = await supabase
+        .from("landing_galeri")
+        .select("image_url, caption, uploaded_at")
+        .order("uploaded_at", { ascending: false });
 
-  container.innerHTML = `
-    <div class="skeleton"></div>
-    <div class="skeleton"></div>
-    <div class="skeleton"></div>
-    <div class="skeleton"></div>
-  `;
+      if (error) throw error;
+      images = galeri || [];
+      container.innerHTML = "";
+      if (!images.length) container.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
 
-  try {
-    const { data: galeri, error } = await supabase
-      .from("landing_galeri")
-      .select("image_url, caption, uploaded_at")
-      .order("uploaded_at", { ascending: false });
+      images.forEach((g, i) => {
+        const div = document.createElement("div");
+        div.className = "galeri-item";
 
-    if (error) throw error;
+        const img = document.createElement("img");
+        img.src = g.image_url;
+        img.dataset.index = i;
+        img.loading = "lazy";
+        img.onclick = () => openModal(i);
 
-    images = galeri || [];
-    container.innerHTML = "";
-
-    if (!images.length) {
-      container.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
-      return;
+        div.appendChild(img);
+        container.appendChild(div);
+      });
+    } catch (err) {
+      console.error("Gagal load galeri:", err);
+      container.innerHTML = `<p style="text-align:center;color:#aaa;">Terjadi kesalahan.</p>`;
     }
-
-    images.forEach((g, i) => {
-      const div = document.createElement("div");
-      div.className = "galeri-item";
-
-      const img = document.createElement("img");
-      img.src = g.image_url; // pastikan public URL
-      img.dataset.index = i;
-      img.loading = "lazy";
-      img.onclick = () => openModal(i);
-
-      div.appendChild(img);
-      container.appendChild(div);
-    });
-
-  } catch (err) {
-    console.error("Gagal load galeri:", err);
-    container.innerHTML = `<p style="text-align:center;color:#aaa;">Terjadi kesalahan.</p>`;
   }
-}
 
-// ===========================
-// MODAL GALERI
-// ===========================
-function initModal() {
-  const modal = document.getElementById("lightboxModal");
-  const modalImg = document.getElementById("lightboxImage");
-  const closeBtn = document.getElementById("closeBtn");
-  const prevBtn = document.getElementById("prevBtn");
-  const nextBtn = document.getElementById("nextBtn");
+  // =====================
+  // MODAL GALERI
+  // =====================
+  function initModal() {
+    const modal = document.getElementById("lightboxModal");
+    const modalImg = document.getElementById("lightboxImage");
+    const closeBtn = document.getElementById("closeBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
 
-  if (!modal || !modalImg) return;
+    if (!modal || !modalImg) return;
 
-  window.openModal = index => {
-    currentIndex = index;
-    modal.style.display = "flex";
-    modalImg.src = images[currentIndex].image_url;
-  };
+    window.openModal = index => {
+      currentIndex = index;
+      modal.style.display = "flex";
+      modalImg.src = images[currentIndex].image_url;
+    };
 
-  closeBtn.onclick = () => (modal.style.display = "none");
+    closeBtn.onclick = () => (modal.style.display = "none");
+    nextBtn.onclick = () => {
+      currentIndex = (currentIndex + 1) % images.length;
+      modalImg.src = images[currentIndex].image_url;
+    };
+    prevBtn.onclick = () => {
+      currentIndex = (currentIndex - 1 + images.length) % images.length;
+      modalImg.src = images[currentIndex].image_url;
+    };
+    modal.onclick = e => { if (e.target === modal) modal.style.display = "none"; };
+  }
+  initModal();
 
-  nextBtn.onclick = () => {
-    if (!images.length) return;
-    currentIndex = (currentIndex + 1) % images.length;
-    modalImg.src = images[currentIndex].image_url;
-  };
-
-  prevBtn.onclick = () => {
-    if (!images.length) return;
-    currentIndex = (currentIndex - 1 + images.length) % images.length;
-    modalImg.src = images[currentIndex].image_url;
-  };
-
-  modal.onclick = e => {
-    if (e.target === modal) modal.style.display = "none";
-  };
-}
-
-// Panggil async
-await loadGaleri();
-initModal();
-
-  // ===========================
+  // =====================
   // AGENDA
-  // ===========================
+  // =====================
   try {
     const { data: agenda } = await supabase
       .from("landing_agenda")
       .select("title, tanggal, lokasi")
       .order("created_at", { ascending: false });
 
-    const list = document.getElementById("agendaList") || document.querySelector("#agenda .agenda-list");
-
+    const list = document.getElementById("agendaList");
     if (list) {
-      if (agenda?.length) {
-        list.innerHTML = agenda.map(a => `
-          <article class="agenda-item">
-            <h4>${a.title}</h4>
-            <p>${a.tanggal} — ${a.lokasi}</p>
-          </article>
-        `).join("");
-      } else list.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada agenda.</p>`;
+      list.innerHTML = agenda?.length
+        ? agenda.map(a => `<article class="agenda-item" data-aos="fade-up"><h4>${a.title}</h4><p>${a.tanggal} — ${a.lokasi}</p></article>`).join("")
+        : `<p style="text-align:center;color:#aaa;">Belum ada agenda.</p>`;
     }
   } catch (err) {
     console.error("Gagal load agenda:", err);
   }
 
-  // ===========================
+  // =====================
   // KONTAK
-  // ===========================
+  // =====================
   try {
     const { data: kontak } = await supabase
       .from("landing_kontak")
@@ -309,19 +244,25 @@ initModal();
     if (kontak?.length) {
       const k = kontak[0];
       safeText(document.getElementById("alamatText"), `📍 ${k.alamat}`);
+      const wa = document.querySelector("#whatsappText a");
+      if (wa && k.whatsapp) {
+        wa.href = "https://wa.me/" + k.whatsapp.replace(/\D/g, "");
+        wa.textContent = k.whatsapp;
+      }
       const mapContainer = document.querySelector(".map-container");
       if (mapContainer) {
-        if (k.map_embed.includes("<iframe")) mapContainer.innerHTML = k.map_embed;
-        else mapContainer.innerHTML = `<iframe src="${k.map_embed}" width="100%" height="280" allowfullscreen></iframe>`;
+        mapContainer.innerHTML = k.map_embed.includes("<iframe")
+          ? k.map_embed
+          : `<iframe src="${k.map_embed}" width="100%" height="280"></iframe>`;
       }
     }
   } catch (err) {
     console.error("Gagal load kontak:", err);
   }
 
-  // ===========================
+  // =====================
   // FOOTER
-  // ===========================
+  // =====================
   const yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
