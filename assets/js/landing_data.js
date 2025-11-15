@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ================================
+ // ================================
 //         LOAD GALERI
 // ================================
 let images = [];
@@ -123,43 +123,49 @@ document.addEventListener("DOMContentLoaded", async () => {
     <div class="skeleton"></div>
   `;
 
-  const { data: galeri, error } = await supabase
-    .from("landing_galeri")
-    .select("image_url, caption, uploaded_at")
-    .order("uploaded_at", { ascending: false });
+  try {
+    const { data: galeri, error } = await supabase
+      .from("landing_galeri")
+      .select("image_url, caption, uploaded_at")
+      .order("uploaded_at", { ascending: false });
 
-  if (error) {
-    container.innerHTML = `<p style="text-align:center;color:#aaa;">Gagal memuat galeri.</p>`;
-    return;
+    if (error) {
+      container.innerHTML = `<p style="text-align:center;color:#aaa;">Gagal memuat galeri.</p>`;
+      return;
+    }
+
+    images = galeri || [];
+    container.innerHTML = "";
+
+    if (images.length === 0) {
+      container.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
+      return;
+    }
+
+    // Render foto
+    images.forEach((g, i) => {
+      const div = document.createElement("div");
+      div.className = "galeri-item";
+
+      const img = document.createElement("img");
+      img.src = g.image_url;
+      img.alt = g.caption || "";
+      img.dataset.index = i;
+      img.loading = "lazy";
+
+      img.onload = () => div.classList.add("loaded");
+      img.onclick = () => openModal(i);
+
+      div.appendChild(img);
+      container.appendChild(div);
+    });
+
+    initModal();
+
+  } catch (err) {
+    console.error("Load galeri gagal:", err);
+    container.innerHTML = `<p style="text-align:center;color:#aaa;">Terjadi kesalahan saat memuat galeri.</p>`;
   }
-
-  images = galeri || [];
-  container.innerHTML = "";
-
-  if (images.length === 0) {
-    container.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
-    return;
-  }
-
-  // Render foto
-  images.forEach((g, i) => {
-    const div = document.createElement("div");
-    div.className = "galeri-item";
-
-    const img = document.createElement("img");
-    img.src = g.image_url;
-    img.alt = g.caption || "";
-    img.dataset.index = i;
-    img.loading = "lazy";
-
-    img.onload = () => div.classList.add("loaded");
-    img.onclick = () => openModal(i);
-
-    div.appendChild(img);
-    container.appendChild(div);
-  });
-
-  initModal();
 });
 
 // ================================
@@ -177,18 +183,22 @@ function initModal() {
     return;
   }
 
+  // Buka modal
   window.openModal = (index) => {
     currentIndex = index;
     modal.style.display = "flex";
     updateModal();
   };
 
+  // Update tampilan foto di modal
   function updateModal() {
     modalImg.src = images[currentIndex].image_url;
   }
 
-  // Close
-  closeBtn.addEventListener("click", () => (modal.style.display = "none"));
+  // Tutup modal
+  closeBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
 
   // Next
   nextBtn.addEventListener("click", () => {
@@ -202,13 +212,13 @@ function initModal() {
     updateModal();
   });
 
-  // Click di luar gambar → close
+  // Tutup jika klik backdrop
   modal.addEventListener("click", (e) => {
     if (e.target === modal) modal.style.display = "none";
   });
 
   // ============================
-  //          SWIPE MOBILE
+  //          SWIPE
   // ============================
   let startX = 0;
 
