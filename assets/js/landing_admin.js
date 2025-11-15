@@ -80,6 +80,59 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+   // ================= VIDEO =================
+async function loadVideos() {
+  const { data: videos } = await supabase
+    .from("landing_videos")
+    .select("*")
+    .order("order_index", { ascending: true });
+
+  const list = document.getElementById("videoList");
+  list.innerHTML = "";
+
+  videos.forEach(v => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${v.caption || v.video_link}</span>
+                    <button class="editBtn">Edit</button>
+                    <button class="deleteBtn">Hapus</button>`;
+
+    // Edit caption
+    li.querySelector(".editBtn").addEventListener("click", async () => {
+      const newCaption = prompt("Ubah caption video:", v.caption);
+      if(newCaption !== null){
+        await supabase.from("landing_videos").update({caption:newCaption}).eq("id",v.id);
+        loadVideos();
+      }
+    });
+
+    // Hapus video
+    li.querySelector(".deleteBtn").addEventListener("click", async () => {
+      if(confirm("Yakin ingin menghapus video ini?")){
+        await supabase.from("landing_videos").delete().eq("id",v.id);
+        loadVideos();
+      }
+    });
+
+    list.appendChild(li);
+  });
+}
+
+// Tambah video
+document.getElementById("addVideo").addEventListener("click", async () => {
+  const link = document.getElementById("videoLink").value.trim();
+  const caption = document.getElementById("videoCaption").value.trim();
+  if(!link) return alert("Masukkan link YouTube!");
+
+  await supabase.from("landing_videos").insert([{video_link: link, caption}]);
+  document.getElementById("videoLink").value = "";
+  document.getElementById("videoCaption").value = "";
+  loadVideos();
+});
+
+// Load video saat admin buka halaman
+loadVideos();
+
+
   // ================= GALERI FOTO (CRUD) =================
   const galleryFiles = document.getElementById("galleryFiles");
   const galleryPreview = document.getElementById("galleryPreview");
