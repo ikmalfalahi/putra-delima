@@ -4,7 +4,7 @@ html, body { scroll-behavior: smooth; font-family: "Poppins", sans-serif; }
 body {
   overflow-x: hidden;
   background: #f4f6f8;
-  color: #111;
+  color: #f5c542;;
   text-align: center;
   transition: all 0.4s ease;
 }
@@ -511,6 +511,7 @@ body.dark .caption { color: #ddd; background: #1e1e1e; }
 .footer p {
   margin: 0;                    /* hapus margin default p */
 }
+
 
 
 
