@@ -109,10 +109,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // --- SKELETON LOADING ---
   container.innerHTML = `
-    <div class="skeleton"></div>
-    <div class="skeleton"></div>
-    <div class="skeleton"></div>
-    <div class="skeleton"></div>
+    <div class="gallery-item skeleton-box"></div>
+    <div class="gallery-item skeleton-box"></div>
+    <div class="gallery-item skeleton-box"></div>
+    <div class="gallery-item skeleton-box"></div>
   `;
 
   try {
@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // --- TAMPILKAN FOTO ---
     images.forEach((g, i) => {
       const div = document.createElement("div");
-      div.className = "galeri-item";
+      div.className = "gallery-item"; // FIX: cocok dengan CSS
 
       const img = document.createElement("img");
       img.src = g.image_url;
@@ -146,7 +146,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       img.dataset.index = i;
       img.loading = "lazy";
 
-      img.onload = () => div.classList.add("loaded");
+      // skeleton hilang setelah load
+      img.onload = () => {
+        div.classList.add("loaded");
+        img.style.opacity = "1";
+      };
+
       img.onclick = () => openModal(i);
 
       div.appendChild(img);
@@ -179,42 +184,39 @@ function initModal() {
   // --- OPEN MODAL ---
   window.openModal = (index) => {
     currentIndex = index;
-    modal.style.display = "flex";
+    modal.classList.add("show");
     updateModal();
   };
 
   // --- UPDATE IMAGE ---
   function updateModal() {
     if (!images[currentIndex]) return;
-    modalImg.src = images[currentIndex].image_url;
+
+    modalImg.style.opacity = "0";
+    setTimeout(() => {
+      modalImg.src = images[currentIndex].image_url;
+      modalImg.style.opacity = "1";
+    }, 150); // animasi fade halus
   }
 
   // --- CLOSE BUTTON ---
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      modal.style.display = "none";
-    };
-  }
+  closeBtn.onclick = () => modal.classList.remove("show");
 
   // --- NEXT ---
-  if (nextBtn) {
-    nextBtn.onclick = () => {
-      currentIndex = (currentIndex + 1) % images.length;
-      updateModal();
-    };
-  }
+  nextBtn.onclick = () => {
+    currentIndex = (currentIndex + 1) % images.length;
+    updateModal();
+  };
 
   // --- PREVIOUS ---
-  if (prevBtn) {
-    prevBtn.onclick = () => {
-      currentIndex = (currentIndex - 1 + images.length) % images.length;
-      updateModal();
-    };
-  }
+  prevBtn.onclick = () => {
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    updateModal();
+  };
 
   // --- CLOSE WHEN CLICK BACKDROP ---
   modal.onclick = (e) => {
-    if (e.target === modal) modal.style.display = "none";
+    if (e.target === modal) modal.classList.remove("show");
   };
 
   // ============================
@@ -230,25 +232,18 @@ function initModal() {
     let diff = e.changedTouches[0].clientX - touchStartX;
 
     if (Math.abs(diff) > 50) {
-      if (diff > 0) {
-        // swipe kanan → prev
-        prevBtn.click();
-      } else {
-        // swipe kiri → next
-        nextBtn.click();
-      }
+      if (diff > 0) prevBtn.click();
+      else nextBtn.click();
     }
   });
 }
-  
+
 // ======================================
-//      SKELETON FADE-IN (optional)
+//      SKELETON OPTIONAL (tidak wajib)
 // ======================================
 function applyFadeIn() {
-  document.querySelectorAll(".galeri-item img").forEach((img) => {
-    img.onload = () => {
-      img.parentElement.classList.add("loaded");
-    };
+  document.querySelectorAll(".gallery-item img").forEach((img) => {
+    img.onload = () => img.parentElement.classList.add("loaded");
   });
 }
   
