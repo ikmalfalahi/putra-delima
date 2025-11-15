@@ -93,181 +93,164 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("Gagal load struktur:", err);
   }
 
-// === GALERI (FINAL FIXED CLEAN) ===
-try {
-  const { data: galeri, error } = await supabase
-    .from("landing_galeri")
-    .select("image_url, caption, uploaded_at")
-    .order("uploaded_at", { ascending: false });
+// ================================
+//         LOAD GALERI
+// ================================
+let images = [];
+let currentIndex = 0;
 
+document.addEventListener("DOMContentLoaded", async () => {
   const container = document.getElementById("galleryContainer");
 
   if (!container) {
-    console.warn("❌ Elemen #galleryContainer tidak ditemukan.");
+    console.warn("❌ #galleryContainer tidak ditemukan.");
     return;
   }
 
-  // Reset container
-  container.innerHTML = "";
+  // --- SKELETON LOADING ---
+  container.innerHTML = `
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+  `;
 
-  if (error) {
-    console.error("❌ Error Supabase:", error.message);
-    container.innerHTML = `<p style="color:#aaa;text-align:center;">Gagal memuat galeri.</p>`;
-    return;
-  }
+  try {
+    const { data: galeri, error } = await supabase
+      .from("landing_galeri")
+      .select("image_url, caption, uploaded_at")
+      .order("uploaded_at", { ascending: false });
 
-  if (galeri && galeri.length > 0) {
-    galeri.forEach((g, i) => {
+    if (error) {
+      console.error("❌ Error Supabase:", error.message);
+      container.innerHTML = `<p style="text-align:center;color:#aaa;">Gagal memuat galeri.</p>`;
+      return;
+    }
+
+    images = galeri || [];
+    container.innerHTML = "";
+
+    if (images.length === 0) {
+      container.innerHTML = `<p style="text-align:center;color:#aaa;">Belum ada foto galeri.</p>`;
+      return;
+    }
+
+    // --- TAMPILKAN FOTO ---
+    images.forEach((g, i) => {
       const div = document.createElement("div");
       div.className = "galeri-item";
-      div.setAttribute("data-aos", "zoom-in");
 
       const img = document.createElement("img");
       img.src = g.image_url;
-      img.alt = g.caption || `Gambar ${i + 1}`;
+      img.alt = g.caption || "";
+      img.dataset.index = i;
       img.loading = "lazy";
 
-      const caption = document.createElement("p");
-      caption.className = "caption";
-      caption.innerText = g.caption || "";
+      img.onload = () => div.classList.add("loaded");
+      img.onclick = () => openModal(i);
 
       div.appendChild(img);
-      div.appendChild(caption);
-
       container.appendChild(div);
     });
-  } else {
-    container.innerHTML =
-      '<p style="color:#aaa;text-align:center;">Belum ada foto galeri.</p>';
-  }
-} catch (err) {
-  console.error("Gagal load galeri:", err);
-}
 
- // ==========================
-//     LOAD GALERI
-// ==========================
-let currentIndex = 0;
-let images = [];
-
-try {
-  const { data: galeri } = await supabase
-    .from("landing_galeri")
-    .select("image_url, caption")
-    .order("uploaded_at", { ascending: false });
-
-  const container = document.getElementById("galleryContainer");
-
-  container.innerHTML = "";
-
-  images = galeri || [];
-
-  images.forEach((g, i) => {
-    const img = document.createElement("img");
-    img.src = g.image_url;
-    img.alt = g.caption || "";
-    img.dataset.index = i;
-    img.onclick = () => openModal(i);
-    container.appendChild(img);
-  });
-
-} catch (err) {
-  console.error("Galeri gagal dimuat:", err);
-}
-
-// ==========================
-//     MODAL LOGIC
-// ==========================
-const modal = document.getElementById("imageModal");
-const modalImg = document.getElementById("modalImage");
-const modalCaption = document.getElementById("modalCaption");
-
-function openModal(index) {
-  currentIndex = index;
-  modal.style.display = "block";
-  updateModal();
-}
-
-function updateModal() {
-  modalImg.src = images[currentIndex].image_url;
-  modalCaption.innerText = images[currentIndex].caption || "";
-}
-
-document.querySelector(".close").onclick = () => {
-  modal.style.display = "none";
-};
-
-// NEXT / PREVIOUS
-document.querySelector(".next").onclick = () => {
-  currentIndex = (currentIndex + 1) % images.length;
-  updateModal();
-};
-
-document.querySelector(".prev").onclick = () => {
-  currentIndex = (currentIndex - 1 + images.length) % images.length;
-  updateModal();
-};
-
-// Klik di luar gambar → close
-modal.onclick = (e) => {
-  if (e.target === modal) modal.style.display = "none";
-};
-
-// ==========================
-//     SWIPE (MOBILE)
-// ==========================
-let startX = 0;
-
-modal.addEventListener("touchstart", (e) => {
-  startX = e.touches[0].clientX;
-});
-
-modal.addEventListener("touchend", (e) => {
-  let endX = e.changedTouches[0].clientX;
-
-  if (endX < startX - 40) {
-    // swipe kiri
-    currentIndex = (currentIndex + 1) % images.length;
-    updateModal();
+  } catch (err) {
+    console.error("❌ Gagal load galeri:", err);
+    container.innerHTML = `<p style="text-align:center;color:#aaa;">Terjadi kesalahan saat memuat galeri.</p>`;
   }
 
-  if (endX > startX + 40) {
-    // swipe kanan
-    currentIndex = (currentIndex - 1 + images.length) % images.length;
-    updateModal();
-  }
+  initModal();
 });
 
-  // === APPLY SKELETON LOAD ===
-document.querySelectorAll(".gallery-item img").forEach(img => {
-  img.onload = () => {
-    img.style.opacity = "1";
-    img.parentElement.classList.add("loaded");
-  };
-});
-
-// === SWIPE HANDLER ===
-let touchStartX = 0;
-
-document.addEventListener("DOMContentLoaded", () => {
+// ======================================
+//               MODAL
+// ======================================
+function initModal() {
   const modal = document.getElementById("lightboxModal");
-  if (!modal) return; // safety guard
+  const modalImg = document.getElementById("lightboxImage");
+  const closeBtn = document.getElementById("closeBtn");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
 
+  if (!modal) {
+    console.error("❌ Modal (#lightboxModal) tidak ditemukan");
+    return;
+  }
+
+  // --- OPEN MODAL ---
+  window.openModal = (index) => {
+    currentIndex = index;
+    modal.style.display = "flex";
+    updateModal();
+  };
+
+  // --- UPDATE IMAGE ---
+  function updateModal() {
+    if (!images[currentIndex]) return;
+    modalImg.src = images[currentIndex].image_url;
+  }
+
+  // --- CLOSE BUTTON ---
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      modal.style.display = "none";
+    };
+  }
+
+  // --- NEXT ---
+  if (nextBtn) {
+    nextBtn.onclick = () => {
+      currentIndex = (currentIndex + 1) % images.length;
+      updateModal();
+    };
+  }
+
+  // --- PREVIOUS ---
+  if (prevBtn) {
+    prevBtn.onclick = () => {
+      currentIndex = (currentIndex - 1 + images.length) % images.length;
+      updateModal();
+    };
+  }
+
+  // --- CLOSE WHEN CLICK BACKDROP ---
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.style.display = "none";
+  };
+
+  // ============================
+  //         SWIPE MOBILE
+  // ============================
   let touchStartX = 0;
 
-  modal.addEventListener("touchstart", e => {
-    touchStartX = e.changedTouches[0].screenX;
+  modal.addEventListener("touchstart", (e) => {
+    touchStartX = e.changedTouches[0].clientX;
   });
 
-  modal.addEventListener("touchend", e => {
-    let diff = e.changedTouches[0].screenX - touchStartX;
+  modal.addEventListener("touchend", (e) => {
+    let diff = e.changedTouches[0].clientX - touchStartX;
 
-    if (Math.abs(diff) > 60) {
-      if (diff > 0) showPrev(); 
-      else showNext();
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        // swipe kanan → prev
+        prevBtn.click();
+      } else {
+        // swipe kiri → next
+        nextBtn.click();
+      }
     }
   });
-});
+}
+  
+// ======================================
+//      SKELETON FADE-IN (optional)
+// ======================================
+function applyFadeIn() {
+  document.querySelectorAll(".galeri-item img").forEach((img) => {
+    img.onload = () => {
+      img.parentElement.classList.add("loaded");
+    };
+  });
+}
   
   // === AGENDA ===
   try {
